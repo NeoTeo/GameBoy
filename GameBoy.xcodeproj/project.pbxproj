@@ -1,0 +1,296 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
+		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
+		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
+		AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AB41DBBA6980072CF49 /* cpu.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB6E8AAC1DBBA64F0072CF49 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		AB6E8AAE1DBBA64F0072CF49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB6E8AB41DBBA6980072CF49 /* cpu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AB6E8AA11DBBA64F0072CF49 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AB6E8A9B1DBBA64F0072CF49 = {
+			isa = PBXGroup;
+			children = (
+				AB6E8AA61DBBA64F0072CF49 /* GameBoy */,
+				AB6E8AA51DBBA64F0072CF49 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AB6E8AA51DBBA64F0072CF49 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AB6E8AA61DBBA64F0072CF49 /* GameBoy */ = {
+			isa = PBXGroup;
+			children = (
+				AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */,
+				AB6E8AB41DBBA6980072CF49 /* cpu.swift */,
+				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
+				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
+				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
+			);
+			path = GameBoy;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AB6E8AA31DBBA64F0072CF49 /* GameBoy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB6E8AB11DBBA64F0072CF49 /* Build configuration list for PBXNativeTarget "GameBoy" */;
+			buildPhases = (
+				AB6E8AA01DBBA64F0072CF49 /* Sources */,
+				AB6E8AA11DBBA64F0072CF49 /* Frameworks */,
+				AB6E8AA21DBBA64F0072CF49 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GameBoy;
+			productName = GameBoy;
+			productReference = AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AB6E8A9C1DBBA64F0072CF49 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0800;
+				LastUpgradeCheck = 0800;
+				ORGANIZATIONNAME = "Matteo Sartori";
+				TargetAttributes = {
+					AB6E8AA31DBBA64F0072CF49 = {
+						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = SK8WX2BAWU;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = AB6E8A9F1DBBA64F0072CF49 /* Build configuration list for PBXProject "GameBoy" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AB6E8A9B1DBBA64F0072CF49;
+			productRefGroup = AB6E8AA51DBBA64F0072CF49 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AB6E8AA31DBBA64F0072CF49 /* GameBoy */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AB6E8AA21DBBA64F0072CF49 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
+				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AB6E8AA01DBBA64F0072CF49 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */,
+				AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB6E8AAC1DBBA64F0072CF49 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AB6E8AAF1DBBA64F0072CF49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AB6E8AB01DBBA64F0072CF49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Release;
+		};
+		AB6E8AB21DBBA64F0072CF49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SK8WX2BAWU;
+				INFOPLIST_FILE = GameBoy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		AB6E8AB31DBBA64F0072CF49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SK8WX2BAWU;
+				INFOPLIST_FILE = GameBoy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AB6E8A9F1DBBA64F0072CF49 /* Build configuration list for PBXProject "GameBoy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB6E8AAF1DBBA64F0072CF49 /* Debug */,
+				AB6E8AB01DBBA64F0072CF49 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB6E8AB11DBBA64F0072CF49 /* Build configuration list for PBXNativeTarget "GameBoy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB6E8AB21DBBA64F0072CF49 /* Debug */,
+				AB6E8AB31DBBA64F0072CF49 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AB6E8A9C1DBBA64F0072CF49 /* Project object */;
+}
