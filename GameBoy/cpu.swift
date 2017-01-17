@@ -46,6 +46,7 @@ struct MEMORY {
         ram = Array(repeating: 0, count: Int(ram_size))
     }
 }
+
 struct SYSTEM {
     
     var cpu: CPU
@@ -65,20 +66,48 @@ func start(system: inout SYSTEM) {
         system.cpu.PC += 1
     }
     
-    var BC: UInt16 { get { return (UInt16(system.cpu.B) << 8) | UInt16(system.cpu.C) } }
-    var DE: UInt16 { get { return (UInt16(system.cpu.D) << 8) | UInt16(system.cpu.E) } }
-    var HL: UInt16 { get { return (UInt16(system.cpu.H) << 8) | UInt16(system.cpu.L) } }
-    
-    func readRam(at location: UInt16) -> UInt8 {
+    var BC: UInt16 {
+        get { return (UInt16(system.cpu.B) << 8) | UInt16(system.cpu.C) }
+        set {
+            system.cpu.C = UInt8(newValue & 0xFF)
+            system.cpu.B = UInt8(newValue >> 8)
+        }
+    }
+    var DE: UInt16 {
+        get { return (UInt16(system.cpu.D) << 8) | UInt16(system.cpu.E) }
+        set {
+            system.cpu.E = UInt8(newValue & 0xFF)
+            system.cpu.D = UInt8(newValue >> 8)
+        }
+    }
+    var HL: UInt16 {
+        get { return (UInt16(system.cpu.H) << 8) | UInt16(system.cpu.L) }
+        set {
+            system.cpu.L = UInt8(newValue & 0xFF)
+            system.cpu.H = UInt8(newValue >> 8)
+        }
+    }
+
+    func readData16(at location: UInt16) -> UInt16 {
+        let msb = system.memory.ram[Int(location)]
+        let lsb = system.memory.ram[Int(location+1)]
+        return (UInt16(msb) << 8) | UInt16(lsb)
+    }
+
+    func readData8(at location: UInt16) -> UInt8 {
             return system.memory.ram[Int(location)]
     }
+    
     func writeRam(at location: UInt16, with value: UInt8) {
         system.memory.ram[Int(location)] = value
     }
     
     repeat {
         /// Read from ram
-        let opcode = readRam(at: system.cpu.PC)
+        let opcode = readData8(at: system.cpu.PC)
+        
+        /// We've read the opcode so move on to next address.
+        incPc()
         
         /** interpret data/instruction
             Each opcode can affect the registers, the RAM and the interrupts
@@ -88,13 +117,24 @@ func start(system: inout SYSTEM) {
             incPc()
             
         case 0x01:  /// LD BC, d16
+            system.cpu.B = readData8(at: system.cpu.PC)
             incPc()
-            system.cpu.B = readRam(at: system.cpu.PC)
-            incPc()
-            system.cpu.C = readRam(at: system.cpu.PC)
+            system.cpu.C = readData8(at: system.cpu.PC)
             
         case 0x02:  /// LD (BC), A, load location at BC with register A
             writeRam(at: BC, with: system.cpu.A)
+        
+        case 0x03:  /// INC BC
+            BC += 1
+        
+        case 0x04:  /// INC B
+            system.cpu.B += 1
+            
+        case 0x05:  /// DEC B
+            system.cpu.B -= 1
+            
+        case 0x06:  /// LD B, d8
+            system.cpu.B = readData8(at: system.cpu.PC)
             
         default:
             interrupt = 1
