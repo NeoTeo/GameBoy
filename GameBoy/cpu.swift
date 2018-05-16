@@ -8,7 +8,23 @@
 
 import Foundation
 
-struct CPU {
+protocol MEMORY {
+    
+    init(size: UInt16)
+    func read8(at location: UInt16) -> UInt8
+    func read16(at location: UInt16) -> UInt16
+    mutating func write(at location: UInt16, with value: UInt8)
+}
+
+protocol SYSTEM {
+    var cpu: CPU { get }
+    var ram: MEMORY { get }
+    
+    func start(clockRate: Int)
+}
+
+/// LR35902 CPU
+class CPU {
     var PC: UInt16 = 0      // Program Counter
     var SP: UInt16 = 0      // Stack Pointer
     
@@ -22,124 +38,160 @@ struct CPU {
     var H: UInt8 = 0
     var L: UInt8 = 0
     
-    /// Bit 7 = Zero, 6 = Subtract, 5 = Half carry, 4 = Carry
-    struct Flags {
-        var Z: Bool = false     /// Zero
-        var N: Bool = false     /// Subtract/Negative
-        var H: Bool = false     /// Half carry
-        var C: Bool = false     /// carry
+    struct FlagRegister : OptionSet {
+        let rawValue: UInt8
+        
+        static let Z = FlagRegister(rawValue: 1 << 7)     /// Zero
+        static let N = FlagRegister(rawValue: 1 << 6)     /// Add/Sub (BCD)
+        static let H = FlagRegister(rawValue: 1 << 5)     /// Half carry (BCD)
+        static let C = FlagRegister(rawValue: 1 << 4)     /// carry
     }
     
-    var F: Flags = Flags()
+    var F: FlagRegister = [] // init clear
     
-    func dataAtPc(_ ram: [UInt8]) -> UInt8 {
-        return ram[Int(PC)]
-    }
-}
-
-struct MEMORY {
-    let ram_size: UInt16// in bytes
-    var ram: [UInt8]
-    
-    init(size: UInt16) {
-        ram_size = size
-        ram = Array(repeating: 0, count: Int(ram_size))
-    }
-}
-
-struct SYSTEM {
-    
-    var cpu: CPU
-    var memory: MEMORY
-    
-    init() {
-        memory = MEMORY(size: 8192)
-        cpu = CPU()
-    }
-}
-
-func start(system: inout SYSTEM) {
-    
-    var interrupt = 0
-    
-    func incPc() {
-        system.cpu.PC += 1
+    var AF: UInt16 {
+        get { return (UInt16(A) << 8) | UInt16(F.rawValue) }
+        set {
+            F = FlagRegister(rawValue: UInt8(newValue & 0xFF))
+            A = UInt8(newValue >> 8)
+        }
     }
     
     var BC: UInt16 {
-        get { return (UInt16(system.cpu.B) << 8) | UInt16(system.cpu.C) }
+        get { return (UInt16(B) << 8) | UInt16(C) }
         set {
-            system.cpu.C = UInt8(newValue & 0xFF)
-            system.cpu.B = UInt8(newValue >> 8)
+            C = UInt8(newValue & 0xFF)
+            B = UInt8(newValue >> 8)
         }
     }
+    
     var DE: UInt16 {
-        get { return (UInt16(system.cpu.D) << 8) | UInt16(system.cpu.E) }
+        get { return (UInt16(D) << 8) | UInt16(E) }
         set {
-            system.cpu.E = UInt8(newValue & 0xFF)
-            system.cpu.D = UInt8(newValue >> 8)
+            E = UInt8(newValue & 0xFF)
+            D = UInt8(newValue >> 8)
         }
     }
+    
     var HL: UInt16 {
-        get { return (UInt16(system.cpu.H) << 8) | UInt16(system.cpu.L) }
+        get { return (UInt16(H) << 8) | UInt16(L) }
         set {
-            system.cpu.L = UInt8(newValue & 0xFF)
-            system.cpu.H = UInt8(newValue >> 8)
+            L = UInt8(newValue & 0xFF)
+            H = UInt8(newValue >> 8)
         }
     }
+    
+    // Opcode metadata holds the opcode instruction and its cycle count.
+    //    typealias opcodeMeta = ( (UInt16)->(), UInt8)
+    //    let opTable: [UInt8 : opcodeMeta] = [
+    //        0x00 : (ld)
+    //    ]
 
-    func readData16(at location: UInt16) -> UInt16 {
-        let msb = system.memory.ram[Int(location)]
-        let lsb = system.memory.ram[Int(location+1)]
-        return (UInt16(msb) << 8) | UInt16(lsb)
-    }
-
-    func readData8(at location: UInt16) -> UInt8 {
-            return system.memory.ram[Int(location)]
+    var ram: MEMORY!
+    
+    func reset() {
+        // Set initial register values as in DMG/GB
+        AF = 0x01B0
+        BC = 0x0013
+        DE = 0x00D8
+        HL = 0x014D
+        SP = 0xFFFE
+        PC = 0x0100
     }
     
-    func writeRam(at location: UInt16, with value: UInt8) {
-        system.memory.ram[Int(location)] = value
-    }
-    
-    repeat {
-        /// Read from ram
-        let opcode = readData8(at: system.cpu.PC)
+    func clockTick() {
         
-        /// We've read the opcode so move on to next address.
-        incPc()
+        func incPc() { PC = (PC &+ 1) }
+        
+        
+        /// Read from ram
+        let opcode = ram.read8(at: PC)
+        print("PC is \(PC)")
+        print("opcode is \(opcode)")
         
         /** interpret data/instruction
-            Each opcode can affect the registers, the RAM and the interrupts
-        **/
+         Each opcode can affect the registers, the RAM and the interrupts
+         **/
         switch opcode {
         case 0x00:  /// NOP
             incPc()
             
         case 0x01:  /// LD BC, d16
-            system.cpu.B = readData8(at: system.cpu.PC)
+            //            cpu.B = ram.read8(at: cpu.PC)
             incPc()
-            system.cpu.C = readData8(at: system.cpu.PC)
+            //            cpu.C = ram.read8(at: cpu.PC)
+            BC = ram.read16(at: PC)
             
         case 0x02:  /// LD (BC), A, load location at BC with register A
-            writeRam(at: BC, with: system.cpu.A)
-        
+            ram.write(at: BC, with: A)
+            
         case 0x03:  /// INC BC
             BC += 1
-        
+            
         case 0x04:  /// INC B
-            system.cpu.B += 1
+            B += 1
             
         case 0x05:  /// DEC B
-            system.cpu.B -= 1
+            B -= 1
             
         case 0x06:  /// LD B, d8
-            system.cpu.B = readData8(at: system.cpu.PC)
+            B = ram.read8(at: PC)
             
         default:
-            interrupt = 1
             break
         }
-    } while interrupt == 0
+    }
 }
 
+class RAM : MEMORY {
+
+    let size: UInt16// in bytes
+    var ram: [UInt8]
+    
+    required init(size: UInt16) {
+        self.size = size
+        ram = Array(repeating: 0, count: Int(size))
+    }
+    
+    func read16(at location: UInt16) -> UInt16 {
+        let msb = ram[Int(location)]
+        let lsb = ram[Int(location+1)]
+        return (UInt16(msb) << 8) | UInt16(lsb)
+    }
+    
+    func read8(at location: UInt16) -> UInt8 {
+        return ram[Int(location)]
+    }
+    
+    func write(at location: UInt16, with value: UInt8) {
+        ram[Int(location)] = value
+    }
+
+}
+
+class Gameboy : SYSTEM {
+    
+    var cpu: CPU
+    var ram: MEMORY
+    
+    init() {
+        
+        cpu = CPU()
+        ram = RAM(size: 0xFFFF)
+        // Connect the cpu with the memory
+        cpu.ram = ram
+        cpu.reset()
+    }
+    
+    func start(clockRate: Int) {
+        
+        let interval = TimeInterval( 1 / clockRate )
+        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
+        
+        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
+    }
+    
+    func runCycle(timer: Timer) {
+        cpu.clockTick()
+    }
+}

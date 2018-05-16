@@ -7,13 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
 		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
 		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
 		AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AB41DBBA6980072CF49 /* cpu.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AB3D07081E2E6968009BDF00 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB6E8A9C1DBBA64F0072CF49 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB6E8AA31DBBA64F0072CF49;
+			remoteInfo = GameBoy;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
+		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -23,6 +37,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AB3D07001E2E6968009BDF00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AB6E8AA11DBBA64F0072CF49 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,10 +54,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AB3D07041E2E6968009BDF00 /* GameBoyTests */ = {
+			isa = PBXGroup;
+			children = (
+				AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */,
+				AB3D07071E2E6968009BDF00 /* Info.plist */,
+			);
+			path = GameBoyTests;
+			sourceTree = "<group>";
+		};
 		AB6E8A9B1DBBA64F0072CF49 = {
 			isa = PBXGroup;
 			children = (
 				AB6E8AA61DBBA64F0072CF49 /* GameBoy */,
+				AB3D07041E2E6968009BDF00 /* GameBoyTests */,
 				AB6E8AA51DBBA64F0072CF49 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -45,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */,
+				AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +96,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		AB3D07021E2E6968009BDF00 /* GameBoyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB3D070C1E2E6968009BDF00 /* Build configuration list for PBXNativeTarget "GameBoyTests" */;
+			buildPhases = (
+				AB3D06FF1E2E6968009BDF00 /* Sources */,
+				AB3D07001E2E6968009BDF00 /* Frameworks */,
+				AB3D07011E2E6968009BDF00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB3D07091E2E6968009BDF00 /* PBXTargetDependency */,
+			);
+			name = GameBoyTests;
+			productName = GameBoyTests;
+			productReference = AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		AB6E8AA31DBBA64F0072CF49 /* GameBoy */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AB6E8AB11DBBA64F0072CF49 /* Build configuration list for PBXNativeTarget "GameBoy" */;
@@ -87,13 +137,21 @@
 		AB6E8A9C1DBBA64F0072CF49 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0800;
-				LastUpgradeCheck = 0810;
+				LastSwiftUpdateCheck = 0820;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Matteo Sartori";
 				TargetAttributes = {
+					AB3D07021E2E6968009BDF00 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = SK8WX2BAWU;
+						LastSwiftMigration = 0930;
+						ProvisioningStyle = Automatic;
+						TestTargetID = AB6E8AA31DBBA64F0072CF49;
+					};
 					AB6E8AA31DBBA64F0072CF49 = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = SK8WX2BAWU;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -112,11 +170,19 @@
 			projectRoot = "";
 			targets = (
 				AB6E8AA31DBBA64F0072CF49 /* GameBoy */,
+				AB3D07021E2E6968009BDF00 /* GameBoyTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		AB3D07011E2E6968009BDF00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AB6E8AA21DBBA64F0072CF49 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -129,6 +195,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AB3D06FF1E2E6968009BDF00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AB6E8AA01DBBA64F0072CF49 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -139,6 +213,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB3D07091E2E6968009BDF00 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB6E8AA31DBBA64F0072CF49 /* GameBoy */;
+			targetProxy = AB3D07081E2E6968009BDF00 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */ = {
@@ -152,6 +234,38 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		AB3D070A1E2E6968009BDF00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SK8WX2BAWU;
+				INFOPLIST_FILE = GameBoyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GameBoy.app/Contents/MacOS/GameBoy";
+			};
+			name = Debug;
+		};
+		AB3D070B1E2E6968009BDF00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = SK8WX2BAWU;
+				INFOPLIST_FILE = GameBoyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GameBoy.app/Contents/MacOS/GameBoy";
+			};
+			name = Release;
+		};
 		AB6E8AAF1DBBA64F0072CF49 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -161,20 +275,28 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -211,20 +333,28 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -254,7 +384,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -268,13 +399,23 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.iloveyoubits.GameBoy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AB3D070C1E2E6968009BDF00 /* Build configuration list for PBXNativeTarget "GameBoyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB3D070A1E2E6968009BDF00 /* Debug */,
+				AB3D070B1E2E6968009BDF00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		AB6E8A9F1DBBA64F0072CF49 /* Build configuration list for PBXProject "GameBoy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
