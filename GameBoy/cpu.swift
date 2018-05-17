@@ -81,48 +81,6 @@ class CPU {
         }
     }
     
-    enum ArgType {
-        case A
-        case B
-        case C
-        case D
-        case E
-        case H
-        case L
-        case AF
-        case BC
-        case BCloc
-        case DE
-        case HL
-        case d8
-        case d16
-        case a8
-        case a16
-    }
-    
-    enum OpType {
-        case NOP
-        case LD
-        case INC
-        case DEC
-        case RLCA
-        case ADD
-        case RRCA
-        case STOP
-        case RLA
-    }
-        
-    enum Inst {
-        case NOP(cycles: UInt8)
-        case LD(target: ArgType, source: ArgType, cycles: UInt8)
-    }
-
-    let instructions: [Inst] = [
-        Inst.NOP(cycles: 4),                                   // 0x00
-        Inst.LD(target: .BC, source: .d16, cycles: 12),        // 0x01
-        Inst.LD(target: .BCloc, source: .A, cycles: 8)         // 0x02
-    ]
-    
     var ram: MEMORY!
     var subOpCycles: UInt8 = 0
     
@@ -152,88 +110,52 @@ class CPU {
 
         print("PC is \(PC)")
         print("opcode is \(opcode)")
-        
-//        let (opType, op, arg1, arg2, cycles) = instructions[Int(opcode)]
-        let op = instructions[Int(opcode)]
-        
-        switch op {
-        case .NOP(subOpCycles):
-            print("NOP")
-            
-        case .LD(let target, let source, subOpCycles):
-            
-            switch (target, source) {
-            case (.BC, .a16):
-                BC = ram.read16(at: PC)
-            case (.BCloc, .A):
-                ram.write(at: BC, with: A)
-                
-            default:
-                print("no happy")
-            }
-            
-            print("LD")
+
+        /** interpret data/instruction
+         Each opcode can affect the registers, the RAM and the interrupts
+         **/
+        switch opcode {
+        case 0x00:  /// NOP
+            subOpCycles = 4
+
+            // Make LD,INC, etc. functions that takes various args so we can look
+            // them up in a table instead of this switch or at least reduce its size.
+        case 0x01:  /// LD BC, d16
+            BC = ram.read16(at: PC)
+            incPc()
+            incPc()
+            subOpCycles = 12
+
+        case 0x02:  /// LD (BC), A, load location at BC with register A
+            ram.write(at: BC, with: A)
+            subOpCycles = 8
+
+        case 0x03:  /// INC BC
+            BC += 1
+            subOpCycles = 8
+
+        case 0x04:  /// INC B
+            B += 1
+            subOpCycles = 4
+
+        case 0x05:  /// DEC B
+            B -= 1
+            subOpCycles = 4
+
+        case 0x06:  /// LD B, d8
+            B = ram.read8(at: PC)
+            subOpCycles = 8
+
+        // LD SP, d16
+        case 0x31:
+            SP = ram.read16(at: PC)
+            incPc()
+            incPc()
+            subOpCycles = 12
         default:
-            print("unsupported operation \(op)")
+            break
         }
     }
-//    func clockTick() {
-//
-//        subOpCycles -= 1
-//        if subOpCycles > 0 {  return }
-//
-//        /// Read from ram
-//        let opcode = ram.read8(at: PC)
-//        incPc()
-//
-//        print("PC is \(PC)")
-//        print("opcode is \(opcode)")
-//
-//        /** interpret data/instruction
-//         Each opcode can affect the registers, the RAM and the interrupts
-//         **/
-//        switch opcode {
-//        case 0x00:  /// NOP
-//            subOpCycles = 4
-//
-//            // Make LD,INC, etc. functions that takes various args so we can look
-//            // them up in a table instead of this switch or at least reduce its size.
-//        case 0x01:  /// LD BC, d16
-//            BC = ram.read16(at: PC)
-//            incPc()
-//            incPc()
-//            subOpCycles = 12
-//
-//        case 0x02:  /// LD (BC), A, load location at BC with register A
-//            ram.write(at: BC, with: A)
-//            subOpCycles = 8
-//
-//        case 0x03:  /// INC BC
-//            BC += 1
-//            subOpCycles = 8
-//
-//        case 0x04:  /// INC B
-//            B += 1
-//            subOpCycles = 4
-//
-//        case 0x05:  /// DEC B
-//            B -= 1
-//            subOpCycles = 4
-//
-//        case 0x06:  /// LD B, d8
-//            B = ram.read8(at: PC)
-//            subOpCycles = 8
-//
-//        // LD SP, d16
-//        case 0x31:
-//            SP = ram.read16(at: PC)
-//            incPc()
-//            incPc()
-//            subOpCycles = 12
-//        default:
-//            break
-//        }
-//    }
 }
 
 class RAM : MEMORY {
