@@ -88,6 +88,7 @@ class CPU {
     //    ]
 
     var ram: MEMORY!
+    var subOpCycles: UInt8 = 0
     
     func reset() {
         // Set initial register values as in DMG/GB
@@ -99,13 +100,21 @@ class CPU {
         PC = 0x0100
     }
     
+    func incPc() {
+        PC = (PC &+ 1)
+    }
+    
     func clockTick() {
-        
-        func incPc() { PC = (PC &+ 1) }
-        
+
+        guard subOpCycles == 0 else {
+            subOpCycles -= 1
+            return
+        }
         
         /// Read from ram
         let opcode = ram.read8(at: PC)
+        incPc()
+        
         print("PC is \(PC)")
         print("opcode is \(opcode)")
         
@@ -114,29 +123,40 @@ class CPU {
          **/
         switch opcode {
         case 0x00:  /// NOP
-            incPc()
+            subOpCycles = 4
             
         case 0x01:  /// LD BC, d16
-            //            cpu.B = ram.read8(at: cpu.PC)
-            incPc()
-            //            cpu.C = ram.read8(at: cpu.PC)
             BC = ram.read16(at: PC)
+            incPc()
+            incPc()
+            subOpCycles = 12
             
         case 0x02:  /// LD (BC), A, load location at BC with register A
             ram.write(at: BC, with: A)
+            subOpCycles = 8
             
         case 0x03:  /// INC BC
             BC += 1
+            subOpCycles = 8
             
         case 0x04:  /// INC B
             B += 1
+            subOpCycles = 4
             
         case 0x05:  /// DEC B
             B -= 1
+            subOpCycles = 4
             
         case 0x06:  /// LD B, d8
             B = ram.read8(at: PC)
+            subOpCycles = 8
             
+        // LD SP, d16
+        case 0x31:
+            SP = ram.read16(at: PC)
+            incPc()
+            incPc()
+            subOpCycles = 12
         default:
             break
         }
@@ -188,6 +208,8 @@ class Gameboy : SYSTEM {
         let interval = TimeInterval( 1 / clockRate )
         let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
         
+        // bodge some code into ram
+        ram.write(at: 0x100, with: 0x01)
         RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
