@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
+		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
+		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
 		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
 		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
@@ -28,6 +30,8 @@
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
+		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
 		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -84,11 +88,13 @@
 		AB6E8AA61DBBA64F0072CF49 /* GameBoy */ = {
 			isa = PBXGroup;
 			children = (
+				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 				AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */,
 				AB6E8AB41DBBA6980072CF49 /* cpu.swift */,
 				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
 				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
+				AB59ADE020AEE6560055A60F /* BinaryLoader.swift */,
 			);
 			path = GameBoy;
 			sourceTree = "<group>";
@@ -188,6 +194,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
+				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -207,6 +214,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */,
 				AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */,
 				AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */,
 			);

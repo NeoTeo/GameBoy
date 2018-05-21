@@ -14,6 +14,9 @@ protocol MEMORY {
     func read8(at location: UInt16) -> UInt8
     func read16(at location: UInt16) -> UInt16
     mutating func write(at location: UInt16, with value: UInt8)
+    
+    // Helper function - might be useful for DMA
+    func insert(data: [UInt8], at address: UInt16)
 }
 
 protocol SYSTEM {
@@ -23,10 +26,26 @@ protocol SYSTEM {
     func start(clockRate: Int)
 }
 
-/// LR35902 CPU
+/*
+     LR35902 CPU
+ 
+ Registers.
+ 7                   0 7                  0
+ +--------------------+-------------------+
+ |         A          |         F         |
+ +--------------------+-------------------+
+ |         B          |         C         |
+ +--------------------+-------------------+
+ |         D          |         E         |
+ +--------------------+-------------------+
+ |         H          |         L         |
+ +--------------------+-------------------+
+ 15                                       0
+ +--------------------+-------------------+
+ |        PC          |        SP         |
+ +--------------------+-------------------+
+ */
 class CPU {
-    var PC: UInt16 = 0      // Program Counter
-    var SP: UInt16 = 0      // Stack Pointer
     
     /// registers
     var A: UInt8 = 0
@@ -37,7 +56,10 @@ class CPU {
     
     var H: UInt8 = 0
     var L: UInt8 = 0
-    
+
+    var PC: UInt16 = 0      // Program Counter
+    var SP: UInt16 = 0      // Stack Pointer
+
     struct FlagRegister : OptionSet {
         let rawValue: UInt8
         
@@ -82,7 +104,7 @@ class CPU {
     }
     
     var ram: MEMORY!
-    var subOpCycles: UInt8 = 0
+    var subOpCycles: UInt8 = 4
     
     func reset() {
         // Set initial register values as in DMG/GB
@@ -91,12 +113,66 @@ class CPU {
         DE = 0x00D8
         HL = 0x014D
         SP = 0xFFFE
-        PC = 0x0100
+        PC = 0x0000
     }
     
     
     func incPc() {
         PC = (PC &+ 1)
+    }
+
+
+    // INC A, B, C, D, E, H, L, (HL)
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - Reset.
+    // H - Set if carry from bit 3.
+    // C - Not affected.
+    func inc(n: inout UInt8) {
+    
+        // increment n register and wrap to 0 if overflowed.
+        n = n &+ 1
+        
+        // Set F register correctly
+        // Z set if result is 0
+        if n == 0 { F.insert(.Z) }
+        else {
+            F.remove(.Z)
+            
+            // H set if overflow from bit 3
+            if (n & 0x08) == 1 {
+                F.insert(.H)
+            } else {
+                F.remove(.H)
+            }
+        }
+        // N set to 0
+        F.remove(.N)
+    }
+    
+    // INC BC, DE, HL, SP
+    // Flags unaffected
+    func inc(nn: inout UInt16) {
+        nn = nn &+ 1
+    }
+    
+    func dec(n: inout UInt8) {
+        n = n &- 1
+        
+        if n == 0 { F.insert(.Z) }
+        else {
+            F.remove(.Z)
+            
+            // H set if no borrow from bit 4 ?
+            if (n & 0x08) == 0 {
+                F.insert(.H)
+            } else {
+                F.remove(.H)
+            }
+        }
+        // N set to 1
+        F.insert(.N)
+
     }
     
     func clockTick() {
@@ -109,7 +185,7 @@ class CPU {
         incPc()
 
         print("PC is \(PC)")
-        print("opcode is \(opcode)")
+        print("opcode is 0x" + String(format: "%2X",opcode) )
 
         /** interpret data/instruction
          Each opcode can affect the registers, the RAM and the interrupts
@@ -131,11 +207,11 @@ class CPU {
             subOpCycles = 8
 
         case 0x03:  /// INC BC
-            BC += 1
+            inc(nn: &BC)
             subOpCycles = 8
 
         case 0x04:  /// INC B
-            B += 1
+            inc(n: &B)
             subOpCycles = 4
 
         case 0x05:  /// DEC B
@@ -153,6 +229,7 @@ class CPU {
             incPc()
             subOpCycles = 12
         default:
+            subOpCycles = 4
             break
         }
     }
@@ -182,6 +259,11 @@ class RAM : MEMORY {
         ram[Int(location)] = value
     }
 
+    // Helper functions
+    func insert(data: [UInt8], at address: UInt16) {
+        ram.insert(contentsOf: data, at: Int(address))
+        
+    }
 }
 
 class Gameboy : SYSTEM {
@@ -204,11 +286,24 @@ class Gameboy : SYSTEM {
         let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
         
         // bodge some code into ram
-        ram.write(at: 0x100, with: 0x01)
+        bodgeBootLoader()
+        
         RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
     func runCycle(timer: Timer) {
         cpu.clockTick()
+    }
+    
+    func bodgeBootLoader() {
+        let binaryName = "DMG_ROM.bin"
+        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+            let bootBinary = try? loadBinary(from: URL(fileURLWithPath: path))
+        else {
+            print("Failed to load boot binary.")
+            return
+        }
+        
+        ram.insert(data: bootBinary, at: 0x0000)
     }
 }
