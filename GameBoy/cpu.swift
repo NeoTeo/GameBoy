@@ -77,10 +77,10 @@ class CPU {
             }
             
             set {
-                Z = (newValue & (1 >> 7) == 0x01)
-                N = (newValue & (1 >> 6) == 0x01)
-                H = (newValue & (1 >> 5) == 0x01)
-                C = (newValue & (1 >> 4) == 0x01)
+                Z = ((newValue >> 7) & 1) == 1
+                N = ((newValue >> 6) & 1) == 1
+                H = ((newValue >> 5) & 1) == 1
+                C = ((newValue >> 4) & 1) == 1
             }
         }
         

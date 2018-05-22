@@ -28,8 +28,15 @@ class GameBoyTests: XCTestCase {
 //        start(system: &gb)
     }
     
+    func testSystem() {
+        let gb = Gameboy()
+        // Check initial state of flag register
+        XCTAssert(gb.cpu.F.rawValue == 0xB0)
+        print("Gameboy F register: \(String(gb.cpu.F.rawValue, radix: 2))")
+    }
+    
     func testCPUFRegister() {
-        var cpu = CPU()
+        let cpu = CPU()
         cpu.F.Z = true
         cpu.F.N = true
         cpu.F.H = true
