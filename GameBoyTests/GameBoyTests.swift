@@ -24,8 +24,31 @@ class GameBoyTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
-        var gb = SYSTEM()
-        start(system: &gb)
+//        var gb = S
+//        start(system: &gb)
+    }
+    
+    func testCPUFRegister() {
+        var cpu = CPU()
+        cpu.F.Z = true
+        cpu.F.N = true
+        cpu.F.H = true
+        cpu.F.C = true
+
+        let rawVal = cpu.F.rawValue
+        
+        XCTAssert(((rawVal >> 7) & 0x1) == 0x1)
+        XCTAssert(cpu.F.Z)
+        
+        XCTAssert(((rawVal >> 6) & 0x1) == 0x1)
+        XCTAssert(cpu.F.N)
+
+        XCTAssert(((rawVal >> 5) & 0x1) == 0x1)
+        XCTAssert(cpu.F.H)
+
+        XCTAssert(((rawVal >> 4) & 0x1) == 0x1)
+        XCTAssert(cpu.F.C)
+
     }
     
     func testPerformanceExample() {

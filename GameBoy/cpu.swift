@@ -60,17 +60,38 @@ class CPU {
     var PC: UInt16 = 0      // Program Counter
     var SP: UInt16 = 0      // Stack Pointer
 
-    struct FlagRegister : OptionSet {
-        let rawValue: UInt8
+    struct FlagRegister {
+        init(rawValue: UInt8, Z: Bool = false, N: Bool = false, H: Bool = false, C: Bool = false) {
+            self.rawValue = rawValue
+        }
         
-        static let Z = FlagRegister(rawValue: 1 << 7)     /// Zero
-        static let N = FlagRegister(rawValue: 1 << 6)     /// Add/Sub (BCD)
-        static let H = FlagRegister(rawValue: 1 << 5)     /// Half carry (BCD)
-        static let C = FlagRegister(rawValue: 1 << 4)     /// carry
+        var rawValue: UInt8 {
+            get {
+                // build an UInt8 from the flags
+                var rawVal: UInt8 = 0
+                if Z { rawVal |= (1 << 7) }
+                if N { rawVal |= (1 << 6) }
+                if H { rawVal |= (1 << 5) }
+                if C { rawVal |= (1 << 4) }
+                return rawVal
+            }
+            
+            set {
+                Z = (newValue & (1 >> 7) == 0x01)
+                N = (newValue & (1 >> 6) == 0x01)
+                H = (newValue & (1 >> 5) == 0x01)
+                C = (newValue & (1 >> 4) == 0x01)
+            }
+        }
+        
+        var Z: Bool = false
+        var N: Bool = false
+        var H: Bool = false
+        var C: Bool = false
     }
-    
-    var F: FlagRegister = [] // init clear
-    
+
+    var F = FlagRegister(rawValue: 0x00)
+
     var AF: UInt16 {
         get { return (UInt16(A) << 8) | UInt16(F.rawValue) }
         set {
@@ -134,20 +155,9 @@ class CPU {
         n = n &+ 1
         
         // Set F register correctly
-        // Z set if result is 0
-        if n == 0 { F.insert(.Z) }
-        else {
-            F.remove(.Z)
-            
-            // H set if overflow from bit 3
-            if (n & 0x08) == 1 {
-                F.insert(.H)
-            } else {
-                F.remove(.H)
-            }
-        }
-        // N set to 0
-        F.remove(.N)
+        F.Z = (n == 0)
+        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
+        F.N = false
     }
     
     // INC BC, DE, HL, SP
@@ -158,21 +168,10 @@ class CPU {
     
     func dec(n: inout UInt8) {
         n = n &- 1
-        
-        if n == 0 { F.insert(.Z) }
-        else {
-            F.remove(.Z)
-            
-            // H set if no borrow from bit 4 ?
-            if (n & 0x08) == 0 {
-                F.insert(.H)
-            } else {
-                F.remove(.H)
-            }
-        }
-        // N set to 1
-        F.insert(.N)
-
+   
+        F.Z = (n == 0)
+        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
+        F.N = true // N set to 1
     }
     
     func clockTick() {
