@@ -59,7 +59,7 @@ class CPU {
 
     var PC: UInt16 = 0      // Program Counter
     var SP: UInt16 = 0      // Stack Pointer
-
+    
     struct FlagRegister {
         init(rawValue: UInt8, Z: Bool = false, N: Bool = false, H: Bool = false, C: Bool = false) {
             self.rawValue = rawValue
@@ -128,10 +128,11 @@ class CPU {
     var subOpCycles: UInt8 = 4
     
     // FIXME: Turn this into an array.
-    // An op consists of a tuple grouping an identifier for the register, a function pointer and a cycle count.
-//    typealias OpHandler = Any // (inout UInt8)->Void
+
+    typealias OpHandler = Any // (inout UInt8)->Void
 //    var ops: [UInt8 : (String, OpHandler, UInt8)] = [:]
-    
+    // An op consists of an instruction id, an arguments string and a cycle count.
+    var ops =  [UInt8 : (Any, String?, UInt8)]()
     func reset() {
         // Set initial register values as in DMG/GB
         AF = 0x01B0
@@ -141,8 +142,12 @@ class CPU {
         SP = 0xFFFE
         PC = 0x0000
         
-//        ops[0x3C] = ("A", inc8, 4)
-//        ops[0x04] = ("B", inc8, 4)
+        ops[0x3C] = (inc8, "A", 4)
+        ops[0x04] = (inc8, "B", 4)
+        ops[0x3D] = (dec8, "A", 4)
+        //        ops[0x3C] = ("A", inc8, 4)
+        //        ops[0x04] = ("B", inc8, 4)
+
     }
     
     
@@ -157,7 +162,7 @@ class CPU {
     // N - Reset.
     // H - Set if carry from bit 3.
     // C - Not affected.
-    func inc(n: inout UInt8) {
+    func inc8(n: inout UInt8) {
     
         // increment n register and wrap to 0 if overflowed.
         n = n &+ 1
@@ -170,12 +175,12 @@ class CPU {
     
     // INC BC, DE, HL, SP
     // Flags unaffected
-    func inc(nn: inout UInt16) {
+    func inc16(nn: inout UInt16) {
         nn = nn &+ 1
     }
     
     // DEC A, B, C, D, E, H, L, (HL)
-    func dec(n: inout UInt8) {
+    func dec8(n: inout UInt8) {
         n = n &- 1
    
         F.Z = (n == 0)
@@ -184,12 +189,11 @@ class CPU {
     }
     
     // DEC BC, DE, HL, SP
-    func dec(nn: inout UInt16) {
+    func dec16(nn: inout UInt16) {
         nn = nn &- 1
     }
-    
-    func clockTick() {
 
+    func clockTick() {
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
 
@@ -200,61 +204,141 @@ class CPU {
         print("PC is \(PC)")
         print("opcode is 0x" + String(format: "%2X",opcode) )
 
-        /** interpret data/instruction
-         Each opcode can affect the registers, the RAM and the interrupts
-         **/
-        switch opcode {
-        case 0x00:  /// NOP
-            subOpCycles = 4
-
-            // Make LD,INC, etc. functions that takes various args so we can look
-            // them up in a table instead of this switch or at least reduce its size.
-        case 0x01:  /// LD BC, d16
-            BC = ram.read16(at: PC)
-            incPc()
-            incPc()
-            subOpCycles = 12
-
-        case 0x02:  /// LD (BC), A, load location at BC with register A
-            ram.write(at: BC, with: A)
-            subOpCycles = 8
-
-        case 0x03:  /// INC BC
-            inc(nn: &BC)
-            subOpCycles = 8
-
-        case 0x04:  /// INC B
-            inc(n: &B)
-            subOpCycles = 4
-
-        case 0x05:  /// DEC B
-            B -= 1
-            subOpCycles = 4
-
-        case 0x06:  /// LD B, d8
-            B = ram.read8(at: PC)
-            subOpCycles = 8
-
-        // LD SP, d16
-        case 0x31:
-            SP = ram.read16(at: PC)
-            incPc()
-            incPc()
-            subOpCycles = 12
+        guard let (op, args, cycles) = ops[opcode] else {
+            print("ERROR reading from ops table")
+            return
+        }
+        
+        subOpCycles = cycles
+        switch op {
+        case let (operation as (inout UInt8)->()):
+            nArgCaller(handler: operation, n: args)
             
-        case 0x3C:
-            inc(n: &A) // INC A
-            subOpCycles = 4
-
-        case 0x3D:
-            dec(n: &A)
-            subOpCycles = 4
+        case let (operation as (inout UInt8, inout UInt8)->()):
+            print("two 8 bit args")
+        
+        case let (operation as (inout UInt16)->()):
+            nArgCaller(handler: operation, n: args)
+        
+        case let (operation as (inout UInt16, inout UInt16)->()):
+            print("two 16 bit args")
             
         default:
-            subOpCycles = 4
-            break
+            print("shite")
+        }
+//        if let operation = op as? (inout UInt8)->() {
+//            nArgCaller(handler: operation, n: nId1)
+//        }
+    }
+    
+    func nArgCaller(handler: (inout UInt8)->(), n: String?) {
+        switch n {
+        case "A": handler(&A)
+        case "B": handler(&B)
+        case "C": handler(&C)
+        case "D": handler(&D)
+        case "E": handler(&E)
+        case "H": handler(&H)
+        case "L": handler(&L)
+        default:
+            print("shit")
         }
     }
+    
+//    func nArgCaller(handler: (inout UInt8, inout UInt8)->(), n: String?) {
+//
+//        guard let n1 = arg8Ptr(from: n), let n2 = arg8Ptr(from: <#T##String#>)
+//        switch n {
+//        case "A_B": handler(&A, &B)
+//        case "B": handler(&B)
+//        case "C": handler(&C)
+//        case "D": handler(&D)
+//        case "E": handler(&E)
+//        case "H": handler(&H)
+//        case "L": handler(&L)
+//        default:
+//            print("shit")
+//        }
+//    }
+
+    func nArgCaller(handler: (inout UInt16)->(), n: String?) {
+        switch n {
+        case "BC": handler(&BC)
+        case "DE": handler(&DE)
+        case "HL": handler(&HL)
+        case "SP": handler(&SP)
+        default:
+            print("shit")
+        }
+    }
+
+//    func clockTick() {
+//
+//        subOpCycles -= 1
+//        if subOpCycles > 0 {  return }
+//
+//        /// Read from ram
+//        let opcode = ram.read8(at: PC)
+//        incPc()
+//
+//        print("PC is \(PC)")
+//        print("opcode is 0x" + String(format: "%2X",opcode) )
+//
+//        /** interpret data/instruction
+//         Each opcode can affect the registers, the RAM and the interrupts
+//         **/
+//        switch opcode {
+//        case 0x00:  /// NOP
+//            subOpCycles = 4
+//
+//            // Make LD,INC, etc. functions that takes various args so we can look
+//            // them up in a table instead of this switch or at least reduce its size.
+//        case 0x01:  /// LD BC, d16
+//            BC = ram.read16(at: PC)
+//            incPc()
+//            incPc()
+//            subOpCycles = 12
+//
+//        case 0x02:  /// LD (BC), A, load location at BC with register A
+//            ram.write(at: BC, with: A)
+//            subOpCycles = 8
+//
+//        case 0x03:  /// INC BC
+//            inc(nn: &BC)
+//            subOpCycles = 8
+//
+//        case 0x04:  /// INC B
+//            inc(n: &B)
+//            subOpCycles = 4
+//
+//        case 0x05:  /// DEC B
+//            B -= 1
+//            subOpCycles = 4
+//
+//        case 0x06:  /// LD B, d8
+//            B = ram.read8(at: PC)
+//            subOpCycles = 8
+//
+//        // LD SP, d16
+//        case 0x31:
+//            SP = ram.read16(at: PC)
+//            incPc()
+//            incPc()
+//            subOpCycles = 12
+//
+//        case 0x3C:
+//            inc(n: &A) // INC A
+//            subOpCycles = 4
+//
+//        case 0x3D:
+//            dec(n: &A)
+//            subOpCycles = 4
+//
+//        default:
+//            subOpCycles = 4
+//            break
+//        }
+//    }
     
 }
 
