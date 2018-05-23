@@ -127,6 +127,11 @@ class CPU {
     var ram: MEMORY!
     var subOpCycles: UInt8 = 4
     
+    // FIXME: Turn this into an array.
+    // An op consists of a tuple grouping an identifier for the register, a function pointer and a cycle count.
+//    typealias OpHandler = Any // (inout UInt8)->Void
+//    var ops: [UInt8 : (String, OpHandler, UInt8)] = [:]
+    
     func reset() {
         // Set initial register values as in DMG/GB
         AF = 0x01B0
@@ -135,6 +140,9 @@ class CPU {
         HL = 0x014D
         SP = 0xFFFE
         PC = 0x0000
+        
+//        ops[0x3C] = ("A", inc8, 4)
+//        ops[0x04] = ("B", inc8, 4)
     }
     
     
@@ -166,12 +174,18 @@ class CPU {
         nn = nn &+ 1
     }
     
+    // DEC A, B, C, D, E, H, L, (HL)
     func dec(n: inout UInt8) {
         n = n &- 1
    
         F.Z = (n == 0)
         F.H = (n == 0xf) // H set if no borrow from bit 4 ?
         F.N = true // N set to 1
+    }
+    
+    // DEC BC, DE, HL, SP
+    func dec(nn: inout UInt16) {
+        nn = nn &- 1
     }
     
     func clockTick() {
@@ -227,11 +241,21 @@ class CPU {
             incPc()
             incPc()
             subOpCycles = 12
+            
+        case 0x3C:
+            inc(n: &A) // INC A
+            subOpCycles = 4
+
+        case 0x3D:
+            dec(n: &A)
+            subOpCycles = 4
+            
         default:
             subOpCycles = 4
             break
         }
     }
+    
 }
 
 class RAM : MEMORY {

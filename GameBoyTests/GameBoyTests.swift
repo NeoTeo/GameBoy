@@ -11,9 +11,12 @@ import XCTest
 
 class GameBoyTests: XCTestCase {
     
+    var gb: SYSTEM!
+    
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
+        gb = Gameboy()
     }
     
     override func tearDown() {
@@ -29,14 +32,13 @@ class GameBoyTests: XCTestCase {
     }
     
     func testSystem() {
-        let gb = Gameboy()
         // Check initial state of flag register
         XCTAssert(gb.cpu.F.rawValue == 0xB0)
         print("Gameboy F register: \(String(gb.cpu.F.rawValue, radix: 2))")
     }
     
     func testCPUFRegister() {
-        let cpu = CPU()
+        let cpu = gb.cpu
         cpu.F.Z = true
         cpu.F.N = true
         cpu.F.H = true
@@ -58,6 +60,34 @@ class GameBoyTests: XCTestCase {
 
     }
     
+    func testInc8HalfCarry() {
+        
+        gb.cpu.AF = 0x0f00
+        gb.cpu.ram.write(at: 0x0000, with: 0x3C) // Add instruction INC A
+        
+        // Run four ticks that the INC A takes
+        for _ in 0 ..< 4 { gb.cpu.clockTick() }
+        
+        let f = gb.cpu.F
+        XCTAssert(f.H)
+        XCTAssertFalse(f.Z || f.N || f.C)
+        print("AF is " + String(format: "%2X", gb.cpu.AF))
+    }
+
+    func testDec8HalfCarry() {
+        
+        gb.cpu.AF = 0x01020
+        gb.cpu.ram.write(at: 0x0000, with: 0x3D) // Add instruction INC A
+        
+        // Run four ticks that the INC A takes
+        for _ in 0 ..< 4 { gb.cpu.clockTick() }
+        
+        let f = gb.cpu.F
+        XCTAssert( f.H && f.N )
+        XCTAssertFalse( f.Z || f.C )
+        print("AF is " + String(format: "%2X", gb.cpu.AF))
+    }
+
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {
