@@ -88,6 +88,59 @@ class GameBoyTests: XCTestCase {
         print("AF is " + String(format: "%2X", gb.cpu.AF))
     }
 
+    func testIncDecHLptr() {
+        
+        // Set the memory location 0xC000 to the instruction INC (HL)
+        gb.cpu.ram.write(at: 0xC000, with: 0x34)
+        
+        // Set the memory location at 0xC001 to the value 0x42
+        gb.cpu.ram.write(at: 0xC001, with: 0x42)
+        
+        // Set the HL register to the address 1 byte below the instruction
+        gb.cpu.HL = 0xC001
+        
+        // Set the PC to the memory location 0xC000
+        gb.cpu.PC = 0xC000
+        
+        // Run 12 ticks that the INC (HL) takes
+        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+
+        // Check that the value in memory location 0xC001 is now 0x43
+        var incVal = gb.cpu.ram.read8(at: 0xC001)
+        gb.cpu.incPc()
+        
+        XCTAssert(incVal == 0x43)
+        
+        // Now decrement it again.
+        // Set the memory location 0xC002 to the instruction DEC (HL)
+        gb.cpu.ram.write(at: 0xC002, with: 0x35)
+
+        // Run 12 ticks that the DEC (HL) takes
+        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+        
+        // Check that the value in memory location 0xC001 is now 0x42
+        incVal = gb.cpu.ram.read8(at: 0xC001)
+        
+        XCTAssert(incVal == 0x42)
+
+    }
+    
+    func testLd() {
+    
+        // Clear the BC register
+        gb.cpu.BC = 0x0000
+        // Place the LD BC, i16 instruction in the top of RAM
+        gb.cpu.ram.write(at: 0xC000, with: 0x01)
+        // Place the 16 bit value to copy into the BC register in the next two bytes
+        gb.cpu.ram.insert(data: [0x42, 0x69], at: 0xC001)
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        // Run 12 ticks that the instruction takes
+        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+        // Check that the BC register now contains 0x4269
+        XCTAssert( gb.cpu.BC == 0x4269)
+    }
+    
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {

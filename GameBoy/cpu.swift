@@ -125,14 +125,44 @@ class CPU {
     }
     
     var ram: MEMORY!
-    var subOpCycles: UInt8 = 4
+    var subOpCycles: UInt8 = 1
     
-    // FIXME: Turn this into an array.
+    enum OpType {
+        case nop
+        case inc8
+        case inc16
+        case dec8
+        case dec16
+//        case ld8_8
+        case ld8_16
+//        case ld16_8
+        case ld16_16
+    }
+    
+    enum RegisterType {
+        case A
+        case B
+        case C
+        case D
+        case E
+        case H
+        case L
+        case BC
+        case DE
+        case HL
+        case SP
+        case HLptr
+        
+        case i8
+        case i16
+        
+        case noReg
+    }
 
-    typealias OpHandler = Any // (inout UInt8)->Void
-//    var ops: [UInt8 : (String, OpHandler, UInt8)] = [:]
-    // An op consists of an instruction id, an arguments string and a cycle count.
-    var ops =  [UInt8 : (Any, String?, UInt8)]()
+    // An op consists of an instruction id, a tuple of argument ids and a cycle count.
+    // FIXME: Make this into an array and add all the ops as part of its definition.
+    var ops =  [UInt8 : (OpType, (RegisterType, RegisterType), UInt8)]()
+    
     func reset() {
         // Set initial register values as in DMG/GB
         AF = 0x01B0
@@ -141,58 +171,70 @@ class CPU {
         HL = 0x014D
         SP = 0xFFFE
         PC = 0x0000
-        
-        ops[0x3C] = (inc8, "A", 4)
-        ops[0x04] = (inc8, "B", 4)
-        ops[0x3D] = (dec8, "A", 4)
-        //        ops[0x3C] = ("A", inc8, 4)
-        //        ops[0x04] = ("B", inc8, 4)
-
-    }
     
-    
-    func incPc() {
-        PC = (PC &+ 1)
+        // Move this to definition of ops
+        ops[0x00] = (.nop, (.noReg, .noReg), 4)
+        ops[0x01] = (.ld16_16, (.BC, .i16), 12)
+        ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
+        ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
+        ops[0x3C] = (.inc8, (.A, .noReg), 4)
+        ops[0x04] = (.inc8, (.B, .noReg), 4)
+        ops[0x3D] = (.dec8, (.A, .noReg), 4)
     }
 
-
-    // INC A, B, C, D, E, H, L, (HL)
-    // Flags affected:
-    // Z - Set if result is zero.
-    // N - Reset.
-    // H - Set if carry from bit 3.
-    // C - Not affected.
-    func inc8(n: inout UInt8) {
     
-        // increment n register and wrap to 0 if overflowed.
-        n = n &+ 1
-        
-        // Set F register correctly
-        F.Z = (n == 0)
-        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
-        F.N = false
+    enum CPUError : Error {
+        case UnknownRegister
+        case RegisterReadFailure
+        case RegisterWriteFailure
     }
     
-    // INC BC, DE, HL, SP
-    // Flags unaffected
-    func inc16(nn: inout UInt16) {
-        nn = nn &+ 1
+    func getVal8(for register: RegisterType) throws -> UInt8 {
+        switch register {
+            case .A: return A
+            case .B: return B
+            case .C: return C
+            case .D: return D
+            case .E: return E
+            case .H: return H
+            case .L: return L
+            default: throw CPUError.UnknownRegister
+        }
     }
     
-    // DEC A, B, C, D, E, H, L, (HL)
-    func dec8(n: inout UInt8) {
-        n = n &- 1
-   
-        F.Z = (n == 0)
-        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
-        F.N = true // N set to 1
+    func set(val: UInt8, for register: RegisterType) throws {
+        switch register {
+        case .A: A = val
+        case .B: B = val
+        case .C: C = val
+        case .D: D = val
+        case .E: E = val
+        case .H: H = val
+        case .L: L = val
+        default: throw CPUError.UnknownRegister
+        }
     }
     
-    // DEC BC, DE, HL, SP
-    func dec16(nn: inout UInt16) {
-        nn = nn &- 1
+    func getVal16(for register: RegisterType) throws -> UInt16 {
+        switch register {
+            case .BC: return BC
+            case .DE: return DE
+            case .HL: return HL
+            case .SP: return SP
+            default: throw CPUError.UnknownRegister
+        }
     }
-
+    
+    func set(val: UInt16, for register: RegisterType) throws {
+        switch register {
+        case .BC: BC = val
+        case .DE: DE = val
+        case .HL: HL = val
+        case .SP: SP = val
+        default: throw CPUError.UnknownRegister
+        }
+    }
+    
     func clockTick() {
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
@@ -210,68 +252,28 @@ class CPU {
         }
         
         subOpCycles = cycles
-        switch op {
-        case let (operation as (inout UInt8)->()):
-            nArgCaller(handler: operation, n: args)
-            
-        case let (operation as (inout UInt8, inout UInt8)->()):
-            print("two 8 bit args")
-        
-        case let (operation as (inout UInt16)->()):
-            nArgCaller(handler: operation, n: args)
-        
-        case let (operation as (inout UInt16, inout UInt16)->()):
-            print("two 16 bit args")
-            
-        default:
-            print("shite")
-        }
-//        if let operation = op as? (inout UInt8)->() {
-//            nArgCaller(handler: operation, n: nId1)
-//        }
-    }
-    
-    func nArgCaller(handler: (inout UInt8)->(), n: String?) {
-        switch n {
-        case "A": handler(&A)
-        case "B": handler(&B)
-        case "C": handler(&C)
-        case "D": handler(&D)
-        case "E": handler(&E)
-        case "H": handler(&H)
-        case "L": handler(&L)
-        default:
-            print("shit")
+        do {
+            switch op {
+            case .nop:
+                subOpCycles = 4
+            case .ld16_16:
+                try ld16_16(argTypes: args)
+            case .ld8_16:
+                try ld8_16(argTypes: args)
+            case .dec8:
+                try dec8(argType: args.0)
+            case .dec16:
+                try dec16(argType: args.0)
+            case .inc8:
+                try inc8(argType: args.0)
+            case .inc16:
+                try inc16(argType: args.0)
+            }
+        } catch {
+            print("Error executing opcodes \(error)")
         }
     }
     
-//    func nArgCaller(handler: (inout UInt8, inout UInt8)->(), n: String?) {
-//
-//        guard let n1 = arg8Ptr(from: n), let n2 = arg8Ptr(from: <#T##String#>)
-//        switch n {
-//        case "A_B": handler(&A, &B)
-//        case "B": handler(&B)
-//        case "C": handler(&C)
-//        case "D": handler(&D)
-//        case "E": handler(&E)
-//        case "H": handler(&H)
-//        case "L": handler(&L)
-//        default:
-//            print("shit")
-//        }
-//    }
-
-    func nArgCaller(handler: (inout UInt16)->(), n: String?) {
-        switch n {
-        case "BC": handler(&BC)
-        case "DE": handler(&DE)
-        case "HL": handler(&HL)
-        case "SP": handler(&SP)
-        default:
-            print("shit")
-        }
-    }
-
 //    func clockTick() {
 //
 //        subOpCycles -= 1
@@ -342,6 +344,104 @@ class CPU {
     
 }
 
+// Extension defining instructions
+extension CPU {
+    func incPc(_ bytes: UInt16=1) {
+        PC = (PC &+ bytes)
+    }
+    
+    // LD n, nn
+    // Put value nn into n
+    // Flags unaffected.
+    func ld16_16(argTypes: (RegisterType, RegisterType)) throws {
+        var nn: UInt16
+        let source = argTypes.1
+        let target = argTypes.0
+        
+        if source == .i16 {
+            nn = ram.read16(at: PC)
+            incPc(2)
+        } else {
+            nn = try getVal16(for: source)
+        }
+        
+        try set(val: nn, for: target)
+    }
+    
+    // LD A,
+    func ld8_16(argTypes: (RegisterType, RegisterType)) throws {
+        
+    }
+    // INC A, B, C, D, E, H, L, (HL)
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - Reset.
+    // H - Set if carry from bit 3.
+    // C - Not affected.
+    func inc8(argType: RegisterType) throws {
+
+        var n: UInt8
+        // pointer indirection special case
+        if argType == .HLptr {
+            
+            let addr = try getVal16(for: .HL)
+            n = ram.read8(at: addr)
+            n = n &+ 1
+            ram.write(at: addr, with: n)
+        } else {
+
+            n = try getVal8(for: argType)
+            // increment n register and wrap to 0 if overflowed.
+            n = n &+ 1
+            try set(val: n, for: argType)
+        }
+        // Set F register correctly
+        F.Z = (n == 0)
+        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
+        F.N = false
+        
+    }
+    
+    // INC BC, DE, HL, SP
+    // Flags unaffected
+    func inc16(argType: RegisterType) throws {
+        var nn = try getVal16(for: argType)
+        nn = nn &+ 1
+        try set(val: nn, for: argType)
+    }
+    
+    // DEC A, B, C, D, E, H, L, (HL)
+    func dec8(argType: RegisterType) throws {
+        var n: UInt8
+        
+        // pointer indirection special case
+        if argType == .HLptr {
+            
+            let addr = try getVal16(for: .HL)
+            n = ram.read8(at: addr)
+            n = n &- 1
+            ram.write(at: addr, with: n)
+
+        } else {
+            
+            n = try getVal8(for: argType)
+            n = n &- 1
+            try set(val: n, for: argType)
+        }
+        
+        F.Z = (n == 0)
+        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
+        F.N = true // N set to 1
+    }
+    
+    // DEC BC, DE, HL, SP
+    func dec16(argType: RegisterType) throws {
+        var nn = try getVal16(for: argType)
+        nn = nn &- 1
+        try set(val: nn, for: argType)
+    }
+}
+
 class RAM : MEMORY {
 
     let size: UInt16// in bytes
@@ -362,6 +462,7 @@ class RAM : MEMORY {
         return ram[Int(location)]
     }
     
+    // FIXME: Add some checks for writing to illegal addresses. 
     func write(at location: UInt16, with value: UInt8) {
         ram[Int(location)] = value
     }
