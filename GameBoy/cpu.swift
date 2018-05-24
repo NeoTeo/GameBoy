@@ -135,7 +135,7 @@ class CPU {
         case dec16
 //        case ld8_8
         case ld8_16
-//        case ld16_8
+        case ld16_8
         case ld16_16
     }
     
@@ -151,10 +151,17 @@ class CPU {
         case DE
         case HL
         case SP
+        
+        case BCptr
+        case DEptr
         case HLptr
+        case HLptrInc
+        case HLptrDec
         
         case i8
+        case i8ptr
         case i16
+        case i16ptr
         
         case noReg
     }
@@ -175,6 +182,7 @@ class CPU {
         // Move this to definition of ops
         ops[0x00] = (.nop, (.noReg, .noReg), 4)
         ops[0x01] = (.ld16_16, (.BC, .i16), 12)
+        ops[0x02] = (.ld16_8, (.BCptr, .A), 8)
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
@@ -191,14 +199,21 @@ class CPU {
     
     func getVal8(for register: RegisterType) throws -> UInt8 {
         switch register {
-            case .A: return A
-            case .B: return B
-            case .C: return C
-            case .D: return D
-            case .E: return E
-            case .H: return H
-            case .L: return L
-            default: throw CPUError.UnknownRegister
+        case .A: return A
+        case .B: return B
+        case .C: return C
+        case .D: return D
+        case .E: return E
+        case .H: return H
+        case .L: return L
+        
+        case .BCptr: return read8(at: BC)
+        case .DEptr: return read8(at: DE)
+        case .HLptr: return read8(at: HL)
+
+        case .i8: return read8(at: PC)
+        
+        default: throw CPUError.UnknownRegister
         }
     }
     
@@ -211,17 +226,25 @@ class CPU {
         case .E: E = val
         case .H: H = val
         case .L: L = val
+            
+        case .BCptr: write(at: BC, with: val)
+        case .DEptr: write(at: DE, with: val)
+        case .HLptr: write(at: HL, with: val)
+
         default: throw CPUError.UnknownRegister
         }
     }
     
     func getVal16(for register: RegisterType) throws -> UInt16 {
         switch register {
-            case .BC: return BC
-            case .DE: return DE
-            case .HL: return HL
-            case .SP: return SP
-            default: throw CPUError.UnknownRegister
+        case .BC: return BC
+        case .DE: return DE
+        case .HL: return HL
+        case .SP: return SP
+            
+        case .i16: return read16(at: PC)
+
+        default: throw CPUError.UnknownRegister
         }
     }
     
@@ -231,8 +254,27 @@ class CPU {
         case .DE: DE = val
         case .HL: HL = val
         case .SP: SP = val
+            
         default: throw CPUError.UnknownRegister
         }
+    }
+    
+    // Wrappers to increment PC as appropriate
+    func read8(at location: UInt16) -> UInt8 {
+        let val = ram.read8(at: location)
+        incPc()
+        return val
+    }
+    
+    func read16(at location: UInt16) -> UInt16 {
+        let val = ram.read16(at: location)
+        incPc()
+        return val
+    }
+    
+    func write(at location: UInt16, with value: UInt8) {
+        ram.write(at: location, with: value)
+        // writes don't increment PC
     }
     
     func clockTick() {
@@ -240,8 +282,7 @@ class CPU {
         if subOpCycles > 0 {  return }
 
         /// Read from ram
-        let opcode = ram.read8(at: PC)
-        incPc()
+        let opcode = read8(at: PC)
 
         print("PC is \(PC)")
         print("opcode is 0x" + String(format: "%2X",opcode) )
@@ -258,6 +299,8 @@ class CPU {
                 subOpCycles = 4
             case .ld16_16:
                 try ld16_16(argTypes: args)
+            case .ld16_8:
+                try ld16_8(argTypes: args)
             case .ld8_16:
                 try ld8_16(argTypes: args)
             case .dec8:
@@ -359,7 +402,7 @@ extension CPU {
         let target = argTypes.0
         
         if source == .i16 {
-            nn = ram.read16(at: PC)
+            nn = read16(at: PC)
             incPc(2)
         } else {
             nn = try getVal16(for: source)
@@ -368,10 +411,22 @@ extension CPU {
         try set(val: nn, for: target)
     }
     
-    // LD A,
+    // LD
     func ld8_16(argTypes: (RegisterType, RegisterType)) throws {
         
     }
+    
+    // LD 16 bit target with 8 bit value
+    func ld16_8(argTypes: (RegisterType, RegisterType)) throws {
+        
+        let source = argTypes.1
+        let target = argTypes.0
+
+        let srcVal = try getVal8(for: source)
+        try set(val: srcVal, for: target)
+        
+    }
+    
     // INC A, B, C, D, E, H, L, (HL)
     // Flags affected:
     // Z - Set if result is zero.
@@ -385,9 +440,9 @@ extension CPU {
         if argType == .HLptr {
             
             let addr = try getVal16(for: .HL)
-            n = ram.read8(at: addr)
+            n = read8(at: addr)
             n = n &+ 1
-            ram.write(at: addr, with: n)
+            write(at: addr, with: n)
         } else {
 
             n = try getVal8(for: argType)
@@ -418,9 +473,9 @@ extension CPU {
         if argType == .HLptr {
             
             let addr = try getVal16(for: .HL)
-            n = ram.read8(at: addr)
+            n = read8(at: addr)
             n = n &- 1
-            ram.write(at: addr, with: n)
+            write(at: addr, with: n)
 
         } else {
             

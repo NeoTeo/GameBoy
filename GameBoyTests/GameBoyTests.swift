@@ -107,7 +107,6 @@ class GameBoyTests: XCTestCase {
 
         // Check that the value in memory location 0xC001 is now 0x43
         var incVal = gb.cpu.ram.read8(at: 0xC001)
-        gb.cpu.incPc()
         
         XCTAssert(incVal == 0x43)
         
@@ -125,8 +124,8 @@ class GameBoyTests: XCTestCase {
 
     }
     
-    func testLd() {
-    
+    func testLd0x01() {
+        // test  LD BC, i16
         // Clear the BC register
         gb.cpu.BC = 0x0000
         // Place the LD BC, i16 instruction in the top of RAM
@@ -139,6 +138,24 @@ class GameBoyTests: XCTestCase {
         for _ in 0 ..< 12 { gb.cpu.clockTick() }
         // Check that the BC register now contains 0x4269
         XCTAssert( gb.cpu.BC == 0x4269)
+    }
+    
+    func testLd0x02() {
+        // test LD (BC), A
+        // Set the BC register to the address of the top of the RAM + 1 byte
+        gb.cpu.BC = 0xC001
+        // Set the A register to the value 0x42
+        gb.cpu.A = 0x42
+        // Set the byte at the top of RAM to be be the LD (BC), A instruction
+        gb.cpu.ram.write(at: 0xC000, with: 0x02)
+        // Set the PC to the top of the RAM
+        gb.cpu.PC = 0xC000
+        // Run 8 ticks that the instruction takes
+        for _ in 0 ..< 8 { gb.cpu.clockTick() }
+        // Read the RAM at the location BC is pointing to
+        let resVal = gb.cpu.read8(at: gb.cpu.BC)
+        // Check that the value matches the value in register A
+        XCTAssert( resVal == gb.cpu.A )
     }
     
     func testPerformanceExample() {
