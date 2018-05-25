@@ -96,9 +96,14 @@ class GameBoyTests: XCTestCase {
         case H(Bool)
         case C(Bool)
         
-//        func isSet(in val: UInt8) -> Bool {
-//            self
-//        }
+        func isSame(in val: UInt8) -> Bool {
+            switch self {
+            case .C(let state): return (((val >> 4) & 1) == 1) == state
+            case .H(let state): return (((val >> 5) & 1) == 1) == state
+            case .N(let state): return (((val >> 6) & 1) == 1) == state
+            case .Z(let state): return (((val >> 7) & 1) == 1) == state
+            }
+        }
     }
     
     func testInc8() {
@@ -108,9 +113,10 @@ class GameBoyTests: XCTestCase {
         
         // A test consists of a start value, an end value and an array of FlagTests
         // which declare the expected flag setting at the end of the test.
-        let tests: [(UInt8, UInt8,[FlagTest])] = [(0x42, 0x43,[.N(false)]),
-                                                  (0xFF, 0x00,[.Z(false)]),
-                                                  (0x15, 0xF0,[.H(true)])]
+        // Perhaps I should use a unionset for the flag testing instead...
+        let tests: [(UInt8, UInt8,[FlagTest])] = [(0x42, 0x43,[.Z(false), .N(false)]),
+                                                  (0xFF, 0x00,[.Z(true), .N(false)]),
+                                                  (0x0F, 0x10,[.Z(false), .H(true), .N(false)])]
         
         let opCodes: [UInt8] = [0x04, 0x14, 0x24, 0x0C, 0x1C, 0x2C, 0x3C]
         var opIdx = 0
@@ -126,7 +132,7 @@ class GameBoyTests: XCTestCase {
                 try? gb.cpu.set(val: startValue, for: reg)
                 // Set the memory location 0xC000 to the instruction opcode
                 gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
-                opIdx += 1
+                
                 // Set the PC to the instruction location
                 gb.cpu.PC = 0xC000
                 // Run the number of ticks the instruction takes
@@ -141,11 +147,12 @@ class GameBoyTests: XCTestCase {
                 XCTAssert(endValue == ev)
                 
                 // check flags
-                let flags = gb.cpu.F.rawValue
+//                let flags = gb.cpu.F.rawValue
 //                for t in ft {
-//                    XCTAssert(
+//                    XCTAssert(t.isSet(in: flags))
 //                }
             }
+            opIdx += 1
         }
         // We should check the flags too.
         // Check Z 1 H
