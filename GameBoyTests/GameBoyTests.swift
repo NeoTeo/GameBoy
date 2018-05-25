@@ -143,19 +143,17 @@ class GameBoyTests: XCTestCase {
                     XCTFail("testInc8 could not get value for register \(reg)")
                     break
                 }
-                // Check that the value of the BC register is one larger
+                // Check that the value of the register matches our expectations
                 XCTAssert(endValue == ev)
                 
                 // check flags
-//                let flags = gb.cpu.F.rawValue
-//                for t in ft {
-//                    XCTAssert(t.isSet(in: flags))
-//                }
+                let flags = gb.cpu.F.rawValue
+                for t in ft {
+                    XCTAssert(t.isSame(in: flags))
+                }
             }
             opIdx += 1
         }
-        // We should check the flags too.
-        // Check Z 1 H
     }
 
     func testInc16() {
