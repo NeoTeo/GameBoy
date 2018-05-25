@@ -88,6 +88,63 @@ class GameBoyTests: XCTestCase {
         print("AF is " + String(format: "%2X", gb.cpu.AF))
     }
 
+    let r16Ids: [CPU.RegisterType] = [ .BC, .DE, .HL, .SP ]
+    let r8Ids: [CPU.RegisterType] = [.A, .B, .C, .D, .E, .H, .L]
+    
+    func testInc16() {
+        
+        // Make sure we stop if any of the tests fail
+        continueAfterFailure = false
+
+        let opCodes: [UInt8] = [0x03, 0x13, 0x23, 0x33]
+        var opIdx = 0
+        
+        for reg in r16Ids {
+            let startValue: UInt16 = 0x00FF
+            // Set the register to a value
+            try? gb.cpu.set(val: startValue, for: reg)
+            // Set the memory location 0xC000 to the instruction opcode
+            gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
+            opIdx += 1
+            // Set the PC to the instruction location
+            gb.cpu.PC = 0xC000
+            // Run the 8 ticks that the instruction takes
+            for _ in 0 ..< 8 { gb.cpu.clockTick() }
+            
+            // Get the value for the register
+            let endValue = try? gb.cpu.getVal16(for: reg)
+            // Check that the value of the BC register is one larger
+            XCTAssert(endValue == startValue+1)
+        }
+    }
+
+    func testDec16() {
+        
+        // Make sure we stop if any of the tests fail
+        continueAfterFailure = false
+
+        let opCodes: [UInt8] = [0x0B, 0x1B, 0x2B, 0x3B]
+        var opIdx = 0
+
+        for reg in r16Ids {
+            let startValue: UInt16 = 0x0100
+            // Set the register to a value
+            try? gb.cpu.set(val: startValue, for: reg)
+            // Set the memory location 0xC000 to the instruction opcode
+            gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
+            opIdx += 1
+            // Set the PC to the instruction location
+            gb.cpu.PC = 0xC000
+            // Run the 8 ticks that the instruction takes
+            for _ in 0 ..< 8 { gb.cpu.clockTick() }
+            
+            // Get the value for the register
+            let endValue = try? gb.cpu.getVal16(for: reg)
+            // Check that the value of the BC register is one larger
+            XCTAssert(endValue == startValue-1)
+        }
+    }
+
     func testIncDecHLptr() {
         
         // Set the memory location 0xC000 to the instruction INC (HL)
