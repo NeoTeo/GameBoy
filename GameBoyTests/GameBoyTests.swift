@@ -89,8 +89,68 @@ class GameBoyTests: XCTestCase {
     }
 
     let r16Ids: [CPU.RegisterType] = [ .BC, .DE, .HL, .SP ]
-    let r8Ids: [CPU.RegisterType] = [.A, .B, .C, .D, .E, .H, .L]
+    let r8Ids: [CPU.RegisterType] = [.B, .D, .H, .C, .E, .L, .A]
+    enum FlagTest {
+        case Z(Bool)
+        case N(Bool)
+        case H(Bool)
+        case C(Bool)
+        
+//        func isSet(in val: UInt8) -> Bool {
+//            self
+//        }
+    }
     
+    func testInc8() {
+        
+        // Make sure we stop if any of the tests fail
+        continueAfterFailure = false
+        
+        // A test consists of a start value, an end value and an array of FlagTests
+        // which declare the expected flag setting at the end of the test.
+        let tests: [(UInt8, UInt8,[FlagTest])] = [(0x42, 0x43,[.N(false)]),
+                                                  (0xFF, 0x00,[.Z(false)]),
+                                                  (0x15, 0xF0,[.H(true)])]
+        
+        let opCodes: [UInt8] = [0x04, 0x14, 0x24, 0x0C, 0x1C, 0x2C, 0x3C]
+        var opIdx = 0
+        
+        for reg in r8Ids {
+            
+            // We test each register multiple times for different flag states
+            for (sv, ev, ft) in tests {
+            
+                // set start value such that the first inc will cause a half carry
+                let startValue: UInt8 = sv
+                // Set the register to a value
+                try? gb.cpu.set(val: startValue, for: reg)
+                // Set the memory location 0xC000 to the instruction opcode
+                gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
+                opIdx += 1
+                // Set the PC to the instruction location
+                gb.cpu.PC = 0xC000
+                // Run the number of ticks the instruction takes
+                for _ in 0 ..< 4 { gb.cpu.clockTick() }
+                
+                // Get the value for the register
+                guard let endValue = try? gb.cpu.getVal8(for: reg) else {
+                    XCTFail("testInc8 could not get value for register \(reg)")
+                    break
+                }
+                // Check that the value of the BC register is one larger
+                XCTAssert(endValue == ev)
+                
+                // check flags
+                let flags = gb.cpu.F.rawValue
+//                for t in ft {
+//                    XCTAssert(
+//                }
+            }
+        }
+        // We should check the flags too.
+        // Check Z 1 H
+    }
+
     func testInc16() {
         
         // Make sure we stop if any of the tests fail
