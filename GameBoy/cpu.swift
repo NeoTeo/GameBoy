@@ -138,6 +138,10 @@ class CPU {
         case ld8_16
         case ld16_8
         case ld16_16
+        case rlca
+        
+        // cb prefix
+        case rlc
     }
     
     enum RegisterType {
@@ -188,6 +192,7 @@ class CPU {
         ops[0x04] = (.inc8, (.B, .noReg), 4)
         ops[0x05] = (.dec8, (.B, .noReg), 4)
         ops[0x06] = (.ld8_8, (.B, .i8), 8)
+        ops[0x07] = (.rlca, (.noReg, .noReg), 4) // not to confuse with RLC A of the CB prefix instructions
         ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
         ops[0x0A] = (.ld8_16, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
@@ -450,6 +455,13 @@ class CPU {
                 try inc8(argType: args.0)
             case .inc16:
                 try inc16(argType: args.0)
+            case .rlca:
+                try rlca()
+                
+                
+            // CB prefix
+            case .rlc:
+                try rlc(argType: args.0)
             }
         } catch {
             print("Error executing opcodes \(error) \(op)")
@@ -465,6 +477,26 @@ extension CPU {
         PC = (PC &+ bytes)
     }
 
+    func rlca() throws {
+        F.C = (A >> 7) == 1
+        A = A << 1
+        F.Z = false
+        F.N = false
+        F.H = false
+    }
+    
+    // CB prefix instruction
+    // RLC A, B, C, D, E, H, L, (HL)
+    // Rotate left
+    func rlc(argType: RegisterType) throws {
+        let reg = try getVal8(for: argType)
+        F.C = (reg >> 7) == 1
+        try set(val: reg << 1, for: argType)
+        F.Z = (reg == 0)
+        F.N = false
+        F.H = false
+    }
+    
     func ld8_8(argTypes: (RegisterType, RegisterType)) throws {
         var n: UInt8
         let source = argTypes.1

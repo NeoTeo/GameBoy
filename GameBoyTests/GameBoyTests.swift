@@ -369,6 +369,27 @@ class GameBoyTests: XCTestCase {
         }
     }
     
+    func testRlca() {
+        let testVal: UInt8 = 0x81
+        // Reset the F register
+        gb.cpu.F.rawValue = 0x00
+        // Set the register
+        gb.cpu.A = testVal
+        // Place the RLCA instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0x07)
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 4 { gb.cpu.clockTick() }
+        
+        // Check that the result matches the expected value
+        let expVal = 0x02
+        XCTAssert(gb.cpu.A == expVal)
+        let F = gb.cpu.F
+        XCTAssert(F.C == true)
+        XCTAssert((F.H && F.N && F.Z) == false)
+    }
+    
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {
