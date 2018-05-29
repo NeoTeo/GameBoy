@@ -280,6 +280,73 @@ class GameBoyTests: XCTestCase {
         XCTAssert( resVal == gb.cpu.A )
     }
     
+    func testLd8_8() {
+    
+        continueAfterFailure = false
+        
+        func checkForHLptrIncDec(regs: (CPU.RegisterType, CPU.RegisterType)) -> (CPU.RegisterType, CPU.RegisterType) {
+            var retRegs = regs
+            if (regs.0 == .HLptrDec) || (regs.0 == .HLptrInc) {
+                retRegs.0 = .HLptr
+                gb.cpu.HL = 0xC003
+            }
+            if (regs.1 == .HLptrDec) || (regs.1 == .HLptrInc) {
+                retRegs.1 = .HLptr
+                gb.cpu.HL = 0xC003
+            }
+
+            return retRegs
+        }
+
+        // Set up a list of the opcodes we want to test; all the LD 8bit, 8bit
+        var opsToTest = [UInt8]()
+        var i: UInt8 = 2
+        while i < 0x3F { opsToTest.append(i) ; i += 4 }
+        for i in 0x40 ..< 0x80 { opsToTest.append(UInt8(i)) }
+        opsToTest += [0xE2, 0xF2, 0xEA, 0xFA]
+        
+        // Set a random number as the test value
+        let testVal: UInt8 = UInt8(arc4random_uniform(0xFF))
+        for op in opsToTest {
+            
+            // Write the opcode to RAM
+            gb.cpu.write(at: 0xC000, with: op)
+            
+            // Get the registers involved in the operation
+            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+                XCTFail("No entry for given opcode \(String(format: "%2X", op))")
+                return
+            }
+            
+            // Set the PC to the address immediately after the opcode in case our
+            // source register is an immediate value which is expected to follow it
+            gb.cpu.PC = 0xC001
+            // We need to set the value that the source register/location will provide.
+            // If the source is an HLptrInc or HLptrDec we need to set the HL to a
+            // known address and to change the source register to an HLptr to avoid
+            // the HL getting [inc|dec]remented; checkForHLptrIncDec handles this.
+            let (destReg, sourceReg) = checkForHLptrIncDec(regs: regs)
+            // Set the source register to our test value we can check against
+            try? gb.cpu.set(val: testVal, for: sourceReg)
+            
+            // Set the PC to the top of the RAM
+            gb.cpu.PC = 0xC000
+            // Run the ticks that the instruction takes
+            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            
+            // If the instruction we just executed contained an HLptrInc/HLptrDec source
+            // or destination register then has [inc|dec]remented the HL by one
+            // and we now need to reset it so we can read it.
+            _ = checkForHLptrIncDec(regs: regs)
+            
+            // Read the value at the destination address
+            let resVal = try! gb.cpu.getVal8(for: destReg)
+            // Check that the value matches the value in register A
+            XCTAssert( resVal == testVal )
+
+        }
+    }
+    
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {

@@ -133,7 +133,7 @@ class CPU {
         case inc16
         case dec8
         case dec16
-//        case ld8_8
+        case ld8_8
         case ld8_16
         case ld16_8
         case ld16_16
@@ -186,27 +186,42 @@ class CPU {
         ops[0x03] = (.inc16, (.BC, .noReg), 8)
         ops[0x04] = (.inc8, (.B, .noReg), 4)
         ops[0x05] = (.dec8, (.B, .noReg), 4)
+        ops[0x06] = (.ld8_8, (.B, .i8), 8)
+        ops[0x0A] = (.ld8_16, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
         ops[0x0D] = (.dec8, (.C, .noReg), 4)
+        ops[0x0E] = (.ld8_8, (.C, .i8), 8)
+        ops[0x12] = (.ld16_8, (.DEptr, .A), 8)
         ops[0x13] = (.inc16, (.DE, .noReg), 8)
         ops[0x14] = (.inc8, (.D, .noReg), 4)
         ops[0x15] = (.dec8, (.D, .noReg), 4)
+        ops[0x16] = (.ld8_8, (.D, .i8), 8)
+        ops[0x1A] = (.ld8_16, (.A, .DEptr), 8)
         ops[0x1B] = (.dec16, (.DE, .noReg), 8)
         ops[0x1C] = (.inc8, (.E, .noReg), 4)
         ops[0x1D] = (.dec8, (.E, .noReg), 4)
+        ops[0x1E] = (.ld8_8, (.E, .i8), 8)
+        ops[0x22] = (.ld16_8, (.HLptrInc, .A), 8)
         ops[0x23] = (.inc16, (.HL, .noReg), 8)
         ops[0x24] = (.inc8, (.H, .noReg), 4)
         ops[0x25] = (.dec8, (.H, .noReg), 4)
+        ops[0x26] = (.ld8_8, (.H, .i8), 8)
+        ops[0x2A] = (.ld8_16, (.A, .HLptrInc), 8)
         ops[0x2B] = (.dec16, (.HL, .noReg), 8)
         ops[0x2C] = (.inc8, (.L, .noReg), 4)
         ops[0x2D] = (.dec8, (.L, .noReg), 4)
+        ops[0x2E] = (.ld8_8, (.L, .i8), 8)
+        ops[0x32] = (.ld16_8, (.HLptrDec, .A), 8)
         ops[0x33] = (.inc16, (.SP, .noReg), 8)
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
+        ops[0x36] = (.ld16_8, (.HLptr, .i8), 12)
+        ops[0x3A] = (.ld8_16, (.A, .HLptrDec), 8)
         ops[0x3B] = (.dec16, (.SP, .noReg), 8)
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
         ops[0x3D] = (.dec8, (.A, .noReg), 4)
+        ops[0x3E] = (.ld8_8, (.A, .i8), 8)
     }
 
     
@@ -230,6 +245,15 @@ class CPU {
         case .DEptr: return read8(at: DE)
         case .HLptr: return read8(at: HL)
 
+        case .HLptrInc:
+            let oldHL = read8(at: HL)
+            try inc16(argType: .HL)
+            return oldHL
+        case .HLptrDec:
+            let oldHL = read8(at: HL)
+            try dec16(argType: .HL)
+            return oldHL
+            
         case .i8: return read8(at: PC)
         
         default: throw CPUError.UnknownRegister
@@ -246,10 +270,16 @@ class CPU {
         case .H: H = val
         case .L: L = val
             
+        // Write value to memory pointed to by the given register
         case .BCptr: write(at: BC, with: val)
         case .DEptr: write(at: DE, with: val)
         case .HLptr: write(at: HL, with: val)
-
+            
+        case .HLptrInc: write(at: HL, with: val) ; try inc16(argType: .HL)
+        case .HLptrDec: write(at: HL, with: val) ; try dec16(argType: .HL)
+            
+        case .i8: write(at: PC, with: val)
+            
         default: throw CPUError.UnknownRegister
         }
     }
@@ -273,6 +303,8 @@ class CPU {
         case .DE: DE = val
         case .HL: HL = val
         case .SP: SP = val
+
+        // The only instruction to load a 16 value into a 16 bit pointer
             
         default: throw CPUError.UnknownRegister
         }
@@ -316,6 +348,8 @@ class CPU {
             switch op {
             case .nop:
                 subOpCycles = 4
+            case .ld8_8:
+                try ld8_8(argTypes: args)
             case .ld16_16:
                 try ld16_16(argTypes: args)
             case .ld16_8:
@@ -332,88 +366,35 @@ class CPU {
                 try inc16(argType: args.0)
             }
         } catch {
-            print("Error executing opcodes \(error)")
+            print("Error executing opcodes \(error) \(op)")
         }
     }
-    
-//    func clockTick() {
-//
-//        subOpCycles -= 1
-//        if subOpCycles > 0 {  return }
-//
-//        /// Read from ram
-//        let opcode = ram.read8(at: PC)
-//        incPc()
-//
-//        print("PC is \(PC)")
-//        print("opcode is 0x" + String(format: "%2X",opcode) )
-//
-//        /** interpret data/instruction
-//         Each opcode can affect the registers, the RAM and the interrupts
-//         **/
-//        switch opcode {
-//        case 0x00:  /// NOP
-//            subOpCycles = 4
-//
-//            // Make LD,INC, etc. functions that takes various args so we can look
-//            // them up in a table instead of this switch or at least reduce its size.
-//        case 0x01:  /// LD BC, d16
-//            BC = ram.read16(at: PC)
-//            incPc()
-//            incPc()
-//            subOpCycles = 12
-//
-//        case 0x02:  /// LD (BC), A, load location at BC with register A
-//            ram.write(at: BC, with: A)
-//            subOpCycles = 8
-//
-//        case 0x03:  /// INC BC
-//            inc(nn: &BC)
-//            subOpCycles = 8
-//
-//        case 0x04:  /// INC B
-//            inc(n: &B)
-//            subOpCycles = 4
-//
-//        case 0x05:  /// DEC B
-//            B -= 1
-//            subOpCycles = 4
-//
-//        case 0x06:  /// LD B, d8
-//            B = ram.read8(at: PC)
-//            subOpCycles = 8
-//
-//        // LD SP, d16
-//        case 0x31:
-//            SP = ram.read16(at: PC)
-//            incPc()
-//            incPc()
-//            subOpCycles = 12
-//
-//        case 0x3C:
-//            inc(n: &A) // INC A
-//            subOpCycles = 4
-//
-//        case 0x3D:
-//            dec(n: &A)
-//            subOpCycles = 4
-//
-//        default:
-//            subOpCycles = 4
-//            break
-//        }
-//    }
-    
 }
 
 // Extension defining instructions
+// Terms:
+// n an 8 bit value, nn a 16 bit value
 extension CPU {
     func incPc(_ bytes: UInt16=1) {
         PC = (PC &+ bytes)
     }
-    
-    // LD n, nn
-    // Put value nn into n
+
+    func ld8_8(argTypes: (RegisterType, RegisterType)) throws {
+        var n: UInt8
+        let source = argTypes.1
+        let target = argTypes.0
+        
+        if source == .i8 {
+            n = read8(at: PC)
+            incPc() // reading from RAM increases the PC
+        } else {
+            n = try getVal8(for: source)
+        }
+        
+        try set(val: n, for: target)
+    }
+
+    // Load a 16 bit source into a 16 bit destination
     // Flags unaffected.
     func ld16_16(argTypes: (RegisterType, RegisterType)) throws {
         var nn: UInt16
@@ -422,7 +403,7 @@ extension CPU {
         
         if source == .i16 {
             nn = read16(at: PC)
-            incPc(2)
+            incPc(2) // reading from RAM increases the PC
         } else {
             nn = try getVal16(for: source)
         }
@@ -432,7 +413,11 @@ extension CPU {
     
     // LD
     func ld8_16(argTypes: (RegisterType, RegisterType)) throws {
+        let source = argTypes.1
+        let target = argTypes.0
         
+        let srcVal = try getVal8(for: source)
+        try set(val: srcVal, for: target)
     }
     
     // LD 16 bit target with 8 bit value
@@ -443,7 +428,6 @@ extension CPU {
 
         let srcVal = try getVal8(for: source)
         try set(val: srcVal, for: target)
-        
     }
     
     // INC A, B, C, D, E, H, L, (HL)
