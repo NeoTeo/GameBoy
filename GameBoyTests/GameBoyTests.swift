@@ -253,7 +253,7 @@ class GameBoyTests: XCTestCase {
         // Place the LD BC, i16 instruction in the top of RAM
         gb.cpu.ram.write(at: 0xC000, with: 0x01)
         // Place the 16 bit value to copy into the BC register in the next two bytes
-        gb.cpu.ram.insert(data: [0x42, 0x69], at: 0xC001)
+        try? gb.cpu.ram.replace(data: [0x42, 0x69], from: 0xC001)
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run 12 ticks that the instruction takes
@@ -280,6 +280,26 @@ class GameBoyTests: XCTestCase {
         XCTAssert( resVal == gb.cpu.A )
     }
     
+    // test LD (i16), SP
+    // The instruction uses 3 bytes
+    func testLd0x08() {
+        let testVal: UInt16 = 0x4269
+        // Clear the SP register
+        gb.cpu.SP = testVal
+        // Place the LD BC, i16 instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0x08)
+        // Write the destination location as a 16 bit value in RAM just after the opcode.
+        try? gb.cpu.ram.replace(data: [0xC0, 0x03], from: 0xC001)
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 20 { gb.cpu.clockTick() }
+        
+        let resVal = gb.cpu.read16(at: 0xC003)
+        // Check that the result matches the testVal
+        XCTAssert( resVal == testVal)
+    }
+    
     func testLd8_8() {
     
         continueAfterFailure = false
@@ -302,7 +322,9 @@ class GameBoyTests: XCTestCase {
         var opsToTest = [UInt8]()
         var i: UInt8 = 2
         while i < 0x3F { opsToTest.append(i) ; i += 4 }
-        for i in 0x40 ..< 0x80 { opsToTest.append(UInt8(i)) }
+        for i in 0x40 ..< 0x80 {
+            if i != 0x76 { opsToTest.append(UInt8(i)) }
+        }
         opsToTest += [0xE2, 0xF2, 0xEA, 0xFA]
         
         // Set a random number as the test value

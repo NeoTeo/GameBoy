@@ -16,7 +16,8 @@ protocol MEMORY {
     mutating func write(at location: UInt16, with value: UInt8)
     
     // Helper function - might be useful for DMA
-    func insert(data: [UInt8], at address: UInt16)
+    //func insert(data: [UInt8], at address: UInt16)
+    func replace(data: [UInt8], from address: UInt16) throws
 }
 
 protocol SYSTEM {
@@ -187,6 +188,7 @@ class CPU {
         ops[0x04] = (.inc8, (.B, .noReg), 4)
         ops[0x05] = (.dec8, (.B, .noReg), 4)
         ops[0x06] = (.ld8_8, (.B, .i8), 8)
+        ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
         ops[0x0A] = (.ld8_16, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
@@ -222,6 +224,78 @@ class CPU {
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
         ops[0x3D] = (.dec8, (.A, .noReg), 4)
         ops[0x3E] = (.ld8_8, (.A, .i8), 8)
+        
+        ops[0x40] = (.ld8_8, (.B, .B), 4) // ??
+        ops[0x41] = (.ld8_8, (.B, .C), 4)
+        ops[0x42] = (.ld8_8, (.B, .D), 4)
+        ops[0x43] = (.ld8_8, (.B, .E), 4)
+        ops[0x44] = (.ld8_8, (.B, .H), 4)
+        ops[0x45] = (.ld8_8, (.B, .L), 4)
+        ops[0x46] = (.ld8_16, (.B, .HLptr), 8)
+        ops[0x47] = (.ld8_8, (.B, .A), 4)
+        
+        ops[0x48] = (.ld8_8, (.C, .B), 4)
+        ops[0x49] = (.ld8_8, (.C, .C), 4) // ??
+        ops[0x4A] = (.ld8_8, (.C, .D), 4)
+        ops[0x4B] = (.ld8_8, (.C, .E), 4)
+        ops[0x4C] = (.ld8_8, (.C, .H), 4)
+        ops[0x4D] = (.ld8_8, (.C, .L), 4)
+        ops[0x4E] = (.ld8_16, (.C, .HLptr), 8)
+        ops[0x4F] = (.ld8_8, (.C, .A), 4)
+        
+        ops[0x50] = (.ld8_8, (.D, .B), 4)
+        ops[0x51] = (.ld8_8, (.D, .C), 4)
+        ops[0x52] = (.ld8_8, (.D, .D), 4) // ??
+        ops[0x53] = (.ld8_8, (.D, .E), 4)
+        ops[0x54] = (.ld8_8, (.D, .H), 4)
+        ops[0x55] = (.ld8_8, (.D, .L), 4)
+        ops[0x56] = (.ld8_16, (.D, .HLptr), 8)
+        ops[0x57] = (.ld8_8, (.D, .A), 4)
+        
+        ops[0x58] = (.ld8_8, (.E, .B), 4)
+        ops[0x59] = (.ld8_8, (.E, .C), 4)
+        ops[0x5A] = (.ld8_8, (.E, .D), 4)
+        ops[0x5B] = (.ld8_8, (.E, .E), 4) // ??
+        ops[0x5C] = (.ld8_8, (.E, .H), 4)
+        ops[0x5D] = (.ld8_8, (.E, .L), 4)
+        ops[0x5E] = (.ld8_16, (.E, .HLptr), 8)
+        ops[0x5F] = (.ld8_8, (.E, .A), 4)
+
+        ops[0x60] = (.ld8_8, (.H, .B), 4)
+        ops[0x61] = (.ld8_8, (.H, .C), 4)
+        ops[0x62] = (.ld8_8, (.H, .D), 4)
+        ops[0x63] = (.ld8_8, (.H, .E), 4)
+        ops[0x64] = (.ld8_8, (.H, .H), 4) // ??
+        ops[0x65] = (.ld8_8, (.H, .L), 4)
+        ops[0x66] = (.ld8_16, (.H, .HLptr), 8)
+        ops[0x67] = (.ld8_8, (.H, .A), 4)
+        
+        ops[0x68] = (.ld8_8, (.L, .B), 4)
+        ops[0x69] = (.ld8_8, (.L, .C), 4)
+        ops[0x6A] = (.ld8_8, (.L, .D), 4)
+        ops[0x6B] = (.ld8_8, (.L, .E), 4)
+        ops[0x6C] = (.ld8_8, (.L, .H), 4)
+        ops[0x6D] = (.ld8_8, (.L, .L), 4) // ??
+        ops[0x6E] = (.ld8_16, (.L, .HLptr), 8)
+        ops[0x6F] = (.ld8_8, (.L, .A), 4)
+        
+        ops[0x70] = (.ld16_8, (.HLptr, .B), 8)
+        ops[0x71] = (.ld16_8, (.HLptr, .C), 8)
+        ops[0x72] = (.ld16_8, (.HLptr, .D), 8)
+        ops[0x73] = (.ld16_8, (.HLptr, .E), 8)
+        ops[0x74] = (.ld16_8, (.HLptr, .H), 8)
+        ops[0x75] = (.ld16_8, (.HLptr, .L), 8)
+        // ops[0x76] = (.halt, (.noReg, .noReg), 4) // not yet implemented
+        ops[0x77] = (.ld16_8, (.HLptr, .A), 8)
+        
+        ops[0x78] = (.ld8_8, (.A, .B), 4)
+        ops[0x79] = (.ld8_8, (.A, .C), 4)
+        ops[0x7A] = (.ld8_8, (.A, .D), 4)
+        ops[0x7B] = (.ld8_8, (.A, .E), 4)
+        ops[0x7C] = (.ld8_8, (.A, .H), 4)
+        ops[0x7D] = (.ld8_8, (.A, .L), 4)
+        ops[0x7E] = (.ld8_16, (.A, .HLptr), 8)
+        ops[0x7F] = (.ld8_8, (.A, .A), 4) // ??
     }
 
     
@@ -304,7 +378,11 @@ class CPU {
         case .HL: HL = val
         case .SP: SP = val
 
-        // The only instruction to load a 16 value into a 16 bit pointer
+        // Load a 16 bit value into a destination, LD (i16), SP
+        case .i16ptr:
+            let dest = try getVal16(for: .i16)
+            write(at: dest, with: val)
+        
             
         default: throw CPUError.UnknownRegister
         }
@@ -319,7 +397,7 @@ class CPU {
     
     func read16(at location: UInt16) -> UInt16 {
         let val = ram.read16(at: location)
-        incPc()
+        incPc(2)
         return val
     }
     
@@ -327,7 +405,15 @@ class CPU {
         ram.write(at: location, with: value)
         // writes don't increment PC
     }
-    
+
+    func write(at location: UInt16, with value: UInt16) {
+        let msb = UInt8(value >> 8)
+        let lsb = UInt8(value & 0xFF)
+        ram.write(at: location, with: msb)
+        ram.write(at: location+1, with: lsb)
+        // writes don't increment PC
+    }
+
     func clockTick() {
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
@@ -397,18 +483,11 @@ extension CPU {
     // Load a 16 bit source into a 16 bit destination
     // Flags unaffected.
     func ld16_16(argTypes: (RegisterType, RegisterType)) throws {
-        var nn: UInt16
         let source = argTypes.1
         let target = argTypes.0
         
-        if source == .i16 {
-            nn = read16(at: PC)
-            incPc(2) // reading from RAM increases the PC
-        } else {
-            nn = try getVal16(for: source)
-        }
-        
-        try set(val: nn, for: target)
+        let srcVal = try getVal16(for: source)
+        try set(val: srcVal, for: target)
     }
     
     // LD
@@ -505,6 +584,10 @@ class RAM : MEMORY {
     let size: UInt16// in bytes
     var ram: [UInt8]
     
+    enum RamError : Error {
+        case Overflow
+    }
+
     required init(size: UInt16) {
         self.size = size
         ram = Array(repeating: 0, count: Int(size))
@@ -526,9 +609,12 @@ class RAM : MEMORY {
     }
 
     // Helper functions
-    func insert(data: [UInt8], at address: UInt16) {
-        ram.insert(contentsOf: data, at: Int(address))
-        
+    func replace(data: [UInt8], from address: UInt16) throws {
+        //ram.insert(contentsOf: data, at: Int(address))
+        let start = Int(address)
+        let end = start+data.count
+        guard end < ram.count else { throw RamError.Overflow }
+        ram.replaceSubrange(start..<end, with: data)
     }
 }
 
@@ -570,6 +656,7 @@ class Gameboy : SYSTEM {
             return
         }
         
-        ram.insert(data: bootBinary, at: 0x0000)
+//        ram.insert(data: bootBinary, at: 0x0000)
+        try? ram.replace(data: bootBinary, from: 0x0000)
     }
 }
