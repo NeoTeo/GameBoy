@@ -503,6 +503,25 @@ extension CPU {
         PC = (PC &+ bytes)
     }
 
+    func adc(argTypes: (RegisterType, RegisterType)) throws {
+        
+        let t1 = try getVal8(for: argTypes.0)
+        let t2 = try getVal8(for: argTypes.1)
+        
+        // Store the C flag before it is changed.
+        let oldC: UInt8 = F.C == true ? 1 : 0
+        
+        let (res1, _) = t1.addingReportingOverflow(t2)
+        let (result, overflow) = res1.addingReportingOverflow(oldC)
+        
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = false
+        F.H = halfCarryOverflow(term1: res1, term2: oldC)
+        F.C = overflow
+    }
+    
     func add16_16(argTypes: (RegisterType, RegisterType)) throws {
         let t1 = try getVal16(for: argTypes.0)
         let t2 = try getVal16(for: argTypes.1)

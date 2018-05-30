@@ -104,8 +104,18 @@ class GameBoyTests: XCTestCase {
             case .Z(let state): return (((val >> 7) & 1) == 1) == state
             }
         }
+        
+        func setSame(in val: UInt8) -> UInt8 {
+            switch self {
+            case .C(let state): return val ^ ((state == true ? 1 : 0) << 4)
+            case .H(let state): return val ^ ((state == true ? 1 : 0) << 5)
+            case .N(let state): return val ^ ((state == true ? 1 : 0) << 6)
+            case .Z(let state): return val ^ ((state == true ? 1 : 0) << 7)
+            }
+        }
     }
     
+    typealias TestState = (UInt8, UInt8,[FlagTest])
     func testInc8() {
         
         // Make sure we stop if any of the tests fail
@@ -114,9 +124,11 @@ class GameBoyTests: XCTestCase {
         // A test consists of a start value, an end value and an array of FlagTests
         // which declare the expected flag setting at the end of the test.
         // Perhaps I should use a unionset for the flag testing instead...
-        let tests: [(UInt8, UInt8,[FlagTest])] = [(0x42, 0x43,[.Z(false), .N(false)]),
-                                                  (0xFF, 0x00,[.Z(true), .N(false)]),
-                                                  (0x0F, 0x10,[.Z(false), .H(true), .N(false)])]
+        let tests: [TestState] = [
+            (0x42, 0x43,[.Z(false), .N(false)]),
+            (0xFF, 0x00,[.Z(true), .N(false)]),
+            (0x0F, 0x10,[.Z(false), .H(true), .N(false)])
+        ]
         
         let opCodes: [UInt8] = [0x04, 0x14, 0x24, 0x0C, 0x1C, 0x2C, 0x3C]
         var opIdx = 0
@@ -300,16 +312,71 @@ class GameBoyTests: XCTestCase {
         XCTAssert( resVal == testVal)
     }
     
+    typealias TestStartState = ((UInt8, UInt8), [FlagTest])
+    typealias TestEndState =  (UInt8, [FlagTest])
+    func testAdc() {
+
+        // Tests consist of a tuple with:
+        // a tuple of the two register arguments,
+        // an array with initial flags and their state
+        // an expected end value,
+        // an array of flags and their expected state
+        let tests: [(TestStartState, TestEndState)] = [
+            (((0xFE, 0x01), [.C(true)]), (0x00, [.C(true), .H(true)])),
+//            ((0xFE, 0x01),[.Z(true), .N(false)]),
+//            (0x0F, 0x10,[.Z(false), .H(true), .N(false)])
+        ]
+
+        continueAfterFailure = false
+        // Set up a list of the opcodes we want to test; all the LD 8bit, 8bit
+        var opsToTest = [UInt8]()
+        for i in 0x88..<0x8F { opsToTest.append(UInt8(i)) }
+        opsToTest.append(0xCE)
+
+        for op in opsToTest {
+            // Write the opcode to RAM
+            gb.cpu.write(at: 0xC000, with: op)
+            // Set PC just after opcode in case we're loading an immediate value from subsequent bytes
+            gb.cpu.PC = 0xC001
+            
+            // Get the registers involved in the operation
+            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+                XCTFail("No entry for given opcode \(String(format: "%2X", op))")
+                return
+            }
+
+            // Set up some edge case tests
+            // This case should result in 0x00 and
+            let v1: UInt8 = 0xFE
+            let v2: UInt8 = 0x01
+            gb.cpu.F.C = true
+            
+            var testVal = 0
+            if gb.cpu.F.C == true { testVal = testVal &+ 1 }
+            // Set the two registers to our values
+            try? gb.cpu.set(val: v1, for: regs.0)
+            try? gb.cpu.set(val: v2, for: regs.1)
+            
+            // Run the ticks that the instruction takes
+            gb.cpu.PC = 0xC000
+            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+
+            // Read the destination register to confirm the result
+            let resVal = try? gb.cpu.getVal8(for: regs.0)
+            XCTAssert(resVal == testVal)
+        }
+    }
+    
     func testAdd8_8() {
         
         continueAfterFailure = false
         // Set up a list of the opcodes we want to test; all the LD 8bit, 8bit
         var opsToTest = [UInt8]()
         for i in 0x80..<0x87 { opsToTest.append(UInt8(i)) }
-        // Generate two random numbers and set the resulting addition as the test value
+
         
         for op in opsToTest {
-            
+            // Generate two random numbers and set the resulting addition as the test value
             let v1: UInt8 = UInt8(arc4random_uniform(0xFF))
             let v2: UInt8 = UInt8(arc4random_uniform(0xFF))
             let (testVal, overflow) = v1.addingReportingOverflow(v2)
@@ -414,7 +481,8 @@ class GameBoyTests: XCTestCase {
             if i != 0x76 { opsToTest.append(UInt8(i)) }
         }
         opsToTest += [0xE2, 0xF2, 0xEA, 0xFA]
-        
+
+        // FIXME: move testval inside the ops loop
         // Set a random number as the test value
         let testVal: UInt8 = UInt8(arc4random_uniform(0xFF))
         for op in opsToTest {
