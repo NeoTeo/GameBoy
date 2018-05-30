@@ -107,10 +107,10 @@ class GameBoyTests: XCTestCase {
         
         func setSame(in val: UInt8) -> UInt8 {
             switch self {
-            case .C(let state): return val ^ ((state == true ? 1 : 0) << 4)
-            case .H(let state): return val ^ ((state == true ? 1 : 0) << 5)
-            case .N(let state): return val ^ ((state == true ? 1 : 0) << 6)
-            case .Z(let state): return val ^ ((state == true ? 1 : 0) << 7)
+            case .C(let s): return (myC & ~(1 << 4)) | (s == true ? 1 : 0) << 4
+            case .H(let s): return (myC & ~(1 << 5)) | (s == true ? 1 : 0) << 5
+            case .N(let s): return (myC & ~(1 << 6)) | (s == true ? 1 : 0) << 6
+            case .Z(let s): return (myC & ~(1 << 7)) | (s == true ? 1 : 0) << 7
             }
         }
     }
