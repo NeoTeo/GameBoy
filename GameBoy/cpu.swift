@@ -195,6 +195,7 @@ class CPU {
         ops[0x06] = (.ld8_8, (.B, .i8), 8)
         ops[0x07] = (.rlca, (.noReg, .noReg), 4) // not to confuse with RLC A of the CB prefix instructions
         ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
+        ops[0x09] = (.add16_16, (.HL, .BC), 8)
         ops[0x0A] = (.ld8_8, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
@@ -205,6 +206,7 @@ class CPU {
         ops[0x14] = (.inc8, (.D, .noReg), 4)
         ops[0x15] = (.dec8, (.D, .noReg), 4)
         ops[0x16] = (.ld8_8, (.D, .i8), 8)
+        ops[0x19] = (.add16_16, (.HL, .DE), 8)
         ops[0x1A] = (.ld8_8, (.A, .DEptr), 8)
         ops[0x1B] = (.dec16, (.DE, .noReg), 8)
         ops[0x1C] = (.inc8, (.E, .noReg), 4)
@@ -215,6 +217,7 @@ class CPU {
         ops[0x24] = (.inc8, (.H, .noReg), 4)
         ops[0x25] = (.dec8, (.H, .noReg), 4)
         ops[0x26] = (.ld8_8, (.H, .i8), 8)
+        ops[0x29] = (.add16_16, (.HL, .HL), 8)
         ops[0x2A] = (.ld8_8, (.A, .HLptrInc), 8)
         ops[0x2B] = (.dec16, (.HL, .noReg), 8)
         ops[0x2C] = (.inc8, (.L, .noReg), 4)
@@ -225,6 +228,7 @@ class CPU {
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
         ops[0x36] = (.ld8_8, (.HLptr, .i8), 12)
+        ops[0x39] = (.add16_16, (.HL, .SP), 8)
         ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8)
         ops[0x3B] = (.dec16, (.SP, .noReg), 8)
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
@@ -451,7 +455,7 @@ class CPU {
             case .add8_8:
                 try add8_8(argTypes: args)
             case .add16_16:
-                break
+                try add16_16(argTypes: args)
             case .nop:
                 subOpCycles = 4
             case .ld8_8:
@@ -485,8 +489,10 @@ extension CPU {
     func halfCarryOverflow(term1: UInt8, term2: UInt8) -> Bool {
         return (((term1 & 0xF) + (term2 & 0xF)) & 0x10) == 0x10
     }
-    
-    
+
+    func halfCarryOverflow(term1: UInt16, term2: UInt16) -> Bool {
+        return (((term1 & 0xFFF) + (term2 & 0xFFF)) & 0x1000) == 0x1000
+    }
 }
 
 // Extension defining instructions
@@ -497,6 +503,18 @@ extension CPU {
         PC = (PC &+ bytes)
     }
 
+    func add16_16(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal16(for: argTypes.0)
+        let t2 = try getVal16(for: argTypes.1)
+        let (result, overflow) = t1.addingReportingOverflow(t2)
+        try set(val: result, for: argTypes.0)
+        
+//        F.Z = (result == 0) // does not affect
+        F.N = false
+        F.H = halfCarryOverflow(term1: t1, term2: t2)
+        F.C = overflow
+    }
+    
     func add8_8(argTypes: (RegisterType, RegisterType)) throws {
         let t1 = try getVal8(for: argTypes.0)
         let t2 = try getVal8(for: argTypes.1)
