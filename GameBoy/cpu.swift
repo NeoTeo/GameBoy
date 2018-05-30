@@ -129,14 +129,15 @@ class CPU {
     var subOpCycles: UInt8 = 1
     
     enum OpType {
+        case adc8_8
+        case add8_8
+        case add16_16
         case nop
         case inc8
         case inc16
         case dec8
         case dec16
         case ld8_8
-        case ld8_16
-        case ld16_8
         case ld16_16
         case rlca
         
@@ -187,44 +188,44 @@ class CPU {
         // Move this to definition of ops
         ops[0x00] = (.nop, (.noReg, .noReg), 4)
         ops[0x01] = (.ld16_16, (.BC, .i16), 12)
-        ops[0x02] = (.ld16_8, (.BCptr, .A), 8)
+        ops[0x02] = (.ld8_8, (.BCptr, .A), 8)
         ops[0x03] = (.inc16, (.BC, .noReg), 8)
         ops[0x04] = (.inc8, (.B, .noReg), 4)
         ops[0x05] = (.dec8, (.B, .noReg), 4)
         ops[0x06] = (.ld8_8, (.B, .i8), 8)
         ops[0x07] = (.rlca, (.noReg, .noReg), 4) // not to confuse with RLC A of the CB prefix instructions
         ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
-        ops[0x0A] = (.ld8_16, (.A, .BCptr), 8)
+        ops[0x0A] = (.ld8_8, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
         ops[0x0D] = (.dec8, (.C, .noReg), 4)
         ops[0x0E] = (.ld8_8, (.C, .i8), 8)
-        ops[0x12] = (.ld16_8, (.DEptr, .A), 8)
+        ops[0x12] = (.ld8_8, (.DEptr, .A), 8)
         ops[0x13] = (.inc16, (.DE, .noReg), 8)
         ops[0x14] = (.inc8, (.D, .noReg), 4)
         ops[0x15] = (.dec8, (.D, .noReg), 4)
         ops[0x16] = (.ld8_8, (.D, .i8), 8)
-        ops[0x1A] = (.ld8_16, (.A, .DEptr), 8)
+        ops[0x1A] = (.ld8_8, (.A, .DEptr), 8)
         ops[0x1B] = (.dec16, (.DE, .noReg), 8)
         ops[0x1C] = (.inc8, (.E, .noReg), 4)
         ops[0x1D] = (.dec8, (.E, .noReg), 4)
         ops[0x1E] = (.ld8_8, (.E, .i8), 8)
-        ops[0x22] = (.ld16_8, (.HLptrInc, .A), 8)
+        ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
         ops[0x23] = (.inc16, (.HL, .noReg), 8)
         ops[0x24] = (.inc8, (.H, .noReg), 4)
         ops[0x25] = (.dec8, (.H, .noReg), 4)
         ops[0x26] = (.ld8_8, (.H, .i8), 8)
-        ops[0x2A] = (.ld8_16, (.A, .HLptrInc), 8)
+        ops[0x2A] = (.ld8_8, (.A, .HLptrInc), 8)
         ops[0x2B] = (.dec16, (.HL, .noReg), 8)
         ops[0x2C] = (.inc8, (.L, .noReg), 4)
         ops[0x2D] = (.dec8, (.L, .noReg), 4)
         ops[0x2E] = (.ld8_8, (.L, .i8), 8)
-        ops[0x32] = (.ld16_8, (.HLptrDec, .A), 8)
+        ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8)
         ops[0x33] = (.inc16, (.SP, .noReg), 8)
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
-        ops[0x36] = (.ld16_8, (.HLptr, .i8), 12)
-        ops[0x3A] = (.ld8_16, (.A, .HLptrDec), 8)
+        ops[0x36] = (.ld8_8, (.HLptr, .i8), 12)
+        ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8)
         ops[0x3B] = (.dec16, (.SP, .noReg), 8)
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
         ops[0x3D] = (.dec8, (.A, .noReg), 4)
@@ -236,7 +237,7 @@ class CPU {
         ops[0x43] = (.ld8_8, (.B, .E), 4)
         ops[0x44] = (.ld8_8, (.B, .H), 4)
         ops[0x45] = (.ld8_8, (.B, .L), 4)
-        ops[0x46] = (.ld8_16, (.B, .HLptr), 8)
+        ops[0x46] = (.ld8_8, (.B, .HLptr), 8)
         ops[0x47] = (.ld8_8, (.B, .A), 4)
         
         ops[0x48] = (.ld8_8, (.C, .B), 4)
@@ -245,7 +246,7 @@ class CPU {
         ops[0x4B] = (.ld8_8, (.C, .E), 4)
         ops[0x4C] = (.ld8_8, (.C, .H), 4)
         ops[0x4D] = (.ld8_8, (.C, .L), 4)
-        ops[0x4E] = (.ld8_16, (.C, .HLptr), 8)
+        ops[0x4E] = (.ld8_8, (.C, .HLptr), 8)
         ops[0x4F] = (.ld8_8, (.C, .A), 4)
         
         ops[0x50] = (.ld8_8, (.D, .B), 4)
@@ -254,7 +255,7 @@ class CPU {
         ops[0x53] = (.ld8_8, (.D, .E), 4)
         ops[0x54] = (.ld8_8, (.D, .H), 4)
         ops[0x55] = (.ld8_8, (.D, .L), 4)
-        ops[0x56] = (.ld8_16, (.D, .HLptr), 8)
+        ops[0x56] = (.ld8_8, (.D, .HLptr), 8)
         ops[0x57] = (.ld8_8, (.D, .A), 4)
         
         ops[0x58] = (.ld8_8, (.E, .B), 4)
@@ -263,7 +264,7 @@ class CPU {
         ops[0x5B] = (.ld8_8, (.E, .E), 4) // ??
         ops[0x5C] = (.ld8_8, (.E, .H), 4)
         ops[0x5D] = (.ld8_8, (.E, .L), 4)
-        ops[0x5E] = (.ld8_16, (.E, .HLptr), 8)
+        ops[0x5E] = (.ld8_8, (.E, .HLptr), 8)
         ops[0x5F] = (.ld8_8, (.E, .A), 4)
 
         ops[0x60] = (.ld8_8, (.H, .B), 4)
@@ -272,7 +273,7 @@ class CPU {
         ops[0x63] = (.ld8_8, (.H, .E), 4)
         ops[0x64] = (.ld8_8, (.H, .H), 4) // ??
         ops[0x65] = (.ld8_8, (.H, .L), 4)
-        ops[0x66] = (.ld8_16, (.H, .HLptr), 8)
+        ops[0x66] = (.ld8_8, (.H, .HLptr), 8)
         ops[0x67] = (.ld8_8, (.H, .A), 4)
         
         ops[0x68] = (.ld8_8, (.L, .B), 4)
@@ -281,17 +282,17 @@ class CPU {
         ops[0x6B] = (.ld8_8, (.L, .E), 4)
         ops[0x6C] = (.ld8_8, (.L, .H), 4)
         ops[0x6D] = (.ld8_8, (.L, .L), 4) // ??
-        ops[0x6E] = (.ld8_16, (.L, .HLptr), 8)
+        ops[0x6E] = (.ld8_8, (.L, .HLptr), 8)
         ops[0x6F] = (.ld8_8, (.L, .A), 4)
         
-        ops[0x70] = (.ld16_8, (.HLptr, .B), 8)
-        ops[0x71] = (.ld16_8, (.HLptr, .C), 8)
-        ops[0x72] = (.ld16_8, (.HLptr, .D), 8)
-        ops[0x73] = (.ld16_8, (.HLptr, .E), 8)
-        ops[0x74] = (.ld16_8, (.HLptr, .H), 8)
-        ops[0x75] = (.ld16_8, (.HLptr, .L), 8)
+        ops[0x70] = (.ld8_8, (.HLptr, .B), 8)
+        ops[0x71] = (.ld8_8, (.HLptr, .C), 8)
+        ops[0x72] = (.ld8_8, (.HLptr, .D), 8)
+        ops[0x73] = (.ld8_8, (.HLptr, .E), 8)
+        ops[0x74] = (.ld8_8, (.HLptr, .H), 8)
+        ops[0x75] = (.ld8_8, (.HLptr, .L), 8)
         // ops[0x76] = (.halt, (.noReg, .noReg), 4) // not yet implemented
-        ops[0x77] = (.ld16_8, (.HLptr, .A), 8)
+        ops[0x77] = (.ld8_8, (.HLptr, .A), 8)
         
         ops[0x78] = (.ld8_8, (.A, .B), 4)
         ops[0x79] = (.ld8_8, (.A, .C), 4)
@@ -299,8 +300,16 @@ class CPU {
         ops[0x7B] = (.ld8_8, (.A, .E), 4)
         ops[0x7C] = (.ld8_8, (.A, .H), 4)
         ops[0x7D] = (.ld8_8, (.A, .L), 4)
-        ops[0x7E] = (.ld8_16, (.A, .HLptr), 8)
+        ops[0x7E] = (.ld8_8, (.A, .HLptr), 8)
         ops[0x7F] = (.ld8_8, (.A, .A), 4) // ??
+        
+        ops[0x80] = (.add8_8, (.A, .B), 4)
+        ops[0x81] = (.add8_8, (.A, .C), 4)
+        ops[0x82] = (.add8_8, (.A, .D), 4)
+        ops[0x83] = (.add8_8, (.A, .E), 4)
+        ops[0x84] = (.add8_8, (.A, .H), 4)
+        ops[0x85] = (.add8_8, (.A, .L), 4)
+        ops[0x86] = (.add8_8, (.A, .HLptr), 4)
     }
 
     
@@ -437,16 +446,18 @@ class CPU {
         subOpCycles = cycles
         do {
             switch op {
+            case .adc8_8:
+                break
+            case .add8_8:
+                try add8_8(argTypes: args)
+            case .add16_16:
+                break
             case .nop:
                 subOpCycles = 4
             case .ld8_8:
                 try ld8_8(argTypes: args)
             case .ld16_16:
                 try ld16_16(argTypes: args)
-            case .ld16_8:
-                try ld16_8(argTypes: args)
-            case .ld8_16:
-                try ld8_16(argTypes: args)
             case .dec8:
                 try dec8(argType: args.0)
             case .dec16:
@@ -469,6 +480,15 @@ class CPU {
     }
 }
 
+// Extension defining helper functions
+extension CPU {
+    func halfCarryOverflow(term1: UInt8, term2: UInt8) -> Bool {
+        return (((term1 & 0xF) + (term2 & 0xF)) & 0x10) == 0x10
+    }
+    
+    
+}
+
 // Extension defining instructions
 // Terms:
 // n an 8 bit value, nn a 16 bit value
@@ -477,6 +497,19 @@ extension CPU {
         PC = (PC &+ bytes)
     }
 
+    func add8_8(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal8(for: argTypes.0)
+        let t2 = try getVal8(for: argTypes.1)
+        let (result, overflow) = t1.addingReportingOverflow(t2)
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = false
+        F.H = halfCarryOverflow(term1: t1, term2: t2)
+        F.C = overflow
+    }
+    
+    
     func rlca() throws {
         F.C = (A >> 7) == 1
         A = A << 1
@@ -521,7 +554,7 @@ extension CPU {
         let srcVal = try getVal16(for: source)
         try set(val: srcVal, for: target)
     }
-    
+ /*
     // LD
     func ld8_16(argTypes: (RegisterType, RegisterType)) throws {
         let source = argTypes.1
@@ -540,7 +573,7 @@ extension CPU {
         let srcVal = try getVal8(for: source)
         try set(val: srcVal, for: target)
     }
-    
+   */
     // INC A, B, C, D, E, H, L, (HL)
     // Flags affected:
     // Z - Set if result is zero.

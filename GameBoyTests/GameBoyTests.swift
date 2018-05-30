@@ -300,6 +300,52 @@ class GameBoyTests: XCTestCase {
         XCTAssert( resVal == testVal)
     }
     
+    func testAdd8_8() {
+        
+        continueAfterFailure = false
+        // Set up a list of the opcodes we want to test; all the LD 8bit, 8bit
+        var opsToTest = [UInt8]()
+        for i in 0x80..<0x87 { opsToTest.append(UInt8(i)) }
+        // Generate two random numbers and set the resulting addition as the test value
+        
+        for op in opsToTest {
+            
+            let v1: UInt8 = UInt8(arc4random_uniform(0xFF))
+            let v2: UInt8 = UInt8(arc4random_uniform(0xFF))
+            let (testVal, overflow) = v1.addingReportingOverflow(v2)
+            let halfCarry = gb.cpu.halfCarryOverflow(term1: v1, term2: v2)
+
+            // Write the opcode to RAM
+            gb.cpu.write(at: 0xC000, with: op)
+            gb.cpu.PC = 0xC001
+            
+            // Get the registers involved in the operation
+            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+                XCTFail("No entry for given opcode \(String(format: "%2X", op))")
+                return
+            }
+            
+            // Set the two registers to our values
+            try? gb.cpu.set(val: v1, for: regs.0)
+            try? gb.cpu.set(val: v2, for: regs.1)
+
+            // Run the ticks that the instruction takes
+            gb.cpu.PC = 0xC000
+            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+
+            let resVal = try? gb.cpu.getVal8(for: regs.0)
+        
+            XCTAssert(resVal == testVal)
+            let flags = gb.cpu.F
+            print("resval \(resVal!) vs \(testVal) and flags: \(flags)")
+            XCTAssert((flags.C == overflow)
+                && (flags.H == halfCarry)
+                && (flags.N == false)
+                && (flags.Z == (testVal == 0))
+            )
+        }
+    }
+
     func testLd8_8() {
     
         continueAfterFailure = false
