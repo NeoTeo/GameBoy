@@ -8,25 +8,6 @@
 
 import Foundation
 
-protocol MEMORY {
-    
-    init(size: UInt16)
-    func read8(at location: UInt16) -> UInt8
-    func read16(at location: UInt16) -> UInt16
-    mutating func write(at location: UInt16, with value: UInt8)
-    
-    // Helper function - might be useful for DMA
-    //func insert(data: [UInt8], at address: UInt16)
-    func replace(data: [UInt8], from address: UInt16) throws
-}
-
-protocol SYSTEM {
-    var cpu: CPU { get }
-    var ram: MEMORY { get }
-    
-    func start(clockRate: Int)
-}
-
 /*
      LR35902 CPU
  
@@ -132,15 +113,18 @@ class CPU {
         case adc8_8
         case add8_8
         case add16_16
-        case nop
+        case and
         case inc8
         case inc16
         case dec8
         case dec16
         case ld8_8
         case ld16_16
+        case halt
+        case nop
+        case or
         case rlca
-        
+        case sub
         // cb prefix
         case rlc
     }
@@ -295,7 +279,7 @@ class CPU {
         ops[0x73] = (.ld8_8, (.HLptr, .E), 8)
         ops[0x74] = (.ld8_8, (.HLptr, .H), 8)
         ops[0x75] = (.ld8_8, (.HLptr, .L), 8)
-        // ops[0x76] = (.halt, (.noReg, .noReg), 4) // not yet implemented
+        ops[0x76] = (.halt, (.noReg, .noReg), 4) // not properly implemented
         ops[0x77] = (.ld8_8, (.HLptr, .A), 8)
         
         ops[0x78] = (.ld8_8, (.A, .B), 4)
@@ -313,7 +297,7 @@ class CPU {
         ops[0x83] = (.add8_8, (.A, .E), 4)
         ops[0x84] = (.add8_8, (.A, .H), 4)
         ops[0x85] = (.add8_8, (.A, .L), 4)
-        ops[0x86] = (.add8_8, (.A, .HLptr), 4)
+        ops[0x86] = (.add8_8, (.A, .HLptr), 8)
         ops[0x87] = (.add8_8, (.A, .A), 4)
         
         ops[0x88] = (.adc8_8, (.A, .B), 4)
@@ -322,10 +306,20 @@ class CPU {
         ops[0x8B] = (.adc8_8, (.A, .E), 4)
         ops[0x8C] = (.adc8_8, (.A, .H), 4)
         ops[0x8D] = (.adc8_8, (.A, .L), 4)
-        ops[0x8E] = (.adc8_8, (.A, .HLptr), 4)
+        ops[0x8E] = (.adc8_8, (.A, .HLptr), 8)
         ops[0x8F] = (.adc8_8, (.A, .A), 4)
         
-        ops[0xCE] = (.adc8_8, (.A, .i8), 4)
+        ops[0x90] = (.sub, (.A, .B), 4)
+        ops[0x91] = (.sub, (.A, .C), 4)
+        ops[0x92] = (.sub, (.A, .D), 4)
+        ops[0x93] = (.sub, (.A, .E), 4)
+        ops[0x94] = (.sub, (.A, .H), 4)
+        ops[0x95] = (.sub, (.A, .L), 4)
+        ops[0x96] = (.sub, (.A, .HLptr), 8)
+        ops[0x97] = (.sub, (.A, .A), 4)
+        
+        ops[0xCE] = (.adc8_8, (.A, .i8), 8)
+        ops[0xD6] = (.sub, (.A, .i8), 8)
     }
 
     
@@ -335,114 +329,6 @@ class CPU {
         case RegisterWriteFailure
     }
     
-    func getVal8(for register: RegisterType) throws -> UInt8 {
-        switch register {
-        case .A: return A
-        case .B: return B
-        case .C: return C
-        case .D: return D
-        case .E: return E
-        case .H: return H
-        case .L: return L
-        
-        case .BCptr: return read8(at: BC)
-        case .DEptr: return read8(at: DE)
-        case .HLptr: return read8(at: HL)
-
-        case .HLptrInc:
-            let oldHL = read8(at: HL)
-            try inc16(argType: .HL)
-            return oldHL
-        case .HLptrDec:
-            let oldHL = read8(at: HL)
-            try dec16(argType: .HL)
-            return oldHL
-            
-        case .i8: return read8(at: PC)
-        
-        default: throw CPUError.UnknownRegister
-        }
-    }
-    
-    func set(val: UInt8, for register: RegisterType) throws {
-        switch register {
-        case .A: A = val
-        case .B: B = val
-        case .C: C = val
-        case .D: D = val
-        case .E: E = val
-        case .H: H = val
-        case .L: L = val
-            
-        // Write value to memory pointed to by the given register
-        case .BCptr: write(at: BC, with: val)
-        case .DEptr: write(at: DE, with: val)
-        case .HLptr: write(at: HL, with: val)
-            
-        case .HLptrInc: write(at: HL, with: val) ; try inc16(argType: .HL)
-        case .HLptrDec: write(at: HL, with: val) ; try dec16(argType: .HL)
-            
-        case .i8: write(at: PC, with: val)
-            
-        default: throw CPUError.UnknownRegister
-        }
-    }
-    
-    func getVal16(for register: RegisterType) throws -> UInt16 {
-        switch register {
-        case .BC: return BC
-        case .DE: return DE
-        case .HL: return HL
-        case .SP: return SP
-            
-        case .i16: return read16(at: PC)
-
-        default: throw CPUError.UnknownRegister
-        }
-    }
-    
-    func set(val: UInt16, for register: RegisterType) throws {
-        switch register {
-        case .BC: BC = val
-        case .DE: DE = val
-        case .HL: HL = val
-        case .SP: SP = val
-
-        // Load a 16 bit value into a destination, LD (i16), SP
-        case .i16ptr:
-            let dest = try getVal16(for: .i16)
-            write(at: dest, with: val)
-        
-            
-        default: throw CPUError.UnknownRegister
-        }
-    }
-    
-    // Wrappers to increment PC as appropriate
-    func read8(at location: UInt16) -> UInt8 {
-        let val = ram.read8(at: location)
-        incPc()
-        return val
-    }
-    
-    func read16(at location: UInt16) -> UInt16 {
-        let val = ram.read16(at: location)
-        incPc(2)
-        return val
-    }
-    
-    func write(at location: UInt16, with value: UInt8) {
-        ram.write(at: location, with: value)
-        // writes don't increment PC
-    }
-
-    func write(at location: UInt16, with value: UInt16) {
-        let msb = UInt8(value >> 8)
-        let lsb = UInt8(value & 0xFF)
-        ram.write(at: location, with: msb)
-        ram.write(at: location+1, with: lsb)
-        // writes don't increment PC
-    }
 
     func clockTick() {
         subOpCycles -= 1
@@ -468,8 +354,8 @@ class CPU {
                 try add8_8(argTypes: args)
             case .add16_16:
                 try add16_16(argTypes: args)
-            case .nop:
-                subOpCycles = 4
+            case .and:
+                try and(argType: args.1)
             case .ld8_8:
                 try ld8_8(argTypes: args)
             case .ld16_16:
@@ -478,13 +364,20 @@ class CPU {
                 try dec8(argType: args.0)
             case .dec16:
                 try dec16(argType: args.0)
+            case .halt:
+                halt()
             case .inc8:
                 try inc8(argType: args.0)
             case .inc16:
                 try inc16(argType: args.0)
+            case .nop:
+                subOpCycles = 4
+            case .or:
+                try or(argType: args.1)
             case .rlca:
                 try rlca()
-                
+            case .sub:
+                try sub8_8(argTypes: args)
                 
             // CB prefix
             case .rlc:
@@ -493,289 +386,5 @@ class CPU {
         } catch {
             print("Error executing opcodes \(error) \(op)")
         }
-    }
-}
-
-// Extension defining helper functions
-extension CPU {
-    func halfCarryOverflow(term1: UInt8, term2: UInt8) -> Bool {
-        return (((term1 & 0xF) + (term2 & 0xF)) & 0x10) == 0x10
-    }
-
-    func halfCarryOverflow(term1: UInt16, term2: UInt16) -> Bool {
-        return (((term1 & 0xFFF) + (term2 & 0xFFF)) & 0x1000) == 0x1000
-    }
-}
-
-// Extension defining instructions
-// Terms:
-// n an 8 bit value, nn a 16 bit value
-extension CPU {
-    func incPc(_ bytes: UInt16=1) {
-        PC = (PC &+ bytes)
-    }
-
-    func adc(argTypes: (RegisterType, RegisterType)) throws {
-        
-        let t1 = try getVal8(for: argTypes.0)
-        let t2 = try getVal8(for: argTypes.1)
-        
-        // Store the C flag before it is changed.
-        let oldC: UInt8 = F.C == true ? 1 : 0
-        
-        // First add the registers keeping track of the carrys
-        let (res1, overflow1) = t1.addingReportingOverflow(t2)
-        let H1 = halfCarryOverflow(term1: t1, term2: t2)
-        // Then add the old carry and track the resulting carrys
-        let (result, overflow2) = res1.addingReportingOverflow(oldC)
-        let H2 = halfCarryOverflow(term1: res1, term2: oldC)
-        
-        print("overflow1: \(overflow1) and overflow2: \(overflow2)")
-        try set(val: result, for: argTypes.0)
-        
-        F.Z = (result == 0)
-        F.N = false
-        F.H = H1 || H2
-        F.C = overflow1 || overflow2
-    }
-    
-    func add16_16(argTypes: (RegisterType, RegisterType)) throws {
-        let t1 = try getVal16(for: argTypes.0)
-        let t2 = try getVal16(for: argTypes.1)
-        let (result, overflow) = t1.addingReportingOverflow(t2)
-        try set(val: result, for: argTypes.0)
-        
-//        F.Z = (result == 0) // does not affect
-        F.N = false
-        F.H = halfCarryOverflow(term1: t1, term2: t2)
-        F.C = overflow
-    }
-    
-    func add8_8(argTypes: (RegisterType, RegisterType)) throws {
-        let t1 = try getVal8(for: argTypes.0)
-        let t2 = try getVal8(for: argTypes.1)
-        let (result, overflow) = t1.addingReportingOverflow(t2)
-        try set(val: result, for: argTypes.0)
-        
-        F.Z = (result == 0)
-        F.N = false
-        F.H = halfCarryOverflow(term1: t1, term2: t2)
-        F.C = overflow
-    }
-    
-    
-    func rlca() throws {
-        F.C = (A >> 7) == 1
-        A = A << 1
-        F.Z = false
-        F.N = false
-        F.H = false
-    }
-    
-    // CB prefix instruction
-    // RLC A, B, C, D, E, H, L, (HL)
-    // Rotate left
-    func rlc(argType: RegisterType) throws {
-        let reg = try getVal8(for: argType)
-        F.C = (reg >> 7) == 1
-        try set(val: reg << 1, for: argType)
-        F.Z = (reg == 0)
-        F.N = false
-        F.H = false
-    }
-    
-    func ld8_8(argTypes: (RegisterType, RegisterType)) throws {
-        var n: UInt8
-        let source = argTypes.1
-        let target = argTypes.0
-        
-        if source == .i8 {
-            n = read8(at: PC)
-            incPc() // reading from RAM increases the PC
-        } else {
-            n = try getVal8(for: source)
-        }
-        
-        try set(val: n, for: target)
-    }
-
-    // Load a 16 bit source into a 16 bit destination
-    // Flags unaffected.
-    func ld16_16(argTypes: (RegisterType, RegisterType)) throws {
-        let source = argTypes.1
-        let target = argTypes.0
-        
-        let srcVal = try getVal16(for: source)
-        try set(val: srcVal, for: target)
-    }
- /*
-    // LD
-    func ld8_16(argTypes: (RegisterType, RegisterType)) throws {
-        let source = argTypes.1
-        let target = argTypes.0
-        
-        let srcVal = try getVal8(for: source)
-        try set(val: srcVal, for: target)
-    }
-    
-    // LD 16 bit target with 8 bit value
-    func ld16_8(argTypes: (RegisterType, RegisterType)) throws {
-        
-        let source = argTypes.1
-        let target = argTypes.0
-
-        let srcVal = try getVal8(for: source)
-        try set(val: srcVal, for: target)
-    }
-   */
-    // INC A, B, C, D, E, H, L, (HL)
-    // Flags affected:
-    // Z - Set if result is zero.
-    // N - Reset.
-    // H - Set if carry from bit 3.
-    // C - Not affected.
-    func inc8(argType: RegisterType) throws {
-
-        var n: UInt8
-        // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &+ 1
-            write(at: addr, with: n)
-        } else {
-
-            n = try getVal8(for: argType)
-            // increment n register and wrap to 0 if overflowed.
-            n = n &+ 1
-            try set(val: n, for: argType)
-        }
-        // Set F register correctly
-        F.Z = (n == 0)
-        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
-        F.N = false
-        
-    }
-    
-    // INC BC, DE, HL, SP
-    // Flags unaffected
-    func inc16(argType: RegisterType) throws {
-        var nn = try getVal16(for: argType)
-        nn = nn &+ 1
-        try set(val: nn, for: argType)
-    }
-    
-    // DEC A, B, C, D, E, H, L, (HL)
-    func dec8(argType: RegisterType) throws {
-        var n: UInt8
-        
-        // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &- 1
-            write(at: addr, with: n)
-
-        } else {
-            
-            n = try getVal8(for: argType)
-            n = n &- 1
-            try set(val: n, for: argType)
-        }
-        
-        F.Z = (n == 0)
-        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
-        F.N = true // N set to 1
-    }
-    
-    // DEC BC, DE, HL, SP
-    func dec16(argType: RegisterType) throws {
-        var nn = try getVal16(for: argType)
-        nn = nn &- 1
-        try set(val: nn, for: argType)
-    }
-}
-
-class RAM : MEMORY {
-
-    let size: UInt16// in bytes
-    var ram: [UInt8]
-    
-    enum RamError : Error {
-        case Overflow
-    }
-
-    required init(size: UInt16) {
-        self.size = size
-        ram = Array(repeating: 0, count: Int(size))
-    }
-    
-    func read16(at location: UInt16) -> UInt16 {
-        let msb = ram[Int(location)]
-        let lsb = ram[Int(location+1)]
-        return (UInt16(msb) << 8) | UInt16(lsb)
-    }
-    
-    func read8(at location: UInt16) -> UInt8 {
-        return ram[Int(location)]
-    }
-    
-    // FIXME: Add some checks for writing to illegal addresses. 
-    func write(at location: UInt16, with value: UInt8) {
-        ram[Int(location)] = value
-    }
-
-    // Helper functions
-    func replace(data: [UInt8], from address: UInt16) throws {
-        //ram.insert(contentsOf: data, at: Int(address))
-        let start = Int(address)
-        let end = start+data.count
-        guard end < ram.count else { throw RamError.Overflow }
-        ram.replaceSubrange(start..<end, with: data)
-    }
-}
-
-class Gameboy : SYSTEM {
-    
-    var cpu: CPU
-    var ram: MEMORY
-    
-    init() {
-        
-        cpu = CPU()
-        ram = RAM(size: 0xFFFF)
-        // Connect the cpu with the memory
-        cpu.ram = ram
-        cpu.reset()
-    }
-    
-    func start(clockRate: Int) {
-        
-        let interval = TimeInterval( 1 / clockRate )
-        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
-        
-        // bodge some code into ram
-        bodgeBootLoader()
-        
-        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
-    }
-    
-    func runCycle(timer: Timer) {
-        cpu.clockTick()
-    }
-    
-    func bodgeBootLoader() {
-        let binaryName = "DMG_ROM.bin"
-        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
-            let bootBinary = try? loadBinary(from: URL(fileURLWithPath: path))
-        else {
-            print("Failed to load boot binary.")
-            return
-        }
-        
-//        ram.insert(data: bootBinary, at: 0x0000)
-        try? ram.replace(data: bootBinary, from: 0x0000)
     }
 }

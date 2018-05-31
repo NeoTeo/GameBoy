@@ -14,6 +14,12 @@
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
 		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
 		AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AB41DBBA6980072CF49 /* cpu.swift */; };
+		AB801B8920C02C5E00B0AEBF /* cpu_instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */; };
+		AB801B8B20C02CB800B0AEBF /* system.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8A20C02CB800B0AEBF /* system.swift */; };
+		AB801B8D20C02CE200B0AEBF /* memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8C20C02CE200B0AEBF /* memory.swift */; };
+		AB801B8F20C02D4500B0AEBF /* cpu_helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */; };
+		AB801B9120C02D8300B0AEBF /* ram.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9020C02D8300B0AEBF /* ram.swift */; };
+		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +44,12 @@
 		AB6E8AAC1DBBA64F0072CF49 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		AB6E8AAE1DBBA64F0072CF49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB6E8AB41DBBA6980072CF49 /* cpu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
+		AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu_instructions.swift; sourceTree = "<group>"; };
+		AB801B8A20C02CB800B0AEBF /* system.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = system.swift; sourceTree = "<group>"; };
+		AB801B8C20C02CE200B0AEBF /* memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = memory.swift; sourceTree = "<group>"; };
+		AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu_helper.swift; sourceTree = "<group>"; };
+		AB801B9020C02D8300B0AEBF /* ram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ram.swift; sourceTree = "<group>"; };
+		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,10 +103,16 @@
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 				AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */,
 				AB6E8AB41DBBA6980072CF49 /* cpu.swift */,
+				AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */,
+				AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */,
+				AB801B8A20C02CB800B0AEBF /* system.swift */,
+				AB801B9220C02DAD00B0AEBF /* gameboy.swift */,
+				AB59ADE020AEE6560055A60F /* BinaryLoader.swift */,
+				AB801B8C20C02CE200B0AEBF /* memory.swift */,
+				AB801B9020C02D8300B0AEBF /* ram.swift */,
 				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
 				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
-				AB59ADE020AEE6560055A60F /* BinaryLoader.swift */,
 			);
 			path = GameBoy;
 			sourceTree = "<group>";
@@ -214,8 +232,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB801B8F20C02D4500B0AEBF /* cpu_helper.swift in Sources */,
 				AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */,
+				AB801B8B20C02CB800B0AEBF /* system.swift in Sources */,
+				AB801B8920C02C5E00B0AEBF /* cpu_instructions.swift in Sources */,
+				AB801B9120C02D8300B0AEBF /* ram.swift in Sources */,
+				AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */,
 				AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */,
+				AB801B8D20C02CE200B0AEBF /* memory.swift in Sources */,
 				AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
