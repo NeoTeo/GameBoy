@@ -107,10 +107,10 @@ class GameBoyTests: XCTestCase {
         
         func setSame(in val: UInt8) -> UInt8 {
             switch self {
-            case .C(let s): return (myC & ~(1 << 4)) | (s == true ? 1 : 0) << 4
-            case .H(let s): return (myC & ~(1 << 5)) | (s == true ? 1 : 0) << 5
-            case .N(let s): return (myC & ~(1 << 6)) | (s == true ? 1 : 0) << 6
-            case .Z(let s): return (myC & ~(1 << 7)) | (s == true ? 1 : 0) << 7
+            case .C(let s): return (val & ~(1 << 4)) | (s == true ? 1 : 0) << 4
+            case .H(let s): return (val & ~(1 << 5)) | (s == true ? 1 : 0) << 5
+            case .N(let s): return (val & ~(1 << 6)) | (s == true ? 1 : 0) << 6
+            case .Z(let s): return (val & ~(1 << 7)) | (s == true ? 1 : 0) << 7
             }
         }
     }
@@ -322,9 +322,11 @@ class GameBoyTests: XCTestCase {
         // an expected end value,
         // an array of flags and their expected state
         let tests: [(TestStartState, TestEndState)] = [
-            (((0xFE, 0x01), [.C(true)]), (0x00, [.C(true), .H(true)])),
-//            ((0xFE, 0x01),[.Z(true), .N(false)]),
-//            (0x0F, 0x10,[.Z(false), .H(true), .N(false)])
+            (((0xFE, 0x01), [.C(true), .H(false)]), (0x00, [.C(true), .H(true), .Z(true)])),
+            (((0xFE, 0x01), [.C(false), .H(false)]), (0xFF, [.C(false), .Z(false)])),
+            (((0xFE, 0x02), [.C(false), .H(false)]), (0x00, [.C(true), .H(true)])),
+            (((0xFD, 0x01), [.C(false), .H(false)]), (0xFE, [.C(false), .H(false)])),
+            (((0xFD, 0x01), [.C(true), .H(false)]), (0xFF, [.C(false), .H(false)])),
         ]
 
         continueAfterFailure = false
@@ -336,8 +338,6 @@ class GameBoyTests: XCTestCase {
         for op in opsToTest {
             // Write the opcode to RAM
             gb.cpu.write(at: 0xC000, with: op)
-            // Set PC just after opcode in case we're loading an immediate value from subsequent bytes
-            gb.cpu.PC = 0xC001
             
             // Get the registers involved in the operation
             guard let (_,regs,ticks) = gb.cpu.ops[op] else {
@@ -346,24 +346,44 @@ class GameBoyTests: XCTestCase {
             }
 
             // Set up some edge case tests
-            // This case should result in 0x00 and
-            let v1: UInt8 = 0xFE
-            let v2: UInt8 = 0x01
-            gb.cpu.F.C = true
-            
-            var testVal = 0
-            if gb.cpu.F.C == true { testVal = testVal &+ 1 }
-            // Set the two registers to our values
-            try? gb.cpu.set(val: v1, for: regs.0)
-            try? gb.cpu.set(val: v2, for: regs.1)
-            
-            // Run the ticks that the instruction takes
-            gb.cpu.PC = 0xC000
-            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            for t in tests {
+                // Extract the start states
+                let startState = t.0
+                
+                let args = startState.0
+                let flags = startState.1
+                
+                // This case should result in 0x00 and
+                let v1: UInt8 = args.0
+                let v2: UInt8 = args.1
+                // Set up the flags we're interested in
+                var newFlagRegister = gb.cpu.F.rawValue
+                for flag in flags { newFlagRegister = flag.setSame(in: newFlagRegister) }
+                gb.cpu.F.rawValue = newFlagRegister
+                
+                // Set PC just after opcode in case we're loading an immediate value from subsequent bytes
+                gb.cpu.PC = 0xC001
 
-            // Read the destination register to confirm the result
-            let resVal = try? gb.cpu.getVal8(for: regs.0)
-            XCTAssert(resVal == testVal)
+                // Set the two registers to our values
+                try? gb.cpu.set(val: v1, for: regs.0)
+                try? gb.cpu.set(val: v2, for: regs.1)
+                
+                // Run the ticks that the instruction takes
+                gb.cpu.PC = 0xC000
+                for _ in 0 ..< ticks { gb.cpu.clockTick() }
+
+                // Extract the end states
+                let endState = t.1
+                let testVal = endState.0
+                let endFlags = endState.1
+
+                // Read the destination register to confirm the result
+                let resVal = try? gb.cpu.getVal8(for: regs.0)
+                XCTAssert(resVal == testVal)
+                
+                // Check the flags
+                for flag in endFlags { XCTAssert(flag.isSame(in: gb.cpu.F.rawValue)) }
+            }
         }
     }
     
@@ -376,11 +396,6 @@ class GameBoyTests: XCTestCase {
 
         
         for op in opsToTest {
-            // Generate two random numbers and set the resulting addition as the test value
-            let v1: UInt8 = UInt8(arc4random_uniform(0xFF))
-            let v2: UInt8 = UInt8(arc4random_uniform(0xFF))
-            let (testVal, overflow) = v1.addingReportingOverflow(v2)
-            let halfCarry = gb.cpu.halfCarryOverflow(term1: v1, term2: v2)
 
             // Write the opcode to RAM
             gb.cpu.write(at: 0xC000, with: op)
@@ -392,6 +407,12 @@ class GameBoyTests: XCTestCase {
                 return
             }
             
+            // Generate two random numbers and set the resulting addition as the test value
+            let v1: UInt8 = UInt8(arc4random_uniform(0xFF))
+            let v2: UInt8 = (regs.0 == regs.1) ? v1 : UInt8(arc4random_uniform(0xFF))
+            let (testVal, overflow) = v1.addingReportingOverflow(v2)
+            let halfCarry = gb.cpu.halfCarryOverflow(term1: v1, term2: v2)
+
             // Set the two registers to our values
             try? gb.cpu.set(val: v1, for: regs.0)
             try? gb.cpu.set(val: v2, for: regs.1)

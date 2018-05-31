@@ -314,6 +314,18 @@ class CPU {
         ops[0x84] = (.add8_8, (.A, .H), 4)
         ops[0x85] = (.add8_8, (.A, .L), 4)
         ops[0x86] = (.add8_8, (.A, .HLptr), 4)
+        ops[0x87] = (.add8_8, (.A, .A), 4)
+        
+        ops[0x88] = (.adc8_8, (.A, .B), 4)
+        ops[0x89] = (.adc8_8, (.A, .C), 4)
+        ops[0x8A] = (.adc8_8, (.A, .D), 4)
+        ops[0x8B] = (.adc8_8, (.A, .E), 4)
+        ops[0x8C] = (.adc8_8, (.A, .H), 4)
+        ops[0x8D] = (.adc8_8, (.A, .L), 4)
+        ops[0x8E] = (.adc8_8, (.A, .HLptr), 4)
+        ops[0x8F] = (.adc8_8, (.A, .A), 4)
+        
+        ops[0xCE] = (.adc8_8, (.A, .i8), 4)
     }
 
     
@@ -451,7 +463,7 @@ class CPU {
         do {
             switch op {
             case .adc8_8:
-                break
+                try adc(argTypes: args)
             case .add8_8:
                 try add8_8(argTypes: args)
             case .add16_16:
@@ -511,15 +523,20 @@ extension CPU {
         // Store the C flag before it is changed.
         let oldC: UInt8 = F.C == true ? 1 : 0
         
-        let (res1, _) = t1.addingReportingOverflow(t2)
-        let (result, overflow) = res1.addingReportingOverflow(oldC)
+        // First add the registers keeping track of the carrys
+        let (res1, overflow1) = t1.addingReportingOverflow(t2)
+        let H1 = halfCarryOverflow(term1: t1, term2: t2)
+        // Then add the old carry and track the resulting carrys
+        let (result, overflow2) = res1.addingReportingOverflow(oldC)
+        let H2 = halfCarryOverflow(term1: res1, term2: oldC)
         
+        print("overflow1: \(overflow1) and overflow2: \(overflow2)")
         try set(val: result, for: argTypes.0)
         
         F.Z = (result == 0)
         F.N = false
-        F.H = halfCarryOverflow(term1: res1, term2: oldC)
-        F.C = overflow
+        F.H = H1 || H2
+        F.C = overflow1 || overflow2
     }
     
     func add16_16(argTypes: (RegisterType, RegisterType)) throws {
