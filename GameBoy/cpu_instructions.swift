@@ -37,6 +37,28 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
+    func sbc(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
+        let t2 = try getVal8(for: argTypes.1)
+        
+        // Store the C flag before it is changed.
+        let oldC: UInt8 = F.C == true ? 1 : 0
+
+        let (res1, overflow1) = t1.subtractingReportingOverflow(t2)
+        let H1 = halfCarryUnderflow(term1: t1, term2: t2)
+        
+        let (result, overflow2) = res1.subtractingReportingOverflow(oldC)
+        let H2 = halfCarryUnderflow(term1: res1, term2: oldC)
+
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = true
+        F.H = H1 || H2
+        F.C = overflow1 || overflow2
+        
+    }
+
     func add16_16(argTypes: (RegisterType, RegisterType)) throws {
         let t1 = try getVal16(for: argTypes.0)
         let t2 = try getVal16(for: argTypes.1)
@@ -114,6 +136,7 @@ extension CPU {
         F.H = halfCarryUnderflow(term1: t1, term2: t2)
         F.C = overflow
     }
+
     
     func rlca() throws {
         F.C = (A >> 7) == 1

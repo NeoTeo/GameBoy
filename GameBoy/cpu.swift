@@ -124,6 +124,7 @@ class CPU {
         case nop
         case or
         case rlca
+        case sbc
         case sub
         // cb prefix
         case rlc
@@ -318,6 +319,15 @@ class CPU {
         ops[0x96] = (.sub, (.A, .HLptr), 8)
         ops[0x97] = (.sub, (.A, .A), 4)
         
+        ops[0x98] = (.sbc, (.A, .B), 4)
+        ops[0x99] = (.sbc, (.A, .C), 4)
+        ops[0x9A] = (.sbc, (.A, .D), 4)
+        ops[0x9B] = (.sbc, (.A, .E), 4)
+        ops[0x9C] = (.sbc, (.A, .H), 4)
+        ops[0x9D] = (.sbc, (.A, .L), 4)
+        ops[0x9E] = (.sbc, (.A, .HLptr), 8)
+        ops[0x9F] = (.sbc, (.A, .A), 4)
+        
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
     }
@@ -376,6 +386,8 @@ class CPU {
                 try or(argType: args.1)
             case .rlca:
                 try rlca()
+            case .sbc:
+                try sbc(argTypes: args)
             case .sub:
                 try sub8_8(argTypes: args)
                 

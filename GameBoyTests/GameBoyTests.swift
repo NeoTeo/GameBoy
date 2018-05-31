@@ -344,58 +344,6 @@ class GameBoyTests: XCTestCase {
         opsToTest.append(0xCE)
         
         test(ops: opsToTest, and: tests)
-/*
-        for op in opsToTest {
-            // Write the opcode to RAM
-            gb.cpu.write(at: 0xC000, with: op)
-            
-            // Get the registers involved in the operation
-            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
-                XCTFail("No entry for given opcode \(String(format: "%2X", op))")
-                return
-            }
-
-            // Set up some edge case tests
-            for t in tests {
-                // Extract the start states
-                let startState = t.0
-                
-                let args = startState.0
-                let flags = startState.1
-                
-                // This case should result in 0x00 and
-                let v1: UInt8 = args.0
-                let v2: UInt8 = args.1
-                // Set up the flags we're interested in
-                var newFlagRegister = gb.cpu.F.rawValue
-                for flag in flags { newFlagRegister = flag.setSame(in: newFlagRegister) }
-                gb.cpu.F.rawValue = newFlagRegister
-                
-                // Set PC just after opcode in case we're loading an immediate value from subsequent bytes
-                gb.cpu.PC = 0xC001
-
-                // Set the two registers to our values
-                try? gb.cpu.set(val: v1, for: regs.0)
-                try? gb.cpu.set(val: v2, for: regs.1)
-                
-                // Run the ticks that the instruction takes
-                gb.cpu.PC = 0xC000
-                for _ in 0 ..< ticks { gb.cpu.clockTick() }
-
-                // Extract the end states
-                let endState = t.1
-                let testVal = endState.0
-                let endFlags = endState.1
-
-                // Read the destination register to confirm the result
-                let resVal = try? gb.cpu.getVal8(for: regs.0)
-                XCTAssert(resVal == testVal)
-                
-                // Check the flags
-                for flag in endFlags { XCTAssert(flag.isSame(in: gb.cpu.F.rawValue)) }
-            }
-        }
- */
     }
     
     func testAdd8_8() {
@@ -487,6 +435,10 @@ class GameBoyTests: XCTestCase {
 
     }
     
+    func testAnd() {
+        
+    }
+    
     func testLd8_8() {
     
         continueAfterFailure = false
@@ -576,6 +528,21 @@ class GameBoyTests: XCTestCase {
         let F = gb.cpu.F
         XCTAssert(F.C == true)
         XCTAssert((F.H && F.N && F.Z) == false)
+    }
+    
+    func testSbc() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x00, 0x01), [.C(false), .H(false)]), (0xFF, [.C(true), .H(true), .N(true), .Z(false)])),
+            (((0x00, 0x01), [.C(true), .H(false)]), (0xFE, [.C(true), .H(true), .N(true), .Z(false)])),
+            (((0x01, 0x01), [.C(false), .H(false)]), (0x00, [.C(false), .H(false), .N(true), .Z(true)])),
+            (((0x01, 0x01), [.C(true), .H(false)]), (0xFF, [.C(true), .H(true), .N(true), .Z(false)])),
+            (((0x10, 0x01), [.C(false), .H(false)]), (0x0F, [.C(false), .H(true), .N(true), .Z(false)])),
+            ]
+        // Set up a list of the opcodes we want to test
+        // (exclude 0x97 as it subtracts itself and won't return the same result as the testval expects)
+        let opsToTest: [UInt8] = [0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E]//, 0x9F]
+        
+        test(ops: opsToTest, and: testVals)
     }
     
     func testSub() {
