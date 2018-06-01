@@ -519,7 +519,20 @@ class GameBoyTests: XCTestCase {
 
         }
     }
-    
+
+    func testOr() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x00, 0x01), []), (0x01, [.Z(false)])),
+            (((0xAA, 0x55), []), (0xFF, [.Z(false)])),
+            (((0xAA, 0xAA), []), (0xAA, [.Z(false)])),
+            ]
+        // Set up a list of the opcodes we want to test
+        // (exclude 0xB7 as it subtracts itself and won't return the same result as the testval expects)
+        let opsToTest: [UInt8] = [0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6]// , 0xB7]
+        
+        test(ops: opsToTest, and: testVals)
+    }
+
     func testRlca() {
         let testVal: UInt8 = 0x81
         // Reset the F register

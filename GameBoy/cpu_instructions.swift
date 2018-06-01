@@ -100,17 +100,6 @@ extension CPU {
         print("CPU in low power mode.")
     }
 
-    // Bitwise OR between the value in the register and the A register
-    func or(argType: RegisterType) throws {
-        let t1 = try getVal8(for: argType)
-        let result = A | t1
-        try set(val: result, for: .A)
-        F.Z = (result == 0)
-        F.N = false
-        F.H = false
-        F.C = false
-    }
-
     func stop() {
         print("CPU in very low power mode.")
     }
@@ -252,6 +241,18 @@ extension CPU {
         var nn = try getVal16(for: argType)
         nn = nn &- 1
         try set(val: nn, for: argType)
+    }
+    
+    func or(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
+        let t2 = try getVal8(for: argTypes.1)
+        let result = t1 | t2
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = false
+        F.H = false
+        F.C = false
     }
     
     func xor(argTypes: (RegisterType, RegisterType)) throws {

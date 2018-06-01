@@ -345,8 +345,18 @@ class CPU {
         ops[0xAB] = (.xor, (.A, .E), 4)
         ops[0xAC] = (.xor, (.A, .H), 4)
         ops[0xAD] = (.xor, (.A, .L), 4)
-        ops[0xAE] = (.xor, (.A, .HLptr), 4)
+        ops[0xAE] = (.xor, (.A, .HLptr), 8)
         ops[0xAF] = (.xor, (.A, .A), 4)
+        
+        ops[0xB0] = (.or, (.A, .B), 4)
+        ops[0xB1] = (.or, (.A, .C), 4)
+        ops[0xB2] = (.or, (.A, .D), 4)
+        ops[0xB3] = (.or, (.A, .E), 4)
+        ops[0xB4] = (.or, (.A, .H), 4)
+        ops[0xB5] = (.or, (.A, .L), 4)
+        ops[0xB6] = (.or, (.A, .HLptr), 8)
+        ops[0xB7] = (.or, (.A, .A), 4)
+
         
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
@@ -401,9 +411,9 @@ class CPU {
             case .inc16:
                 try inc16(argType: args.0)
             case .nop:
-                subOpCycles = 4
+                break
             case .or:
-                try or(argType: args.1)
+                try or(argTypes: args)
             case .rlca:
                 try rlca()
             case .sbc:
