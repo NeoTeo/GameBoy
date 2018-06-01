@@ -126,6 +126,8 @@ class CPU {
         case rlca
         case sbc
         case sub
+        case xor
+        
         // cb prefix
         case rlc
     }
@@ -337,6 +339,15 @@ class CPU {
         ops[0xA6] = (.and, (.A, .HLptr), 8)
         ops[0xA7] = (.and, (.A, .A), 4)
 
+        ops[0xA8] = (.xor, (.A, .B), 4)
+        ops[0xA9] = (.xor, (.A, .C), 4)
+        ops[0xAA] = (.xor, (.A, .D), 4)
+        ops[0xAB] = (.xor, (.A, .E), 4)
+        ops[0xAC] = (.xor, (.A, .H), 4)
+        ops[0xAD] = (.xor, (.A, .L), 4)
+        ops[0xAE] = (.xor, (.A, .HLptr), 4)
+        ops[0xAF] = (.xor, (.A, .A), 4)
+        
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
     }
@@ -399,7 +410,8 @@ class CPU {
                 try sbc(argTypes: args)
             case .sub:
                 try sub8_8(argTypes: args)
-                
+            case .xor:
+                try xor(argTypes: args)
             // CB prefix
             case .rlc:
                 try rlc(argType: args.0)

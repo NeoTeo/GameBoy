@@ -550,7 +550,7 @@ class GameBoyTests: XCTestCase {
             (((0x10, 0x01), [.C(false), .H(false)]), (0x0F, [.C(false), .H(true), .N(true), .Z(false)])),
             ]
         // Set up a list of the opcodes we want to test
-        // (exclude 0x97 as it subtracts itself and won't return the same result as the testval expects)
+        // (exclude 0x9F as it subtracts itself and won't return the same result as the testval expects)
         let opsToTest: [UInt8] = [0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E]//, 0x9F]
         
         test(ops: opsToTest, and: testVals)
@@ -558,11 +558,23 @@ class GameBoyTests: XCTestCase {
     
     func testSub() {
         let testVals: [(TestStartState, TestEndState)] = [
-            (((0x0, 0x01), [.C(false), .H(false)]), (0xFF, [.C(true), .H(true), .N(true), .Z(false)])),
+            (((0x00, 0x01), [.C(false), .H(false)]), (0xFF, [.C(true), .H(true), .N(true), .Z(false)])),
             ]
         // Set up a list of the opcodes we want to test
-        // (exclude 0x97 as it subtracts itself and won't return the same result as the testval expects)
         let opsToTest: [UInt8] = [0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0xD6]
+        
+        test(ops: opsToTest, and: testVals)
+    }
+    
+    func testXor() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x00, 0x01), []), (0x01, [.Z(false)])),
+            (((0xAA, 0x55), []), (0xFF, [.Z(false)])),
+            (((0xAA, 0xAA), []), (0x00, [.Z(true)])),
+            ]
+        // Set up a list of the opcodes we want to test
+        // (exclude 0xAF as it subtracts itself and won't return the same result as the testval expects)
+        let opsToTest: [UInt8] = [0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE]// , 0xAF]
         
         test(ops: opsToTest, and: testVals)
     }
