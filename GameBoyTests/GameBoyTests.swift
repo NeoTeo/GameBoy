@@ -436,7 +436,18 @@ class GameBoyTests: XCTestCase {
     }
     
     func testAnd() {
+        // Flag register is always reset to 0x00 before starting the tests
         
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x00, 0x01), []), (0x00, [.C(false), .H(true), .N(false), .Z(true)])),
+            (((0x01, 0x01), []), (0x01, [.C(false), .H(true), .N(false), .Z(false)])),
+            (((0xFF, 0xFE), []), (0xFE, [.C(false), .H(true), .N(false), .Z(false)])),
+            ]
+        // Set up a list of the opcodes we want to test
+        // (exclude 0x97 as it subtracts itself and won't return the same result as the testval expects)
+        let opsToTest: [UInt8] = [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6]//, 0xA7]
+        
+        test(ops: opsToTest, and: testVals)
     }
     
     func testLd8_8() {
@@ -604,7 +615,7 @@ class GameBoyTests: XCTestCase {
                 let endFlags = endState.1
                 
                 // Read the destination register to confirm the result
-                let resVal = try? gb.cpu.getVal8(for: regs.0)
+                let resVal = try! gb.cpu.getVal8(for: regs.0)
                 XCTAssert(resVal == testVal)
                 
                 // Check the flags

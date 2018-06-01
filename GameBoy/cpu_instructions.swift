@@ -84,10 +84,12 @@ extension CPU {
     }
     
     // Bitwise AND between the value in the register and the A register
-    func and(argType: RegisterType) throws {
-        let t1 = try getVal8(for: argType)
-        let result = A & t1
-        try set(val: result, for: .A)
+    func and(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal8(for: argTypes.0)
+        let t2 = try getVal8(for: argTypes.1)
+        let result = t1 & t2
+        try set(val: result, for: argTypes.0)
+        
         F.Z = (result == 0)
         F.N = false
         F.H = true

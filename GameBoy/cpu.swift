@@ -327,7 +327,16 @@ class CPU {
         ops[0x9D] = (.sbc, (.A, .L), 4)
         ops[0x9E] = (.sbc, (.A, .HLptr), 8)
         ops[0x9F] = (.sbc, (.A, .A), 4)
-        
+
+        ops[0xA0] = (.and, (.A, .B), 4)
+        ops[0xA1] = (.and, (.A, .C), 4)
+        ops[0xA2] = (.and, (.A, .D), 4)
+        ops[0xA3] = (.and, (.A, .E), 4)
+        ops[0xA4] = (.and, (.A, .H), 4)
+        ops[0xA5] = (.and, (.A, .L), 4)
+        ops[0xA6] = (.and, (.A, .HLptr), 8)
+        ops[0xA7] = (.and, (.A, .A), 4)
+
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
     }
@@ -365,7 +374,7 @@ class CPU {
             case .add16_16:
                 try add16_16(argTypes: args)
             case .and:
-                try and(argType: args.1)
+                try and(argTypes: args)
             case .ld8_8:
                 try ld8_8(argTypes: args)
             case .ld16_16:
