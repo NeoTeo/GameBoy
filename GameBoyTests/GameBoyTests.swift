@@ -69,6 +69,18 @@ class GameBoyTests: XCTestCase {
 
     }
     
+    func testCp() {
+        let testVals: [(TestStartState, TestEndState)] = [
+        (((0x00, 0x01), [.C(false), .H(false)]), (0x00, [.C(true), .H(true), .N(true), .Z(false)])),
+        (((0x01, 0x01), [.C(false), .H(false)]), (0x01, [.C(false), .H(false), .N(true), .Z(true)])),
+        (((0x10, 0x01), [.C(false), .H(false)]), (0x10, [.C(false), .H(true), .N(true), .Z(false)])),
+        ]
+        // Set up a list of the opcodes we want to test
+        let opsToTest: [UInt8] = [0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE]//, 0xBF]
+    
+        test(ops: opsToTest, and: testVals)
+    }
+    
     func testInc8HalfCarry() {
         
         gb.cpu.AF = 0x0f00

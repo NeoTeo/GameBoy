@@ -114,6 +114,7 @@ class CPU {
         case add8_8
         case add16_16
         case and
+        case cp
         case inc8
         case inc16
         case dec8
@@ -357,6 +358,15 @@ class CPU {
         ops[0xB6] = (.or, (.A, .HLptr), 8)
         ops[0xB7] = (.or, (.A, .A), 4)
 
+        ops[0xB8] = (.cp, (.A, .B), 4)
+        ops[0xB9] = (.cp, (.A, .C), 4)
+        ops[0xBA] = (.cp, (.A, .D), 4)
+        ops[0xBB] = (.cp, (.A, .E), 4)
+        ops[0xBC] = (.cp, (.A, .H), 4)
+        ops[0xBD] = (.cp, (.A, .L), 4)
+        ops[0xBE] = (.cp, (.A, .HLptr), 8)
+        ops[0xBF] = (.cp, (.A, .A), 4)
+
         
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
@@ -384,7 +394,8 @@ class CPU {
             print("ERROR reading from ops table")
             return
         }
-        
+        // TODO: Consider using the functions directly in the table instead since they
+        // all take args anyway
         subOpCycles = cycles
         do {
             switch op {
@@ -396,6 +407,8 @@ class CPU {
                 try add16_16(argTypes: args)
             case .and:
                 try and(argTypes: args)
+            case .cp:
+                try cp(argTypes: args)
             case .ld8_8:
                 try ld8_8(argTypes: args)
             case .ld16_16:

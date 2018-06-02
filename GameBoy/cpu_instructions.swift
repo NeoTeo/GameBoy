@@ -96,6 +96,19 @@ extension CPU {
         F.C = false
     }
     
+    // Perform a subtraction of the source register from the target register.
+    // Set the flags but don't keep the result.
+    func cp(argTypes: (RegisterType, RegisterType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
+        let t2 = try getVal8(for: argTypes.1)
+        let (result, overflow) = t1.subtractingReportingOverflow(t2)
+        
+        F.Z = (result == 0)
+        F.N = true
+        F.H = halfCarryUnderflow(term1: t1, term2: t2)
+        F.C = overflow
+    }
+
     func halt() {
         print("CPU in low power mode.")
     }
@@ -107,16 +120,12 @@ extension CPU {
     /*
      SUB A,r8
      
-     Subtract the value in r8 from A.
-     Cycles: 1
-     Bytes: 1
-     Flags:
+     Subtract the value in source regisrer from target register and store result in target register.
      Z: Set if result is 0.
      N: 1
      H: Set if no borrow from bit 4.
-     C: Set if no borrow (set if r8 > A).
+     C: Set if no borrow (set if source register > target register).
  */
-    // FIXME: The half carry needs a subtractive version I think
     func sub8_8(argTypes: (RegisterType, RegisterType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
