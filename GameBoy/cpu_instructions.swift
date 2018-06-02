@@ -137,23 +137,53 @@ extension CPU {
         F.C = overflow
     }
 
+    // Rotate destination register(or value pointed to by it) left through carry.
+    // C <- [7 <- 0] <- C
+    func rl(argTypes: (RegisterType, RegisterType)) throws {
+        let regVal = try getVal8(for: argTypes.0)
+        let oldCarry: UInt8 = (F.C == true) ? 0x01 : 0x00
+        let newCarry = (regVal >> 7) == 0x01
+        let result = (regVal << 1) | oldCarry
+        try set(val: result, for: argTypes.0)
+        F.C = newCarry
+        F.N = false
+        F.H = false
+        F.Z = (result == 0x00)
+    }
+
     
+    // Rotate register A left through carry.
+    // C <- [7 <- 0] <- C
+    func rla() throws {
+        let oldCarry: UInt8 = (F.C == true) ? 0x01 : 0x00
+        let newCarry = (A >> 7) == 0x01
+        A = (A << 1) | oldCarry
+        F.C = newCarry
+        F.N = false
+        F.H = false
+        F.Z = false
+    }
+
+    // Rotate register A left.
+    // C <- [7 <- 0] <- [7]
     func rlca() throws {
-        F.C = (A >> 7) == 1
-        A = A << 1
+        let carry: UInt8 = (A >> 7)
+        F.C = (carry == 0x01)
+        A = (A << 1) + carry
         F.Z = false
         F.N = false
         F.H = false
     }
-    
+
     // CB prefix instruction
     // RLC A, B, C, D, E, H, L, (HL)
     // Rotate left
     func rlc(argType: RegisterType) throws {
         let reg = try getVal8(for: argType)
-        F.C = (reg >> 7) == 1
-        try set(val: reg << 1, for: argType)
-        F.Z = (reg == 0)
+        let carry: UInt8 = (reg >> 7)
+        F.C = (carry == 0x01)
+        try set(val: ((reg << 1) | carry), for: argType)
+        F.Z = (reg == 0x00)
         F.N = false
         F.H = false
     }
