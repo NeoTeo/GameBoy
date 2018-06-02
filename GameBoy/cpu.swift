@@ -126,6 +126,7 @@ class CPU {
         case or
         case rlca
         case sbc
+        case stop
         case sub
         case xor
         
@@ -184,6 +185,7 @@ class CPU {
         ops[0x07] = (.rlca, (.noReg, .noReg), 4) // not to confuse with RLC A of the CB prefix instructions
         ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
         ops[0x09] = (.add16_16, (.HL, .BC), 8)
+        ops[0x10] = (.stop, (.noReg, .noReg), 4)
         ops[0x0A] = (.ld8_8, (.A, .BCptr), 8)
         ops[0x0B] = (.dec16, (.BC, .noReg), 8)
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
@@ -431,6 +433,8 @@ class CPU {
                 try rlca()
             case .sbc:
                 try sbc(argTypes: args)
+            case .stop:
+                stop()
             case .sub:
                 try sub8_8(argTypes: args)
             case .xor:
