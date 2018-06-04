@@ -126,6 +126,7 @@ class CPU {
         case or
         case rlca
         case rla
+        case rr
         case rra
         case rrca
         case sbc
@@ -442,8 +443,9 @@ class CPU {
             case .rra:
                 try rra()
             case .rrca:
-                print("operation \(op) not yet implemented")
-                break
+                try rrca()
+//                print("operation \(op) not yet implemented")
+//                break
                 
             case .sbc:
                 try sbc(argTypes: args)
@@ -456,6 +458,8 @@ class CPU {
             // CB prefix
             case .rlc:
                 try rlc(argType: args.0)
+            case .rr:
+                try rr(argTypes: args)
             }
         } catch {
             print("Error executing opcodes \(error) \(op)")

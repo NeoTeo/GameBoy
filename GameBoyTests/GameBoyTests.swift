@@ -557,6 +557,7 @@ class GameBoyTests: XCTestCase {
 //        test(ops: opsToTest, and: testVals)
     }
 
+
     func testRla() {
         
         let testVals: [(TestStartState, TestEndState)] = [
@@ -589,6 +590,16 @@ class GameBoyTests: XCTestCase {
             ]
         
         test(ops: [0x1F], and: testVals, customRegs: (.A, .noReg))
+    }
+
+    func testRrca() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x01, 0x00), [.C(false), .H(false)]), (0x80, [.C(true), .H(false), .N(false), .Z(false)])),
+            (((0x01, 0x00), [.C(true), .H(false)]), (0x80, [.C(true), .H(false), .N(false), .Z(false)])),
+            (((0x00, 0x00), [.C(true), .H(false)]), (0x00, [.C(false), .H(false), .N(false), .Z(false)])),
+            ]
+        
+        test(ops: [0x0F], and: testVals, customRegs: (.A, .noReg))
     }
     
     func testSbc() {
