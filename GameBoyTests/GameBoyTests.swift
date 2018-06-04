@@ -109,8 +109,8 @@ class GameBoyTests: XCTestCase {
         print("AF is " + String(format: "%2X", gb.cpu.AF))
     }
 
-    let r16Ids: [CPU.RegisterType] = [ .BC, .DE, .HL, .SP ]
-    let r8Ids: [CPU.RegisterType] = [.B, .D, .H, .C, .E, .L, .A]
+    let r16Ids: [CPU.ArgType] = [ .BC, .DE, .HL, .SP ]
+    let r8Ids: [CPU.ArgType] = [.B, .D, .H, .C, .E, .L, .A]
     enum FlagTest {
         case Z(Bool)
         case N(Bool)
@@ -462,11 +462,36 @@ class GameBoyTests: XCTestCase {
         test(ops: opsToTest, and: testVals)
     }
     
+    func testJrNz() {
+        
+        // Clear the SP register
+        gb.cpu.F.rawValue = 0x00
+        
+        let offs: [UInt8] = [0x02, 0x00, 0x86]
+        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88]
+        
+        for i in 0 ..< offs.count {
+            // Place the JR NZ, i8 instruction in the top of RAM.
+            gb.cpu.ram.write(at: 0xC000, with: 0x20)
+            
+            // Write the jump offset in RAM in the byte after the opcode.
+            gb.cpu.ram.write(at: 0xC001, with: offs[i])
+            
+            // Set the PC to the top of RAM
+            gb.cpu.PC = 0xC000
+            // Run the ticks that the instruction takes
+            for _ in 0 ..< 12 { gb.cpu.clockTick() }
+            
+            // Check that the PC matches the expected location
+            XCTAssert( gb.cpu.PC == pcLoc[i])
+        }
+    }
+    
     func testLd8_8() {
     
         continueAfterFailure = false
         
-        func checkForHLptrIncDec(regs: (CPU.RegisterType, CPU.RegisterType)) -> (CPU.RegisterType, CPU.RegisterType) {
+        func checkForHLptrIncDec(regs: (CPU.ArgType, CPU.ArgType)) -> (CPU.ArgType, CPU.ArgType) {
             var retRegs = regs
             if (regs.0 == .HLptrDec) || (regs.0 == .HLptrInc) {
                 retRegs.0 = .HLptr
@@ -653,7 +678,7 @@ class GameBoyTests: XCTestCase {
 // Helper functions that are not specific tests themselves.
 extension GameBoyTests {
     
-    typealias RegisterPair = (CPU.RegisterType, CPU.RegisterType)
+    typealias RegisterPair = (CPU.ArgType, CPU.ArgType)
     
     
     /// Test function.
@@ -694,7 +719,7 @@ extension GameBoyTests {
     ///   - regs: the source and destination registers the instruction uses.
     ///   - ticks: the number of ticks the instruction should take
     ///   - testVals: the initial settings and expected outcome for each test.
-    func multiTest(op: UInt8, regs: (CPU.RegisterType, CPU.RegisterType), ticks: UInt8, testVals: [(TestStartState, TestEndState)]) {
+    func multiTest(op: UInt8, regs: (CPU.ArgType, CPU.ArgType), ticks: UInt8, testVals: [(TestStartState, TestEndState)]) {
         for t in testVals {
             // Extract the start states
             let startState = t.0

@@ -13,7 +13,7 @@ import Foundation
 // n an 8 bit value, nn a 16 bit value
 extension CPU {
     
-    func adc(argTypes: (RegisterType, RegisterType)) throws {
+    func adc(argTypes: (ArgType, ArgType)) throws {
         
         let t1 = try getVal8(for: argTypes.0)
         let t2 = try getVal8(for: argTypes.1)
@@ -37,7 +37,50 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
-    func sbc(argTypes: (RegisterType, RegisterType)) throws {
+    func jr(argTypes: (ArgType, ArgType)) throws {
+        let targetArg = argTypes.0
+        let sourceArg = argTypes.1
+        var offset: UInt8 = 0
+        
+        if let passCondition = checkCondition(for: targetArg) {
+            // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
+            guard passCondition == true else { return }
+            offset = try getVal8(for: sourceArg)
+        } else {
+            // there was no condition so the targetArg is the offset
+            offset = try getVal8(for: targetArg)
+        }
+        
+        // The offset is a (-128 to 127) value. Treat as 2's complement.
+        let isNegative = (offset & 0x80) == 0x80
+        let tval = Int(offset & 0x7f)
+        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
+        // Jump to PC + offset
+        guard newPc < ram.size, newPc >= 0 else {
+            throw CPUError.RamError
+        }
+        PC = newPc
+    }
+    
+    
+    /// Check for the given conditions, if any.
+    ///
+    /// - Parameter arg: the condition (or a non conditional argument type)
+    /// - Returns:
+    ///     true if the arg was a condition type and the condition was satisifed
+    ///     false if the arg was a condition type and the condition was not satisfied
+    ///     nil if the arg was not a condition type
+    func checkCondition(for arg: ArgType) -> Bool? {
+        switch arg {
+        case .Carry:   return F.C == true
+        case .NoCarry: return F.C == false
+        case .Zero:    return F.Z == true
+        case .NotZero: return F.Z == false
+        default: return nil
+        }
+    }
+    
+    func sbc(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
         
@@ -59,7 +102,7 @@ extension CPU {
         
     }
 
-    func add16_16(argTypes: (RegisterType, RegisterType)) throws {
+    func add16_16(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal16(for: argTypes.0)
         let t2 = try getVal16(for: argTypes.1)
         let (result, overflow) = t1.addingReportingOverflow(t2)
@@ -71,7 +114,7 @@ extension CPU {
         F.C = overflow
     }
     
-    func add8_8(argTypes: (RegisterType, RegisterType)) throws {
+    func add8_8(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0)
         let t2 = try getVal8(for: argTypes.1)
         let (result, overflow) = t1.addingReportingOverflow(t2)
@@ -84,7 +127,7 @@ extension CPU {
     }
     
     // Bitwise AND between the value in the register and the A register
-    func and(argTypes: (RegisterType, RegisterType)) throws {
+    func and(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0)
         let t2 = try getVal8(for: argTypes.1)
         let result = t1 & t2
@@ -98,7 +141,7 @@ extension CPU {
     
     // Perform a subtraction of the source register from the target register.
     // Set the flags but don't keep the result.
-    func cp(argTypes: (RegisterType, RegisterType)) throws {
+    func cp(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
         let (result, overflow) = t1.subtractingReportingOverflow(t2)
@@ -126,7 +169,7 @@ extension CPU {
      H: Set if no borrow from bit 4.
      C: Set if no borrow (set if source register > target register).
  */
-    func sub8_8(argTypes: (RegisterType, RegisterType)) throws {
+    func sub8_8(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
         let (result, overflow) = t1.subtractingReportingOverflow(t2)
@@ -139,7 +182,7 @@ extension CPU {
 
     // Rotate destination register(or value pointed to by it) left through carry.
     // C <- [7 <- 0] <- C
-    func rl(argTypes: (RegisterType, RegisterType)) throws {
+    func rl(argTypes: (ArgType, ArgType)) throws {
         let regVal = try getVal8(for: argTypes.0)
         let oldCarry: UInt8 = (F.C == true) ? 0x01 : 0x00
         let newCarry = (regVal >> 7) == 0x01
@@ -178,7 +221,7 @@ extension CPU {
     // CB prefix instruction
     // RLC A, B, C, D, E, H, L, (HL)
     // Rotate left
-    func rlc(argType: RegisterType) throws {
+    func rlc(argType: ArgType) throws {
         let reg = try getVal8(for: argType)
         let carry: UInt8 = (reg >> 7)
         F.C = (carry == 0x01)
@@ -190,7 +233,7 @@ extension CPU {
 
     // Rotate target register right through carry.
     // C -> [7 -> 0] -> C
-    func rr(argTypes: (RegisterType, RegisterType)) throws {
+    func rr(argTypes: (ArgType, ArgType)) throws {
         let oldCarry: UInt8 = (F.C == true) ? 0x80 : 0x00
         let regVal = try getVal8(for: argTypes.0)
         let newCarry = (regVal & 0x01) == 0x01
@@ -227,7 +270,7 @@ extension CPU {
     }
 
     
-    func ld8_8(argTypes: (RegisterType, RegisterType)) throws {
+    func ld8_8(argTypes: (ArgType, ArgType)) throws {
         var n: UInt8
         let source = argTypes.1
         let target = argTypes.0
@@ -244,7 +287,7 @@ extension CPU {
     
     // Load a 16 bit source into a 16 bit destination
     // Flags unaffected.
-    func ld16_16(argTypes: (RegisterType, RegisterType)) throws {
+    func ld16_16(argTypes: (ArgType, ArgType)) throws {
         let source = argTypes.1
         let target = argTypes.0
         
@@ -258,7 +301,7 @@ extension CPU {
     // N - Reset.
     // H - Set if carry from bit 3.
     // C - Not affected.
-    func inc8(argType: RegisterType) throws {
+    func inc8(argType: ArgType) throws {
         
         var n: UInt8
         // pointer indirection special case
@@ -284,14 +327,14 @@ extension CPU {
     
     // INC BC, DE, HL, SP
     // Flags unaffected
-    func inc16(argType: RegisterType) throws {
+    func inc16(argType: ArgType) throws {
         var nn = try getVal16(for: argType)
         nn = nn &+ 1
         try set(val: nn, for: argType)
     }
     
     // DEC A, B, C, D, E, H, L, (HL)
-    func dec8(argType: RegisterType) throws {
+    func dec8(argType: ArgType) throws {
         var n: UInt8
         
         // pointer indirection special case
@@ -315,13 +358,13 @@ extension CPU {
     }
     
     // DEC BC, DE, HL, SP
-    func dec16(argType: RegisterType) throws {
+    func dec16(argType: ArgType) throws {
         var nn = try getVal16(for: argType)
         nn = nn &- 1
         try set(val: nn, for: argType)
     }
     
-    func or(argTypes: (RegisterType, RegisterType)) throws {
+    func or(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
         let t2 = try getVal8(for: argTypes.1)
         let result = t1 | t2
@@ -333,7 +376,7 @@ extension CPU {
         F.C = false
     }
     
-    func xor(argTypes: (RegisterType, RegisterType)) throws {
+    func xor(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
         let t2 = try getVal8(for: argTypes.1)
         let result = t1 ^ t2

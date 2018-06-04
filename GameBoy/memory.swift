@@ -9,6 +9,7 @@
 import Foundation
 
 protocol MEMORY {
+    var size: UInt16 { get }
     
     init(size: UInt16)
     func read8(at location: UInt16) -> UInt8

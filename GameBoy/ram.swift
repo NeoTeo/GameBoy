@@ -13,7 +13,7 @@ class RAM : MEMORY {
     let size: UInt16// in bytes
     var ram: [UInt8]
     
-    enum RamError : Error {
+    public enum RamError : Error {
         case Overflow
     }
     

@@ -117,6 +117,7 @@ class CPU {
         case cp
         case inc8
         case inc16
+        case jr
         case dec8
         case dec16
         case ld8_8
@@ -138,7 +139,7 @@ class CPU {
         case rlc
     }
     
-    enum RegisterType {
+    enum ArgType {
         case A
         case B
         case C
@@ -163,11 +164,17 @@ class CPU {
         case i16ptr
         
         case noReg
+        
+        // condition codes
+        case Zero        // Execute if Z is set
+        case NotZero     // Execute if Z is not set
+        case Carry       // Execute if C is set
+        case NoCarry     // Execute if C is not set
     }
 
     // An op consists of an instruction id, a tuple of argument ids and a cycle count.
     // FIXME: Make this into an array and add all the ops as part of its definition.
-    var ops =  [UInt8 : (OpType, (RegisterType, RegisterType), UInt8)]()
+    var ops =  [UInt8 : (OpType, (ArgType, ArgType), UInt8)]()
     
     func reset() {
         // Set initial register values as in DMG/GB
@@ -209,6 +216,7 @@ class CPU {
         ops[0x1D] = (.dec8, (.E, .noReg), 4)
         ops[0x1E] = (.ld8_8, (.E, .i8), 8)
         ops[0x1F] = (.rra, (.noReg, .noReg), 4)
+        ops[0x20] = (.jr, (.NotZero, .i8), 12)
         ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
         ops[0x23] = (.inc16, (.HL, .noReg), 8)
         ops[0x24] = (.inc8, (.H, .noReg), 4)
@@ -220,6 +228,7 @@ class CPU {
         ops[0x2C] = (.inc8, (.L, .noReg), 4)
         ops[0x2D] = (.dec8, (.L, .noReg), 4)
         ops[0x2E] = (.ld8_8, (.L, .i8), 8)
+        ops[0x30] = (.jr, (.NoCarry, .noReg), 12)
         ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8)
         ops[0x33] = (.inc16, (.SP, .noReg), 8)
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
@@ -386,6 +395,7 @@ class CPU {
         case UnknownRegister
         case RegisterReadFailure
         case RegisterWriteFailure
+        case RamError
     }
     
 
@@ -432,6 +442,8 @@ class CPU {
                 try inc8(argType: args.0)
             case .inc16:
                 try inc16(argType: args.0)
+            case .jr:
+                try jr(argTypes: args)
             case .nop:
                 break
             case .or:

@@ -11,7 +11,7 @@ import Foundation
 // Extension defining helper functions
 extension CPU {
     
-    func getVal8(for register: RegisterType) throws -> UInt8 {
+    func getVal8(for register: ArgType) throws -> UInt8 {
         switch register {
         case .A: return A
         case .B: return B
@@ -40,7 +40,7 @@ extension CPU {
         }
     }
     
-    func set(val: UInt8, for register: RegisterType) throws {
+    func set(val: UInt8, for register: ArgType) throws {
         switch register {
         case .A: A = val
         case .B: B = val
@@ -64,7 +64,7 @@ extension CPU {
         }
     }
     
-    func getVal16(for register: RegisterType) throws -> UInt16 {
+    func getVal16(for register: ArgType) throws -> UInt16 {
         switch register {
         case .BC: return BC
         case .DE: return DE
@@ -77,7 +77,7 @@ extension CPU {
         }
     }
     
-    func set(val: UInt16, for register: RegisterType) throws {
+    func set(val: UInt16, for register: ArgType) throws {
         switch register {
         case .BC: BC = val
         case .DE: DE = val
