@@ -126,6 +126,8 @@ class CPU {
         case or
         case rlca
         case rla
+        case rra
+        case rrca
         case sbc
         case stop
         case sub
@@ -192,6 +194,7 @@ class CPU {
         ops[0x0C] = (.inc8, (.C, .noReg), 4)
         ops[0x0D] = (.dec8, (.C, .noReg), 4)
         ops[0x0E] = (.ld8_8, (.C, .i8), 8)
+        ops[0x0F] = (.rrca, (.noReg, .noReg), 4)
         ops[0x12] = (.ld8_8, (.DEptr, .A), 8)
         ops[0x13] = (.inc16, (.DE, .noReg), 8)
         ops[0x14] = (.inc8, (.D, .noReg), 4)
@@ -204,6 +207,7 @@ class CPU {
         ops[0x1C] = (.inc8, (.E, .noReg), 4)
         ops[0x1D] = (.dec8, (.E, .noReg), 4)
         ops[0x1E] = (.ld8_8, (.E, .i8), 8)
+        ops[0x1F] = (.rra, (.noReg, .noReg), 4)
         ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
         ops[0x23] = (.inc16, (.HL, .noReg), 8)
         ops[0x24] = (.inc8, (.H, .noReg), 4)
@@ -435,6 +439,12 @@ class CPU {
                 try rlca()
             case .rla:
                 try rla()
+            case .rra:
+                try rra()
+            case .rrca:
+                print("operation \(op) not yet implemented")
+                break
+                
             case .sbc:
                 try sbc(argTypes: args)
             case .stop:

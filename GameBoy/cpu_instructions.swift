@@ -187,7 +187,19 @@ extension CPU {
         F.N = false
         F.H = false
     }
-    
+
+    // Rotate register A right through carry.
+    // C -> [7 -> 0] -> C
+    func rra() throws {
+        let oldCarry: UInt8 = (F.C == true) ? 0x80 : 0x00
+        let newCarry = (A & 0x01) == 0x01
+        A = (A >> 1) | oldCarry
+        F.C = newCarry
+        F.N = false
+        F.H = false
+        F.Z = false
+    }
+
     func ld8_8(argTypes: (RegisterType, RegisterType)) throws {
         var n: UInt8
         let source = argTypes.1
