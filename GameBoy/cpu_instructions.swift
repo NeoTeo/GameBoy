@@ -37,6 +37,34 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
+    
+    /// Decimal Adjust A (accumulator)
+    /// Use the content of the flags to adjust the A register.
+    /// If the least significant four bits of A contain an non-BCD (ie > 9) or
+    /// the H flag is set then add 0x06 to the A register.
+    /// Then, if the four most significant bits are > 9 (or the C flag is set)
+    /// then 0x60 is added to the A register.
+    /// If the N register is set in any of these cases then we must subtract rather than add.
+    func daa() {
+        
+        var overflow: Bool = false
+        if ((A & 0x0F) > 0x09) || (F.H == true) {
+            
+            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x06) : A.addingReportingOverflow(0x06)
+            F.C = F.C || overflow
+            //            A = (F.N == true) ? A &- 0x06 : A &+ 0x06 }
+        }
+
+        if ((A >> 4) > 0x09) || (F.C == true) {
+            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x60) : A.addingReportingOverflow(0x60)
+            F.C = F.C || overflow
+//            A = (F.N == true) ? A &- 0x60 : A &+ 0x60
+        }
+        
+        F.Z = (A == 0)
+        F.H = false
+    }
+    
     func jr(argTypes: (ArgType, ArgType)) throws {
         let targetArg = argTypes.0
         let sourceArg = argTypes.1

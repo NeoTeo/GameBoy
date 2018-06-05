@@ -462,15 +462,34 @@ class GameBoyTests: XCTestCase {
         test(ops: opsToTest, and: testVals)
     }
     
+    func testDaa() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x11, 0x00), [.C(false), .H(false), .N(false)]), (0x11, [.C(false), .H(false), .N(false), .Z(false)])),
+            (((0x1A, 0x00), [.C(false), .H(false), .N(false)]), (0x20, [.C(false), .H(false), .N(false), .Z(false)])),
+            (((0x93, 0x00), [.C(false), .H(true), .N(false)]), (0x99, [.C(false), .H(false), .N(false), .Z(false)])),
+            (((0x29, 0x00), [.C(true), .H(false), .N(false)]), (0x89, [.C(true), .H(false), .N(false), .Z(false)])),
+            (((0x33, 0x00), [.C(true), .H(true), .N(false)]), (0x99, [.C(true), .H(false), .N(false), .Z(false)])),
+            (((0x9A, 0x00), [.C(false), .H(false), .N(false)]), (0x00, [.C(true), .H(false), .N(false), .Z(true)])),
+            // negative
+            (((0x99, 0x00), [.C(false), .H(false), .N(true)]), (0x99, [.C(false), .H(false), .N(true), .Z(false)])),
+            (((0x86, 0x00), [.C(false), .H(true), .N(true)]), (0x80, [.C(false), .H(false), .N(true), .Z(false)])),
+            (((0x79, 0x00), [.C(true), .H(false), .N(true)]), (0x19, [.C(true), .H(false), .N(true), .Z(false)])),
+            (((0xFF, 0x00), [.C(true), .H(true), .N(true)]), (0x99, [.C(true), .H(false), .N(true), .Z(false)])),
+            ]
+        
+        test(ops: [0x27], and: testVals, customRegs: (.A, .noReg))
+    }
+    
     func testJrNz() {
         
-        // Clear the SP register
+        // Clear the F register
         gb.cpu.F.rawValue = 0x00
-        
-        let offs: [UInt8] = [0x02, 0x00, 0x86]
-        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88]
+        let zFlag: [Bool] = [false, false, false, true]
+        let offs: [UInt8] = [0x02, 0x00, 0x86, 0x42]
+        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88, 0xC001]
         
         for i in 0 ..< offs.count {
+            gb.cpu.F.Z = zFlag[i]
             // Place the JR NZ, i8 instruction in the top of RAM.
             gb.cpu.ram.write(at: 0xC000, with: 0x20)
             
@@ -482,7 +501,7 @@ class GameBoyTests: XCTestCase {
             // Run the ticks that the instruction takes
             for _ in 0 ..< 12 { gb.cpu.clockTick() }
             
-            // Check that the PC matches the expected location
+            // Check that the PC matches the expected location            
             XCTAssert( gb.cpu.PC == pcLoc[i])
         }
     }
