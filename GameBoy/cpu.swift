@@ -114,6 +114,7 @@ class CPU {
         case add8_8
         case add16_16
         case and
+        case cb
         case ccf
         case cp
         case cpl
@@ -141,7 +142,11 @@ class CPU {
         case sub
         case xor
         
+    }
+    
+    enum CbOpType {
         // cb prefix
+        case bit
         case rlc
     }
     
@@ -183,6 +188,7 @@ class CPU {
     // An op consists of an instruction id, a tuple of argument ids and a cycle count.
     // FIXME: Make this into an array and add all the ops as part of its definition.
     var ops =  [UInt8 : (OpType, (ArgType, ArgType), UInt8)]()
+    var cbOps = [UInt8 : (CbOpType, (ArgType, ArgType), UInt8)]()
     
     func reset() {
         // Set initial register values as in DMG/GB
@@ -407,6 +413,7 @@ class CPU {
         ops[0xBF] = (.cp, (.A, .A), 4)
 
         ops[0xC1] = (.pop, (.BC, .noReg), 12)
+        ops[0xCB] = (.cb, (.noReg, .noReg), 4)
         ops[0xD1] = (.pop, (.DE, .noReg), 12)
         ops[0xE1] = (.pop, (.HL, .noReg), 12)
         ops[0xF1] = (.pop, (.AF, .noReg), 12)
@@ -418,6 +425,16 @@ class CPU {
         
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
+        
+        
+        cbOps[0x40] = (.bit, (.i8, .B), 8)
+        cbOps[0x41] = (.bit, (.i8, .C), 8)
+        cbOps[0x42] = (.bit, (.i8, .D), 8)
+        cbOps[0x43] = (.bit, (.i8, .E), 8)
+        cbOps[0x44] = (.bit, (.i8, .H), 8)
+        cbOps[0x45] = (.bit, (.i8, .L), 8)
+        cbOps[0x46] = (.bit, (.i8, .HLptr), 12)
+        cbOps[0x47] = (.bit, (.i8, .A), 8)
     }
 
     
@@ -428,6 +445,7 @@ class CPU {
         case RamError
     }
     
+    var cbMode = false
 
     func clockTick() {
         subOpCycles -= 1
@@ -438,11 +456,22 @@ class CPU {
 
         print("PC is \(PC)")
         print("opcode is 0x" + String(format: "%2X",opcode) )
+        print("CB prefix is \(cbMode)")
+        
+        if cbMode == true {
+            handleCbOps(opcode: opcode) }
+        else {
+            handleOps(opcode: opcode)
+        }
+    }
 
+    func handleOps(opcode: UInt8) {
+        
         guard let (op, args, cycles) = ops[opcode] else {
             print("ERROR reading from ops table")
             return
         }
+        
         // TODO: Consider using the functions directly in the table instead since they
         // all take args anyway
         subOpCycles = cycles
@@ -456,6 +485,8 @@ class CPU {
                 try add16_16(argTypes: args)
             case .and:
                 try and(argTypes: args)
+            case .cb:
+                cbMode = true
             case .ccf:
                 ccf()
             case .cp:
@@ -496,8 +527,8 @@ class CPU {
                 try rra()
             case .rrca:
                 try rrca()
-//                print("operation \(op) not yet implemented")
-//                break
+                //                print("operation \(op) not yet implemented")
+                //                break
                 
             case .sbc:
                 try sbc(argTypes: args)
@@ -509,11 +540,37 @@ class CPU {
                 try sub8_8(argTypes: args)
             case .xor:
                 try xor(argTypes: args)
-            // CB prefix
-            case .rlc:
-                try rlc(argType: args.0)
             case .rr:
                 try rr(argTypes: args)
+            }
+        } catch {
+            print("Error executing opcodes \(error) \(op)")
+        }
+
+    }
+    
+    func handleCbOps(opcode: UInt8) {
+        // CB prefix
+        guard let (op, args, cycles) = cbOps[opcode] else {
+            print("ERROR reading from CB ops table")
+            return
+        }
+        
+        // Always reset cbMode.
+        cbMode = false
+        
+        // TODO: Consider using the functions directly in the table instead since they
+        // all take args anyway
+        subOpCycles = cycles
+        do {
+            switch op {
+            case .bit:
+                try bit(argTypes: args)
+//                print("operation \(op) not yet implemented")
+//                break
+
+            case .rlc:
+                try rlc(argType: args.0)
             }
         } catch {
             print("Error executing opcodes \(error) \(op)")

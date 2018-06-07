@@ -74,6 +74,10 @@ extension CPU {
         F.C = false
     }
 
+    func cb() throws {
+        // Read the next byte as an opcode and return
+    }
+    
     // Complement Carry flag
     func ccf() {
         F.N = false
@@ -432,5 +436,18 @@ extension CPU {
         F.N = false
         F.H = false
         F.C = false
+    }
+}
+
+// CB prefix instructions
+extension CPU {
+    
+    func bit(argTypes: (ArgType, ArgType)) throws {
+        let sourceVal = try getVal8(for: argTypes.1)
+        // Get the immediate value for the bit to test and mask in the bottom three bits
+        let bitToTest = try getVal8(for: argTypes.0) & 0x7
+        
+        // Set Zero flag if the bit was not set
+        F.Z = ((sourceVal >> bitToTest) & 0x01) == 0x0
     }
 }

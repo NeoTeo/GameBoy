@@ -806,6 +806,36 @@ class GameBoyTests: XCTestCase {
     
 }
 
+// Test CB prefix opcodes
+extension GameBoyTests {
+    
+    func testBit() {
+        gb.cpu.AF = 0x4260
+        
+        // Place the CB instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0xCB)
+        gb.cpu.ram.write(at: 0xC001, with: 0x40)
+
+        // Set the B register to a known value
+        gb.cpu.B = 0x42
+        gb.cpu.F.Z = false
+        
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+//
+//        // Read the value at the location (originally) pointed to by the SP
+//        let val1 = gb.cpu.ram.read8(at: 0xC005)
+//        let val2 = gb.cpu.ram.read8(at: 0xC006)
+//
+//        // Check that the PC matches the expected data
+        XCTAssert( gb.cpu.F.Z == true)
+//        XCTAssert( val2 == 0x60)
+    }
+}
+
 // Helper functions that are not specific tests themselves.
 extension GameBoyTests {
     
