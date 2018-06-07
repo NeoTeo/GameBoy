@@ -66,10 +66,13 @@ extension CPU {
     
     func getVal16(for register: ArgType) throws -> UInt16 {
         switch register {
+        case .AF: return AF
         case .BC: return BC
         case .DE: return DE
         case .HL: return HL
         case .SP: return SP
+            
+        case .SPptr: return read16(at: SP)
             
         case .i16: return read16(at: PC)
             
@@ -79,10 +82,13 @@ extension CPU {
     
     func set(val: UInt16, for register: ArgType) throws {
         switch register {
+        case .AF: AF = val
         case .BC: BC = val
         case .DE: DE = val
         case .HL: HL = val
         case .SP: SP = val
+            
+        case .SPptr: write(at: SP, with: val)
             
         // Load a 16 bit value into a destination, LD (i16), SP
         case .i16ptr:
@@ -135,5 +141,22 @@ extension CPU {
     
     func halfCarryOverflow(term1: UInt16, term2: UInt16) -> Bool {
         return (((term1 & 0xFFF) + (term2 & 0xFFF)) & 0x1000) == 0x1000
+    }
+    
+    /// Check for the given conditions, if any.
+    ///
+    /// - Parameter arg: the condition (or a non conditional argument type)
+    /// - Returns:
+    ///     true if the arg was a condition type and the condition was satisifed
+    ///     false if the arg was a condition type and the condition was not satisfied
+    ///     nil if the arg was not a condition type
+    func checkCondition(for arg: ArgType) -> Bool? {
+        switch arg {
+        case .Carry:   return F.C == true
+        case .NoCarry: return F.C == false
+        case .Zero:    return F.Z == true
+        case .NotZero: return F.Z == false
+        default: return nil
+        }
     }
 }

@@ -642,7 +642,65 @@ class GameBoyTests: XCTestCase {
         
         test(ops: opsToTest, and: testVals)
     }
+    
+    func testPopAF() {
+        // Clear the F register
+        gb.cpu.F.rawValue = 0x00
+//        let zFlag: [Bool] = [false, false, false, true]
+//        let offs: [UInt8] = [0x02, 0x00, 0x86, 0x42]
+//        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88, 0xC001]
+        
+//        for i in 0 ..< offs.count {
+//            gb.cpu.F.Z = zFlag[i]
+            // Place the instruction in the top of RAM.
+            gb.cpu.ram.write(at: 0xC000, with: 0xF1)
+        
+            // Set the stack pointer to point to a specific address
+            gb.cpu.SP = 0xC005
+        
+            // Write two bytes of known values at the location pointed to by the SP
+            gb.cpu.ram.write(at: 0xC005, with: 0x42)
+            gb.cpu.ram.write(at: 0xC006, with: 0xA0)
+            
+            // Set the PC to the top of RAM
+            gb.cpu.PC = 0xC000
+        
+            // Run the ticks that the instruction takes
+            for _ in 0 ..< 12 { gb.cpu.clockTick() }
+            
+            // Check that the PC matches the expected data
+            XCTAssert( gb.cpu.A == 0x42)
+            XCTAssert( gb.cpu.F.rawValue == 0xA0)
+//        }
 
+    }
+
+    func testPush() {
+        
+        gb.cpu.AF = 0x4260
+        
+        // Place the instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0xF5)
+        
+        // Set the stack pointer to point to a specific address
+        gb.cpu.SP = 0xC005
+        
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 16 { gb.cpu.clockTick() }
+        
+        // Read the value at the location (originally) pointed to by the SP
+        let val1 = gb.cpu.ram.read8(at: 0xC005)
+        let val2 = gb.cpu.ram.read8(at: 0xC006)
+        
+        // Check that the PC matches the expected data
+        XCTAssert( val1 == 0x42)
+        XCTAssert( val2 == 0x60)
+
+    }
+    
     // CB prefix instruction
     func testRlc() {
 //        let testVals: [(TestStartState, TestEndState)] = [

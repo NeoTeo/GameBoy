@@ -128,6 +128,8 @@ class CPU {
         case halt
         case nop
         case or
+        case pop
+        case push
         case rlca
         case rla
         case rr
@@ -151,6 +153,7 @@ class CPU {
         case E
         case H
         case L
+        case AF
         case BC
         case DE
         case HL
@@ -159,6 +162,7 @@ class CPU {
         case BCptr
         case DEptr
         case HLptr
+        case SPptr
         case HLptrInc
         case HLptrDec
         
@@ -402,6 +406,15 @@ class CPU {
         ops[0xBE] = (.cp, (.A, .HLptr), 8)
         ops[0xBF] = (.cp, (.A, .A), 4)
 
+        ops[0xC1] = (.pop, (.BC, .noReg), 12)
+        ops[0xD1] = (.pop, (.DE, .noReg), 12)
+        ops[0xE1] = (.pop, (.HL, .noReg), 12)
+        ops[0xF1] = (.pop, (.AF, .noReg), 12)
+        
+        ops[0xC5] = (.push, (.noReg, .BC), 16)
+        ops[0xD5] = (.push, (.noReg, .DE), 16)
+        ops[0xE5] = (.push, (.noReg, .HL), 16)
+        ops[0xF5] = (.push, (.noReg, .AF), 16)
         
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
@@ -471,6 +484,10 @@ class CPU {
                 break
             case .or:
                 try or(argTypes: args)
+            case .pop:
+                try pop(argTypes: args)
+            case .push:
+                try push(argTypes: args)
             case .rlca:
                 try rlca()
             case .rla:

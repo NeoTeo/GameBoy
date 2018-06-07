@@ -37,113 +37,6 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
-    // Complement Carry flag
-    func ccf() {
-        F.N = false
-        F.H = false
-        F.C = !F.C
-    }
-    
-    // Complement A (accumulator)
-    func cpl() {
-        A = ~A
-        
-        F.N = true
-        F.H = true
-    }
-    
-    /// Decimal Adjust A (accumulator)
-    /// Use the content of the flags to adjust the A register.
-    /// If the least significant four bits of A contain an non-BCD (ie > 9) or
-    /// the H flag is set then add 0x06 to the A register.
-    /// Then, if the four most significant bits are > 9 (or the C flag is set)
-    /// then 0x60 is added to the A register.
-    /// If the N register is set in any of these cases then we must subtract rather than add.
-    func daa() {
-        
-        var overflow: Bool = false
-        if ((A & 0x0F) > 0x09) || (F.H == true) {
-            
-            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x06) : A.addingReportingOverflow(0x06)
-            F.C = F.C || overflow
-            //            A = (F.N == true) ? A &- 0x06 : A &+ 0x06 }
-        }
-
-        if ((A >> 4) > 0x09) || (F.C == true) {
-            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x60) : A.addingReportingOverflow(0x60)
-            F.C = F.C || overflow
-//            A = (F.N == true) ? A &- 0x60 : A &+ 0x60
-        }
-        
-        F.Z = (A == 0)
-        F.H = false
-    }
-    
-    func jr(argTypes: (ArgType, ArgType)) throws {
-        let targetArg = argTypes.0
-        let sourceArg = argTypes.1
-        var offset: UInt8 = 0
-        
-        if let passCondition = checkCondition(for: targetArg) {
-            // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
-            guard passCondition == true else { return }
-            offset = try getVal8(for: sourceArg)
-        } else {
-            // there was no condition so the targetArg is the offset
-            offset = try getVal8(for: targetArg)
-        }
-        
-        // The offset is a (-128 to 127) value. Treat as 2's complement.
-        let isNegative = (offset & 0x80) == 0x80
-        let tval = Int(offset & 0x7f)
-        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
-        // Jump to PC + offset
-        guard newPc < ram.size, newPc >= 0 else {
-            throw CPUError.RamError
-        }
-        PC = newPc
-    }
-    
-    
-    /// Check for the given conditions, if any.
-    ///
-    /// - Parameter arg: the condition (or a non conditional argument type)
-    /// - Returns:
-    ///     true if the arg was a condition type and the condition was satisifed
-    ///     false if the arg was a condition type and the condition was not satisfied
-    ///     nil if the arg was not a condition type
-    func checkCondition(for arg: ArgType) -> Bool? {
-        switch arg {
-        case .Carry:   return F.C == true
-        case .NoCarry: return F.C == false
-        case .Zero:    return F.Z == true
-        case .NotZero: return F.Z == false
-        default: return nil
-        }
-    }
-    
-    func sbc(argTypes: (ArgType, ArgType)) throws {
-        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
-        let t2 = try getVal8(for: argTypes.1)
-        
-        // Store the C flag before it is changed.
-        let oldC: UInt8 = F.C == true ? 1 : 0
-
-        let (res1, overflow1) = t1.subtractingReportingOverflow(t2)
-        let H1 = halfCarryUnderflow(term1: t1, term2: t2)
-        
-        let (result, overflow2) = res1.subtractingReportingOverflow(oldC)
-        let H2 = halfCarryUnderflow(term1: res1, term2: oldC)
-
-        try set(val: result, for: argTypes.0)
-        
-        F.Z = (result == 0)
-        F.N = true
-        F.H = H1 || H2
-        F.C = overflow1 || overflow2
-        
-    }
-
     func add16_16(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal16(for: argTypes.0)
         let t2 = try getVal16(for: argTypes.1)
@@ -180,6 +73,13 @@ extension CPU {
         F.H = true
         F.C = false
     }
+
+    // Complement Carry flag
+    func ccf() {
+        F.N = false
+        F.H = false
+        F.C = !F.C
+    }
     
     // Perform a subtraction of the source register from the target register.
     // Set the flags but don't keep the result.
@@ -194,34 +94,192 @@ extension CPU {
         F.C = overflow
     }
 
+    // Complement A (accumulator)
+    func cpl() {
+        A = ~A
+        
+        F.N = true
+        F.H = true
+    }
+    
+    /// Decimal Adjust A (accumulator)
+    /// Use the content of the flags to adjust the A register.
+    /// If the least significant four bits of A contain an non-BCD (ie > 9) or
+    /// the H flag is set then add 0x06 to the A register.
+    /// Then, if the four most significant bits are > 9 (or the C flag is set)
+    /// then 0x60 is added to the A register.
+    /// If the N register is set in any of these cases then we must subtract rather than add.
+    func daa() {
+        
+        var overflow: Bool = false
+        if ((A & 0x0F) > 0x09) || (F.H == true) {
+            
+            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x06) : A.addingReportingOverflow(0x06)
+            F.C = F.C || overflow
+            //            A = (F.N == true) ? A &- 0x06 : A &+ 0x06 }
+        }
+
+        if ((A >> 4) > 0x09) || (F.C == true) {
+            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x60) : A.addingReportingOverflow(0x60)
+            F.C = F.C || overflow
+//            A = (F.N == true) ? A &- 0x60 : A &+ 0x60
+        }
+        
+        F.Z = (A == 0)
+        F.H = false
+    }
+    
+    // DEC A, B, C, D, E, H, L, (HL)
+    func dec8(argType: ArgType) throws {
+        var n: UInt8
+        
+        // pointer indirection special case
+        if argType == .HLptr {
+            
+            let addr = try getVal16(for: .HL)
+            n = read8(at: addr)
+            n = n &- 1
+            write(at: addr, with: n)
+            
+        } else {
+            
+            n = try getVal8(for: argType)
+            n = n &- 1
+            try set(val: n, for: argType)
+        }
+        
+        F.Z = (n == 0)
+        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
+        F.N = true // N set to 1
+    }
+    
+    // DEC BC, DE, HL, SP
+    func dec16(argType: ArgType) throws {
+        var nn = try getVal16(for: argType)
+        nn = nn &- 1
+        try set(val: nn, for: argType)
+    }
+
     func halt() {
         print("CPU in low power mode.")
     }
 
-    func stop() {
-        print("CPU in very low power mode.")
+    // INC A, B, C, D, E, H, L, (HL)
+    // Flags affected:
+    // Z - Set if result is zero.
+    // N - Reset.
+    // H - Set if carry from bit 3.
+    // C - Not affected.
+    func inc8(argType: ArgType) throws {
+        
+        var n: UInt8
+        // pointer indirection special case
+        if argType == .HLptr {
+            
+            let addr = try getVal16(for: .HL)
+            n = read8(at: addr)
+            n = n &+ 1
+            write(at: addr, with: n)
+        } else {
+            
+            n = try getVal8(for: argType)
+            // increment n register and wrap to 0 if overflowed.
+            n = n &+ 1
+            try set(val: n, for: argType)
+        }
+        // Set F register correctly
+        F.Z = (n == 0)
+        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
+        F.N = false
+        
     }
     
-    /*
-     SUB A,r8
-     
-     Subtract the value in source regisrer from target register and store result in target register.
-     Z: Set if result is 0.
-     N: 1
-     H: Set if no borrow from bit 4.
-     C: Set if no borrow (set if source register > target register).
- */
-    func sub8_8(argTypes: (ArgType, ArgType)) throws {
-        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
-        let t2 = try getVal8(for: argTypes.1)
-        let (result, overflow) = t1.subtractingReportingOverflow(t2)
-        try set(val: result, for: argTypes.0)
-        F.Z = (result == 0)
-        F.N = true
-        F.H = halfCarryUnderflow(term1: t1, term2: t2)
-        F.C = overflow
+    // INC BC, DE, HL, SP
+    // Flags unaffected
+    func inc16(argType: ArgType) throws {
+        var nn = try getVal16(for: argType)
+        nn = nn &+ 1
+        try set(val: nn, for: argType)
     }
 
+    func jr(argTypes: (ArgType, ArgType)) throws {
+        let targetArg = argTypes.0
+        let sourceArg = argTypes.1
+        var offset: UInt8 = 0
+        
+        if let passCondition = checkCondition(for: targetArg) {
+            // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
+            guard passCondition == true else { return }
+            offset = try getVal8(for: sourceArg)
+        } else {
+            // there was no condition so the targetArg is the offset
+            offset = try getVal8(for: targetArg)
+        }
+        
+        // The offset is a (-128 to 127) value. Treat as 2's complement.
+        let isNegative = (offset & 0x80) == 0x80
+        let tval = Int(offset & 0x7f)
+        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
+        // Jump to PC + offset
+        guard newPc < ram.size, newPc >= 0 else {
+            throw CPUError.RamError
+        }
+        PC = newPc
+    }
+    
+    func ld8_8(argTypes: (ArgType, ArgType)) throws {
+        var n: UInt8
+        let source = argTypes.1
+        let target = argTypes.0
+        
+        if source == .i8 {
+            n = read8(at: PC)
+            incPc() // reading from RAM increases the PC
+        } else {
+            n = try getVal8(for: source)
+        }
+        
+        try set(val: n, for: target)
+    }
+    
+    // Load a 16 bit source into a 16 bit destination
+    // Flags unaffected.
+    func ld16_16(argTypes: (ArgType, ArgType)) throws {
+        let source = argTypes.1
+        let target = argTypes.0
+        
+        let srcVal = try getVal16(for: source)
+        try set(val: srcVal, for: target)
+    }
+
+    func or(argTypes: (ArgType, ArgType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
+        let t2 = try getVal8(for: argTypes.1)
+        let result = t1 | t2
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = false
+        F.H = false
+        F.C = false
+    }
+    
+    func pop(argTypes: (ArgType, ArgType)) throws {
+        
+        // Read the two bytes at the address pointed to by the SP
+        let t1 = try getVal16(for: .SPptr)
+        // FIXME: Additional checking for stack pointer overflow?
+        SP = SP &+ 2
+        
+        try set(val: t1, for: argTypes.0)
+    }
+    
+    func push(argTypes: (ArgType, ArgType)) throws {
+        let val = try getVal16(for: argTypes.1)
+        try set(val: val, for: .SPptr)
+        SP = SP &- 2
+    }
+    
     // Rotate destination register(or value pointed to by it) left through carry.
     // C <- [7 <- 0] <- C
     func rl(argTypes: (ArgType, ArgType)) throws {
@@ -311,117 +369,57 @@ extension CPU {
         F.Z = false
     }
 
+    func sbc(argTypes: (ArgType, ArgType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
+        let t2 = try getVal8(for: argTypes.1)
+        
+        // Store the C flag before it is changed.
+        let oldC: UInt8 = F.C == true ? 1 : 0
+        
+        let (res1, overflow1) = t1.subtractingReportingOverflow(t2)
+        let H1 = halfCarryUnderflow(term1: t1, term2: t2)
+        
+        let (result, overflow2) = res1.subtractingReportingOverflow(oldC)
+        let H2 = halfCarryUnderflow(term1: res1, term2: oldC)
+        
+        try set(val: result, for: argTypes.0)
+        
+        F.Z = (result == 0)
+        F.N = true
+        F.H = H1 || H2
+        F.C = overflow1 || overflow2
+        
+    }
+    
     // Set Carry Flag
     func scf() {
         F.C = true
         F.N = false
         F.H = false
     }
-    
-    func ld8_8(argTypes: (ArgType, ArgType)) throws {
-        var n: UInt8
-        let source = argTypes.1
-        let target = argTypes.0
-        
-        if source == .i8 {
-            n = read8(at: PC)
-            incPc() // reading from RAM increases the PC
-        } else {
-            n = try getVal8(for: source)
-        }
-        
-        try set(val: n, for: target)
-    }
-    
-    // Load a 16 bit source into a 16 bit destination
-    // Flags unaffected.
-    func ld16_16(argTypes: (ArgType, ArgType)) throws {
-        let source = argTypes.1
-        let target = argTypes.0
-        
-        let srcVal = try getVal16(for: source)
-        try set(val: srcVal, for: target)
-    }
 
-    // INC A, B, C, D, E, H, L, (HL)
-    // Flags affected:
-    // Z - Set if result is zero.
-    // N - Reset.
-    // H - Set if carry from bit 3.
-    // C - Not affected.
-    func inc8(argType: ArgType) throws {
-        
-        var n: UInt8
-        // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &+ 1
-            write(at: addr, with: n)
-        } else {
-            
-            n = try getVal8(for: argType)
-            // increment n register and wrap to 0 if overflowed.
-            n = n &+ 1
-            try set(val: n, for: argType)
-        }
-        // Set F register correctly
-        F.Z = (n == 0)
-        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
-        F.N = false
-        
+    func stop() {
+        print("CPU in very low power mode.")
     }
     
-    // INC BC, DE, HL, SP
-    // Flags unaffected
-    func inc16(argType: ArgType) throws {
-        var nn = try getVal16(for: argType)
-        nn = nn &+ 1
-        try set(val: nn, for: argType)
-    }
-    
-    // DEC A, B, C, D, E, H, L, (HL)
-    func dec8(argType: ArgType) throws {
-        var n: UInt8
-        
-        // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &- 1
-            write(at: addr, with: n)
-            
-        } else {
-            
-            n = try getVal8(for: argType)
-            n = n &- 1
-            try set(val: n, for: argType)
-        }
-        
-        F.Z = (n == 0)
-        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
-        F.N = true // N set to 1
-    }
-    
-    // DEC BC, DE, HL, SP
-    func dec16(argType: ArgType) throws {
-        var nn = try getVal16(for: argType)
-        nn = nn &- 1
-        try set(val: nn, for: argType)
-    }
-    
-    func or(argTypes: (ArgType, ArgType)) throws {
-        let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
+    /*
+     SUB A,r8
+     
+     Subtract the value in source regisrer from target register and store result in target register.
+     Z: Set if result is 0.
+     N: 1
+     H: Set if no borrow from bit 4.
+     C: Set if no borrow (set if source register > target register).
+     */
+    func sub8_8(argTypes: (ArgType, ArgType)) throws {
+        let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
-        let result = t1 | t2
+        let (result, overflow) = t1.subtractingReportingOverflow(t2)
         try set(val: result, for: argTypes.0)
-        
         F.Z = (result == 0)
-        F.N = false
-        F.H = false
-        F.C = false
+        F.N = true
+        F.H = halfCarryUnderflow(term1: t1, term2: t2)
+        F.C = overflow
     }
     
     func xor(argTypes: (ArgType, ArgType)) throws {
