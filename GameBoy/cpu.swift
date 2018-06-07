@@ -114,7 +114,9 @@ class CPU {
         case add8_8
         case add16_16
         case and
+        case ccf
         case cp
+        case cpl
         case daa
         case inc8
         case inc16
@@ -204,6 +206,7 @@ class CPU {
         ops[0x0D] = (.dec8, (.C, .noReg), 4)
         ops[0x0E] = (.ld8_8, (.C, .i8), 8)
         ops[0x0F] = (.rrca, (.noReg, .noReg), 4)
+        
         ops[0x10] = (.stop, (.noReg, .noReg), 4)
         ops[0x11] = (.ld16_16, (.DE, .i16), 12)
         ops[0x12] = (.ld8_8, (.DEptr, .A), 8)
@@ -220,6 +223,7 @@ class CPU {
         ops[0x1D] = (.dec8, (.E, .noReg), 4)
         ops[0x1E] = (.ld8_8, (.E, .i8), 8)
         ops[0x1F] = (.rra, (.noReg, .noReg), 4)
+        
         ops[0x20] = (.jr, (.NotZero, .i8), 12)
         ops[0x21] = (.ld16_16, (.HL, .i16), 12)
         ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
@@ -235,6 +239,8 @@ class CPU {
         ops[0x2C] = (.inc8, (.L, .noReg), 4)
         ops[0x2D] = (.dec8, (.L, .noReg), 4)
         ops[0x2E] = (.ld8_8, (.L, .i8), 8)
+        ops[0x2F] = (.cpl, (.noReg, .noReg), 4)
+        
         ops[0x30] = (.jr, (.NoCarry, .i8), 12)
         ops[0x31] = (.ld16_16, (.SP, .i16), 12)
         ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8)
@@ -250,6 +256,7 @@ class CPU {
         ops[0x3C] = (.inc8, (.A, .noReg), 4)
         ops[0x3D] = (.dec8, (.A, .noReg), 4)
         ops[0x3E] = (.ld8_8, (.A, .i8), 8)
+        ops[0x3F] = (.ccf, (.noReg, .noReg), 4)
         
         ops[0x40] = (.ld8_8, (.B, .B), 4) // ??
         ops[0x41] = (.ld8_8, (.B, .C), 4)
@@ -436,8 +443,12 @@ class CPU {
                 try add16_16(argTypes: args)
             case .and:
                 try and(argTypes: args)
+            case .ccf:
+                ccf()
             case .cp:
                 try cp(argTypes: args)
+            case .cpl:
+                cpl()
             case .daa:
                 daa()
             case .ld8_8:

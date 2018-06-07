@@ -99,6 +99,35 @@ class GameBoyTests: XCTestCase {
 
     }
     
+    func testMiscellanous() {
+    
+        // Test SCF – simply sets the Carry flag
+        var testVals: [(TestStartState, TestEndState)] = [(((0x00, 0x00), [.C(false)]), (0x00, [.C(true)]))]
+        // Set up a list of the opcodes we want to test
+        var opsToTest: [UInt8] = [0x37]
+        
+        test(ops: opsToTest, and: testVals)
+
+        // Test CPL – sets the accumulator to its own complement.
+        testVals = [(((0xFF, 0x00), [.H(false), .N(false)]), (0x00, [.H(true), .N(true)])),
+                    (((0xAA, 0x00), [.H(false), .N(false)]), (0x55, [.H(true), .N(true)])),
+        ]
+        // Set up a list of the opcodes we want to test
+        opsToTest = [0x2F]
+        
+        test(ops: opsToTest, and: testVals)
+        
+        // Test CCF – sets the C flag to its own complement.
+        testVals = [(((0x00, 0x00), [.C(false), .N(true), .H(true)]), (0x00, [.C(true), .H(false), .N(false)])),
+                    (((0x00, 0x00), [.C(true), .N(true), .H(true)]), (0x00, [.C(false), .H(false), .N(false)])),
+        ]
+        // Set up a list of the opcodes we want to test
+        opsToTest = [0x3F]
+        
+        test(ops: opsToTest, and: testVals)
+
+    }
+    
     func testCp() {
         let testVals: [(TestStartState, TestEndState)] = [
         (((0x00, 0x01), [.C(false), .H(false)]), (0x00, [.C(true), .H(true), .N(true), .Z(false)])),
@@ -795,9 +824,10 @@ extension GameBoyTests {
             let endFlags = endState.1
             
             // Read the destination register to confirm the result
-            let resVal = try! gb.cpu.getVal8(for: regs.0)
-            XCTAssert(resVal == testVal)
-            
+            if regs.0 != .noReg {
+                let resVal = try! gb.cpu.getVal8(for: regs.0)
+                XCTAssert(resVal == testVal)
+            }
             // Check the flags
             for flag in endFlags { XCTAssert(flag.isSame(in: gb.cpu.F.rawValue)) }
         }

@@ -37,6 +37,20 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
+    // Complement Carry flag
+    func ccf() {
+        F.N = false
+        F.H = false
+        F.C = !F.C
+    }
+    
+    // Complement A (accumulator)
+    func cpl() {
+        A = ~A
+        
+        F.N = true
+        F.H = true
+    }
     
     /// Decimal Adjust A (accumulator)
     /// Use the content of the flags to adjust the A register.
