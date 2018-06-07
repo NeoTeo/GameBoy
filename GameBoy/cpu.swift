@@ -132,6 +132,7 @@ class CPU {
         case rra
         case rrca
         case sbc
+        case scf
         case stop
         case sub
         case xor
@@ -241,6 +242,7 @@ class CPU {
         ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
         ops[0x36] = (.ld8_8, (.HLptr, .i8), 12)
+        ops[0x37] = (.scf, (.noReg, .noReg), 4)
         ops[0x38] = (.jr, (.Carry, .i8), 12)
         ops[0x39] = (.add16_16, (.HL, .SP), 8)
         ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8)
@@ -471,6 +473,8 @@ class CPU {
                 
             case .sbc:
                 try sbc(argTypes: args)
+            case .scf:
+                scf()
             case .stop:
                 stop()
             case .sub:

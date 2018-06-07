@@ -297,6 +297,12 @@ extension CPU {
         F.Z = false
     }
 
+    // Set Carry Flag
+    func scf() {
+        F.C = true
+        F.N = false
+        F.H = false
+    }
     
     func ld8_8(argTypes: (ArgType, ArgType)) throws {
         var n: UInt8

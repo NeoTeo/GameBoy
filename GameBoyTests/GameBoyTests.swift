@@ -12,11 +12,41 @@ import XCTest
 class GameBoyTests: XCTestCase {
     
     var gb: SYSTEM!
+    
+    let r16Ids: [CPU.ArgType] = [ .BC, .DE, .HL, .SP ]
+    let r8Ids: [CPU.ArgType] = [.B, .D, .H, .C, .E, .L, .A]
+    enum FlagTest {
+        case Z(Bool)
+        case N(Bool)
+        case H(Bool)
+        case C(Bool)
+        
+        func isSame(in val: UInt8) -> Bool {
+            switch self {
+            case .C(let state): return (((val >> 4) & 1) == 1) == state
+            case .H(let state): return (((val >> 5) & 1) == 1) == state
+            case .N(let state): return (((val >> 6) & 1) == 1) == state
+            case .Z(let state): return (((val >> 7) & 1) == 1) == state
+            }
+        }
+        
+        func setSame(in val: UInt8) -> UInt8 {
+            switch self {
+            case .C(let s): return (val & ~(1 << 4)) | (s == true ? 1 : 0) << 4
+            case .H(let s): return (val & ~(1 << 5)) | (s == true ? 1 : 0) << 5
+            case .N(let s): return (val & ~(1 << 6)) | (s == true ? 1 : 0) << 6
+            case .Z(let s): return (val & ~(1 << 7)) | (s == true ? 1 : 0) << 7
+            }
+        }
+    }
+    
+    typealias TestState = (UInt8, UInt8,[FlagTest])
+    
     // TestStartState consists of a tuple with:
     // * a tuple of the two register arguments,
     // * an array with initial flags and their state
     typealias TestStartState = ((UInt8, UInt8), [FlagTest])
-    
+
     // TestEndState consists of a tuple with:
     // * an expected end value,
     // * an array of flags and their expected state
@@ -109,34 +139,6 @@ class GameBoyTests: XCTestCase {
         print("AF is " + String(format: "%2X", gb.cpu.AF))
     }
 
-    let r16Ids: [CPU.ArgType] = [ .BC, .DE, .HL, .SP ]
-    let r8Ids: [CPU.ArgType] = [.B, .D, .H, .C, .E, .L, .A]
-    enum FlagTest {
-        case Z(Bool)
-        case N(Bool)
-        case H(Bool)
-        case C(Bool)
-        
-        func isSame(in val: UInt8) -> Bool {
-            switch self {
-            case .C(let state): return (((val >> 4) & 1) == 1) == state
-            case .H(let state): return (((val >> 5) & 1) == 1) == state
-            case .N(let state): return (((val >> 6) & 1) == 1) == state
-            case .Z(let state): return (((val >> 7) & 1) == 1) == state
-            }
-        }
-        
-        func setSame(in val: UInt8) -> UInt8 {
-            switch self {
-            case .C(let s): return (val & ~(1 << 4)) | (s == true ? 1 : 0) << 4
-            case .H(let s): return (val & ~(1 << 5)) | (s == true ? 1 : 0) << 5
-            case .N(let s): return (val & ~(1 << 6)) | (s == true ? 1 : 0) << 6
-            case .Z(let s): return (val & ~(1 << 7)) | (s == true ? 1 : 0) << 7
-            }
-        }
-    }
-    
-    typealias TestState = (UInt8, UInt8,[FlagTest])
     func testInc8() {
         
         // Make sure we stop if any of the tests fail
@@ -379,8 +381,9 @@ class GameBoyTests: XCTestCase {
             }
             
             // Generate two random numbers and set the resulting addition as the test value
-            let v1: UInt8 = UInt8(arc4random_uniform(0xFF))
-            let v2: UInt8 = (regs.0 == regs.1) ? v1 : UInt8(arc4random_uniform(0xFF))
+            let v1: UInt8 = UInt8.random(in: 0x00 ..< 0xFF)
+            let v2: UInt8 = (regs.0 == regs.1) ? v1 : UInt8.random(in: 0x00 ..< 0xFF)
+    
             let (testVal, overflow) = v1.addingReportingOverflow(v2)
             let halfCarry = gb.cpu.halfCarryOverflow(term1: v1, term2: v2)
 
@@ -421,8 +424,8 @@ class GameBoyTests: XCTestCase {
                 return
             }
             
-            let v1: UInt16 = UInt16(arc4random_uniform(0xFFFF))
-            let v2: UInt16 = (regs.0 == regs.1) ? v1 : UInt16(arc4random_uniform(0xFFFF))
+            let v1: UInt16 = UInt16.random(in: 0x0000 ..< 0xFFFF)
+            let v2: UInt16 = (regs.0 == regs.1) ? v1 : UInt16.random(in: 0x0000 ..< 0xFFFF)
             let (testVal, overflow) = v1.addingReportingOverflow(v2)
             let halfCarry = gb.cpu.halfCarryOverflow(term1: v1, term2: v2)
 
@@ -462,6 +465,28 @@ class GameBoyTests: XCTestCase {
         test(ops: opsToTest, and: testVals)
     }
     
+    /* DAA truth table
+     -----------------------------------------------------------------------------
+     | N flag | C Flag  | H Flag | HEX value in | HEX value in | Number  | C flag|
+     | Before | Before  | Before | upper digit  | lower digit  | added   | After |
+     | DAA    | DAA     | DAA    | (bit 7-4)    | (bit 3-0)    | to byte | DAA   |
+     |---------------------------------------------------------------------------|
+     |   0    |    0    |   0    |     0-9      |     0-9      |   00    |   0   |
+     |   0    |    0    |   0    |     0-8      |     A-F      |   06    |   0   |
+     |   0    |    0    |   1    |     0-9      |     0-3      |   06    |   0   |
+     |   0    |    0    |   0    |     A-F      |     0-9      |   60    |   1   |
+     |   0    |    0    |   0    |     9-F      |     A-F      |   66    |   1   |
+     |   0    |    0    |   1    |     A-F      |     0-3      |   66    |   1   |
+     |   0    |    1    |   0    |     0-2      |     0-9      |   60    |   1   |
+     |   0    |    1    |   0    |     0-2      |     A-F      |   66    |   1   |
+     |   0    |    1    |   1    |     0-3      |     0-3      |   66    |   1   |
+     |---------------------------------------------------------------------------|
+     |   1    |    0    |   0    |     0-9      |     0-9      |   00    |   0   |
+     |   1    |    0    |   1    |     0-8      |     6-F      |   FA    |   0   |
+     |   1    |    1    |   0    |     7-F      |     0-9      |   A0    |   1   |
+     |   1    |    1    |   1    |     6-F      |     6-F      |   9A    |   1   |
+     |---------------------------------------------------------------------------|
+     */
     func testDaa() {
         let testVals: [(TestStartState, TestEndState)] = [
             (((0x11, 0x00), [.C(false), .H(false), .N(false)]), (0x11, [.C(false), .H(false), .N(false), .Z(false)])),
@@ -535,7 +560,7 @@ class GameBoyTests: XCTestCase {
 
         // FIXME: move testval inside the ops loop
         // Set a random number as the test value
-        let testVal: UInt8 = UInt8(arc4random_uniform(0xFF))
+        let testVal: UInt8 = UInt8.random(in: 0x00 ..< 0xFF)
         for op in opsToTest {
             
             // Write the opcode to RAM
