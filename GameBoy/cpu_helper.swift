@@ -36,6 +36,15 @@ extension CPU {
             
         case .i8: return read8(at: PC)
             
+        case .u3_0: return 0
+        case .u3_1: return 1
+        case .u3_2: return 2
+        case .u3_3: return 3
+        case .u3_4: return 4
+        case .u3_5: return 5
+        case .u3_6: return 6
+        case .u3_7: return 7
+            
         default: throw CPUError.UnknownRegister
         }
     }

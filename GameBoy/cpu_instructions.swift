@@ -137,20 +137,21 @@ extension CPU {
     func dec8(argType: ArgType) throws {
         var n: UInt8
         
+        // FIXME: This is already part of the getVal8. Remove special case!
         // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &- 1
-            write(at: addr, with: n)
-            
-        } else {
-            
+//        if argType == .HLptr {
+//
+//            let addr = try getVal16(for: .HL)
+//            n = read8(at: addr)
+//            n = n &- 1
+//            write(at: addr, with: n)
+//
+//        } else {
+        
             n = try getVal8(for: argType)
             n = n &- 1
             try set(val: n, for: argType)
-        }
+//        }
         
         F.Z = (n == 0)
         F.H = (n == 0xf) // H set if no borrow from bit 4 ?
@@ -177,20 +178,21 @@ extension CPU {
     func inc8(argType: ArgType) throws {
         
         var n: UInt8
+        // FIXME: Already handled by getVal8. Remove this
         // pointer indirection special case
-        if argType == .HLptr {
-            
-            let addr = try getVal16(for: .HL)
-            n = read8(at: addr)
-            n = n &+ 1
-            write(at: addr, with: n)
-        } else {
-            
+//        if argType == .HLptr {
+//
+//            let addr = try getVal16(for: .HL)
+//            n = read8(at: addr)
+//            n = n &+ 1
+//            write(at: addr, with: n)
+//        } else {
+        
             n = try getVal8(for: argType)
             // increment n register and wrap to 0 if overflowed.
             n = n &+ 1
             try set(val: n, for: argType)
-        }
+//        }
         // Set F register correctly
         F.Z = (n == 0)
         F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
@@ -236,12 +238,12 @@ extension CPU {
         let source = argTypes.1
         let target = argTypes.0
         
-        if source == .i8 {
-            n = read8(at: PC)
-            incPc() // reading from RAM increases the PC
-        } else {
+//        if source == .i8 {
+//            n = read8(at: PC)
+//            incPc() // reading from RAM increases the PC
+//        } else {
             n = try getVal8(for: source)
-        }
+//        }
         
         try set(val: n, for: target)
     }
@@ -445,9 +447,11 @@ extension CPU {
     func bit(argTypes: (ArgType, ArgType)) throws {
         let sourceVal = try getVal8(for: argTypes.1)
         // Get the immediate value for the bit to test and mask in the bottom three bits
-        let bitToTest = try getVal8(for: argTypes.0) & 0x7
+        let bitToTest = try getVal8(for: argTypes.0)//try getVal8(for: argTypes.0) & 0x7
         
         // Set Zero flag if the bit was not set
         F.Z = ((sourceVal >> bitToTest) & 0x01) == 0x0
+        F.N = false
+        F.H = true
     }
 }

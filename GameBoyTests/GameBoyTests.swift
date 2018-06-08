@@ -14,7 +14,7 @@ class GameBoyTests: XCTestCase {
     var gb: SYSTEM!
     
     let r16Ids: [CPU.ArgType] = [ .BC, .DE, .HL, .SP ]
-    let r8Ids: [CPU.ArgType] = [.B, .D, .H, .C, .E, .L, .A]
+    let r8Ids: [CPU.ArgType] = [.B, .D, .H, .C, .E, .L, .A, .HLptr]
     enum FlagTest {
         case Z(Bool)
         case N(Bool)
@@ -169,55 +169,15 @@ class GameBoyTests: XCTestCase {
     }
 
     func testInc8() {
+        let testVals: [(TestStartState, TestEndState)] = [
+            (((0x42, 0x00), []), (0x43, [.Z(false), .N(false)])),
+            (((0xFF, 0x00), []), (0x00, [.Z(true), .N(false)])),
+            (((0x0F, 0x00), []), (0x10, [.Z(false), .H(true), .N(false)])),
+            ]
+        // Set up a list of the opcodes we want to test
+        let opsToTest: [UInt8] = [0x04, 0x14, 0x24, 0x0C, 0x1C, 0x2C, 0x3C]
         
-        // Make sure we stop if any of the tests fail
-        continueAfterFailure = false
-        
-        // A test consists of a start value, an end value and an array of FlagTests
-        // which declare the expected flag setting at the end of the test.
-        // Perhaps I should use a unionset for the flag testing instead...
-        let tests: [TestState] = [
-            (0x42, 0x43,[.Z(false), .N(false)]),
-            (0xFF, 0x00,[.Z(true), .N(false)]),
-            (0x0F, 0x10,[.Z(false), .H(true), .N(false)])
-        ]
-        
-        let opCodes: [UInt8] = [0x04, 0x14, 0x24, 0x0C, 0x1C, 0x2C, 0x3C]
-        var opIdx = 0
-        
-        for reg in r8Ids {
-            
-            // We test each register multiple times for different flag states
-            for (sv, ev, ft) in tests {
-            
-                // set start value such that the first inc will cause a half carry
-                let startValue: UInt8 = sv
-                // Set the register to a value
-                try? gb.cpu.set(val: startValue, for: reg)
-                // Set the memory location 0xC000 to the instruction opcode
-                gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
-                
-                // Set the PC to the instruction location
-                gb.cpu.PC = 0xC000
-                // Run the number of ticks the instruction takes
-                for _ in 0 ..< 4 { gb.cpu.clockTick() }
-                
-                // Get the value for the register
-                guard let endValue = try? gb.cpu.getVal8(for: reg) else {
-                    XCTFail("testInc8 could not get value for register \(reg)")
-                    break
-                }
-                // Check that the value of the register matches our expectations
-                XCTAssert(endValue == ev)
-                
-                // check flags
-                let flags = gb.cpu.F.rawValue
-                for t in ft {
-                    XCTAssert(t.isSame(in: flags))
-                }
-            }
-            opIdx += 1
-        }
+        test(ops: opsToTest, and: testVals)
     }
 
     func testInc16() {
@@ -809,30 +769,66 @@ class GameBoyTests: XCTestCase {
 // Test CB prefix opcodes
 extension GameBoyTests {
     
-    func testBit() {
-        gb.cpu.AF = 0x4260
+    func testBit() throws {
+    
+        let testVals: [UInt8 : [(TestStartState, TestEndState)]] = [
+            0x40 : [(((0xFE, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x01, 0x00), []), (0x00, [.Z(false)]))],
+            0x41 : [(((0xFE, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x01, 0x00), []), (0x00, [.Z(false)]))],
+            0x48 : [(((0xFD, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x02, 0x00), []), (0x00, [.Z(false)]))],
+            0x50 : [(((0xFB, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x04, 0x00), []), (0x00, [.Z(false)]))],
+            0x58 : [(((0xF7, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x08, 0x00), []), (0x00, [.Z(false)]))],
+            0x60 : [(((0xEF, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x10, 0x00), []), (0x00, [.Z(false)]))],
+            0x68 : [(((0xDF, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x20, 0x00), []), (0x00, [.Z(false)]))],
+            0x70 : [(((0xBF, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x40, 0x00), []), (0x00, [.Z(false)]))],
+            0x78 : [(((0x7F, 0x00), []), (0x00, [.Z(true)])),
+                    (((0x80, 0x00), []), (0x00, [.Z(false)]))],
+            ]
         
-        // Place the CB instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0xCB)
-        gb.cpu.ram.write(at: 0xC001, with: 0x40)
+        // Test all BIT operations
+        for opcode in 0x40 ..< 0x80 {
+            
+            let op = UInt8(opcode)
+            
+            // Get the registers involved in the operation
+            guard let (_,regs,_) = gb.cpu.cbOps[op] else {
+                XCTFail("No entry for given opcode \(String(format: "%2X", op))")
+                return
+            }
+            
+            // Place the CB instruction in the top of RAM.
+            gb.cpu.ram.write(at: 0xC000, with: 0xCB)
+            gb.cpu.ram.write(at: 0xC001, with: op)
 
-        // Set the B register to a known value
-        gb.cpu.B = 0x42
-        gb.cpu.F.Z = false
+            guard let testStates = testVals[op] else { continue }
+            
+            for testState in testStates {
+                
+                let testStartState = testState.0
+                let testEndState = testState.1
+                let startVal = testStartState.0.0
+                
+                // Set affected register to a known value
+                try gb.cpu.set(val: startVal, for: regs.1)
+                
+                // Set the PC to the top of RAM
+                gb.cpu.PC = 0xC000
+
+                // Run the ticks that the instruction takes
+                for _ in 0 ..< 12 { gb.cpu.clockTick() }
         
-        // Set the PC to the top of RAM
-        gb.cpu.PC = 0xC000
-
-        // Run the ticks that the instruction takes
-        for _ in 0 ..< 12 { gb.cpu.clockTick() }
-//
-//        // Read the value at the location (originally) pointed to by the SP
-//        let val1 = gb.cpu.ram.read8(at: 0xC005)
-//        let val2 = gb.cpu.ram.read8(at: 0xC006)
-//
-//        // Check that the PC matches the expected data
-        XCTAssert( gb.cpu.F.Z == true)
-//        XCTAssert( val2 == 0x60)
+                let endFlags = testEndState.1
+                // Check the flags
+                for flag in endFlags { XCTAssert(flag.isSame(in: gb.cpu.F.rawValue)) }
+            }
+        }
     }
 }
 

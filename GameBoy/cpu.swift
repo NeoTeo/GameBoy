@@ -183,6 +183,28 @@ class CPU {
         case NotZero     // Execute if Z is not set
         case Carry       // Execute if C is set
         case NoCarry     // Execute if C is not set
+
+        case u3_0
+        case u3_1
+        case u3_2
+        case u3_3
+        case u3_4
+        case u3_5
+        case u3_6
+        case u3_7
+//        case u3(UInt8)   // An unsigned 3bit value ranging from 0 to 7
+        // Wanted to do this with associated values but equality becomes an arse pain.
+        // Because ArgType contains cases with associated values Swift will not
+        // automatically synthesize the equality operator. So we'll have to do it.
+        
+//        static func ==(lhs: ArgType, rhs: ArgType) -> Bool {
+//            switch (lhs, rhs) {
+//            case let (.u3(a), .u3(b)):
+//                return a == b
+//            default:
+//                return lhs == rhs
+//            }
+//        }
     }
 
     // An op consists of an instruction id, a tuple of argument ids and a cycle count.
@@ -426,15 +448,80 @@ class CPU {
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
         ops[0xD6] = (.sub, (.A, .i8), 8)
         
+
+        // CB prefix operations
+        cbOps[0x40] = (.bit, (.u3_0, .B), 8)
+        cbOps[0x41] = (.bit, (.u3_0, .C), 8)
+        cbOps[0x42] = (.bit, (.u3_0, .D), 8)
+        cbOps[0x43] = (.bit, (.u3_0, .E), 8)
+        cbOps[0x44] = (.bit, (.u3_0, .H), 8)
+        cbOps[0x45] = (.bit, (.u3_0, .L), 8)
+        cbOps[0x46] = (.bit, (.u3_0, .HLptr), 12)
+        cbOps[0x47] = (.bit, (.u3_0, .A), 8)
         
-        cbOps[0x40] = (.bit, (.i8, .B), 8)
-        cbOps[0x41] = (.bit, (.i8, .C), 8)
-        cbOps[0x42] = (.bit, (.i8, .D), 8)
-        cbOps[0x43] = (.bit, (.i8, .E), 8)
-        cbOps[0x44] = (.bit, (.i8, .H), 8)
-        cbOps[0x45] = (.bit, (.i8, .L), 8)
-        cbOps[0x46] = (.bit, (.i8, .HLptr), 12)
-        cbOps[0x47] = (.bit, (.i8, .A), 8)
+        cbOps[0x48] = (.bit, (.u3_1, .B), 8)
+        cbOps[0x49] = (.bit, (.u3_1, .C), 8)
+        cbOps[0x4A] = (.bit, (.u3_1, .D), 8)
+        cbOps[0x4B] = (.bit, (.u3_1, .E), 8)
+        cbOps[0x4C] = (.bit, (.u3_1, .H), 8)
+        cbOps[0x4D] = (.bit, (.u3_1, .L), 8)
+        cbOps[0x4E] = (.bit, (.u3_1, .HLptr), 12)
+        cbOps[0x4F] = (.bit, (.u3_1, .A), 8)
+
+        cbOps[0x50] = (.bit, (.u3_2, .B), 8)
+        cbOps[0x51] = (.bit, (.u3_2, .C), 8)
+        cbOps[0x52] = (.bit, (.u3_2, .D), 8)
+        cbOps[0x53] = (.bit, (.u3_2, .E), 8)
+        cbOps[0x54] = (.bit, (.u3_2, .H), 8)
+        cbOps[0x55] = (.bit, (.u3_2, .L), 8)
+        cbOps[0x56] = (.bit, (.u3_2, .HLptr), 12)
+        cbOps[0x57] = (.bit, (.u3_2, .A), 8)
+    
+        cbOps[0x58] = (.bit, (.u3_3, .B), 8)
+        cbOps[0x59] = (.bit, (.u3_3, .C), 8)
+        cbOps[0x5A] = (.bit, (.u3_3, .D), 8)
+        cbOps[0x5B] = (.bit, (.u3_3, .E), 8)
+        cbOps[0x5C] = (.bit, (.u3_3, .H), 8)
+        cbOps[0x5D] = (.bit, (.u3_3, .L), 8)
+        cbOps[0x5E] = (.bit, (.u3_3, .HLptr), 12)
+        cbOps[0x5F] = (.bit, (.u3_3, .A), 8)
+
+        cbOps[0x60] = (.bit, (.u3_4, .B), 8)
+        cbOps[0x61] = (.bit, (.u3_4, .C), 8)
+        cbOps[0x62] = (.bit, (.u3_4, .D), 8)
+        cbOps[0x63] = (.bit, (.u3_4, .E), 8)
+        cbOps[0x64] = (.bit, (.u3_4, .H), 8)
+        cbOps[0x65] = (.bit, (.u3_4, .L), 8)
+        cbOps[0x66] = (.bit, (.u3_4, .HLptr), 12)
+        cbOps[0x67] = (.bit, (.u3_4, .A), 8)
+        
+        cbOps[0x68] = (.bit, (.u3_5, .B), 8)
+        cbOps[0x69] = (.bit, (.u3_5, .C), 8)
+        cbOps[0x6A] = (.bit, (.u3_5, .D), 8)
+        cbOps[0x6B] = (.bit, (.u3_5, .E), 8)
+        cbOps[0x6C] = (.bit, (.u3_5, .H), 8)
+        cbOps[0x6D] = (.bit, (.u3_5, .L), 8)
+        cbOps[0x6E] = (.bit, (.u3_5, .HLptr), 12)
+        cbOps[0x6F] = (.bit, (.u3_5, .A), 8)
+        
+        cbOps[0x70] = (.bit, (.u3_6, .B), 8)
+        cbOps[0x71] = (.bit, (.u3_6, .C), 8)
+        cbOps[0x72] = (.bit, (.u3_6, .D), 8)
+        cbOps[0x73] = (.bit, (.u3_6, .E), 8)
+        cbOps[0x74] = (.bit, (.u3_6, .H), 8)
+        cbOps[0x75] = (.bit, (.u3_6, .L), 8)
+        cbOps[0x76] = (.bit, (.u3_6, .HLptr), 12)
+        cbOps[0x77] = (.bit, (.u3_6, .A), 8)
+        
+        cbOps[0x78] = (.bit, (.u3_7, .B), 8)
+        cbOps[0x79] = (.bit, (.u3_7, .C), 8)
+        cbOps[0x7A] = (.bit, (.u3_7, .D), 8)
+        cbOps[0x7B] = (.bit, (.u3_7, .E), 8)
+        cbOps[0x7C] = (.bit, (.u3_7, .H), 8)
+        cbOps[0x7D] = (.bit, (.u3_7, .L), 8)
+        cbOps[0x7E] = (.bit, (.u3_7, .HLptr), 12)
+        cbOps[0x7F] = (.bit, (.u3_7, .A), 8)
+
     }
 
     
