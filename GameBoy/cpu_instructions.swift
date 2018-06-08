@@ -74,6 +74,27 @@ extension CPU {
         F.C = false
     }
 
+    // Push the address after the CALL instruction (PC+3) onto the stack and
+    // jump to the label in source arg. Can also take conditions in target arg.
+    func call(argTypes: (ArgType, ArgType)) throws {
+        let targetArg = argTypes.0
+        let sourceArg = argTypes.1
+        
+        // If checkCondition returns nil there was no condition so we ignore it.
+        // If there was a condition we only continue if it passed.
+        if let passCondition = checkCondition(for: targetArg) {
+            guard passCondition == true else { return }
+        }
+        
+        // put the address after the CALL instruction onto the stack
+        let returnAddress = PC &+ 3
+        try set(val: returnAddress, for: .BC)
+        try push(argTypes: (.noReg, .BC))
+        
+        let callAddress = try getVal16(for: sourceArg)
+        PC = callAddress
+    }
+
     func cb() throws {
         // Read the next byte as an opcode and return
     }
@@ -207,7 +228,7 @@ extension CPU {
         nn = nn &+ 1
         try set(val: nn, for: argType)
     }
-
+    
     func jr(argTypes: (ArgType, ArgType)) throws {
         let targetArg = argTypes.0
         let sourceArg = argTypes.1

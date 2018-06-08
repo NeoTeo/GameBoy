@@ -114,6 +114,7 @@ class CPU {
         case add8_8
         case add16_16
         case and
+        case call
         case cb
         case ccf
         case cp
@@ -435,6 +436,13 @@ class CPU {
         ops[0xBF] = (.cp, (.A, .A), 4)
 
         ops[0xC1] = (.pop, (.BC, .noReg), 12)
+        
+        ops[0xC4] = (.call, (.NotZero, .i16), 24)
+        ops[0xCC] = (.call, (.Zero, .i16), 24)
+        ops[0xCD] = (.call, (.noReg, .i16), 24)
+        ops[0xD4] = (.call, (.NoCarry, .i16), 24)
+        ops[0xC4] = (.call, (.Carry, .i16), 24)
+        
         ops[0xCB] = (.cb, (.noReg, .noReg), 4)
         ops[0xD1] = (.pop, (.DE, .noReg), 12)
         ops[0xE1] = (.pop, (.HL, .noReg), 12)
@@ -572,6 +580,8 @@ class CPU {
                 try add16_16(argTypes: args)
             case .and:
                 try and(argTypes: args)
+            case .call:
+                try call(argTypes: args)
             case .cb:
                 cbMode = true
             case .ccf:

@@ -454,6 +454,38 @@ class GameBoyTests: XCTestCase {
         test(ops: opsToTest, and: testVals)
     }
     
+    func testCall() {
+        
+        gb.cpu.SP = 0xC010
+
+        // Set Z flag to false so the operation succeeds
+        gb.cpu.F.Z = false
+        
+        // Write the instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0xC4)
+        
+        // Write the destination location as a 16 bit value in RAM just after the opcode.
+        try? gb.cpu.ram.replace(data: [0xC0, 0x0A], from: 0xC001)
+        
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 24 { gb.cpu.clockTick() }
+        
+        // Check that the PC is now 0xC00A
+        XCTAssert( gb.cpu.PC == 0xC00A )
+        
+        // Assert that the stack pointer has moved back (stacks grow upward) by two bytes
+        XCTAssert( gb.cpu.SP == 0xC00E )
+
+        // Assert that the value pointed to by the stack pointer is the address we called from: 0xC004
+        // First move the SP back to where it was
+        gb.cpu.SP = 0xC010
+        
+        let startAddress = try! gb.cpu.getVal16(for: .SPptr)
+        XCTAssert( startAddress == 0xC004 )
+    }
+    
     /* DAA truth table
      -----------------------------------------------------------------------------
      | N flag | C Flag  | H Flag | HEX value in | HEX value in | Number  | C flag|

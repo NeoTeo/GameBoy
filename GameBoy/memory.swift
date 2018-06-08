@@ -19,4 +19,5 @@ protocol MEMORY {
     // Helper function - might be useful for DMA
     //func insert(data: [UInt8], at address: UInt16)
     func replace(data: [UInt8], from address: UInt16) throws
+    func debugPrint(from: UInt16, bytes: UInt16)
 }

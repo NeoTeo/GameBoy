@@ -46,3 +46,25 @@ class RAM : MEMORY {
         ram.replaceSubrange(start..<end, with: data)
     }
 }
+
+// Helper functions
+extension RAM {
+    
+    func debugPrint(from: UInt16, bytes: UInt16) {
+        guard from < size, (from + bytes < size) else {
+            print("debugPrint out of bounds error")
+            return
+        }
+        
+        var count = 0
+        for index in from ..< from + bytes {
+            
+            print(String(format: "%02X", ram[Int(index)]), terminator: " ")
+            
+            count = (count + 1) % 0x10
+            if count == 0 { print("") }
+        }
+        print("")
+        print("---------")
+    }
+}
