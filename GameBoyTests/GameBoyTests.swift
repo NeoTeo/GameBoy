@@ -552,6 +552,10 @@ class GameBoyTests: XCTestCase {
         }
     }
     
+    func testLd16_16() {
+        
+    }
+    
     func testLd8_8() {
     
         continueAfterFailure = false

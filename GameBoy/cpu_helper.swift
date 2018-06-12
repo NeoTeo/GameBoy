@@ -198,3 +198,21 @@ extension CPU {
         return register ^ (1 << bit)
     }
 }
+
+// Debug helper functions
+extension CPU {
+    
+    // print the values of the registers
+    func debugRegisters() {
+        print(String(format: "AF: %2X", AF))
+        print(String(format: "BC: %2X", BC))
+        print(String(format: "DE: %2X", DE))
+        print(String(format: "HL: %2X", HL))
+        print("-----------------")
+        print(String(format: "SP: %2X", SP))
+        print(String(format: "PC: %2X", PC))
+        print("-----------------")
+        print("F: \(F)")
+        print("IMA: \(IME)")
+    }
+}

@@ -224,11 +224,11 @@ class CPU {
     
     func reset() {
         // Set initial register values as in DMG/GB
-        AF = 0x01B0
-        BC = 0x0013
-        DE = 0x00D8
-        HL = 0x014D
-        SP = 0xFFFE
+        AF = 0x0000 //0x01B0
+        BC = 0x0000 //0x0013
+        DE = 0x0000 //0x00D8
+        HL = 0x0000 //0x014D
+        SP = 0x0000 //0xFFFE
         PC = 0x0000
     
         // Move this to definition of ops
@@ -568,16 +568,28 @@ class CPU {
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
 
+        var dbgPr = false
+        
+        if PC == 0x27 {
+            print("PC is \(String(format: "%2X",PC))")
+            dbgPr = true
+        }
+        
         /// Read from ram
         let opcode = read8(at: PC)
 
-        
-        if PC == 12 {
-        print("PC is \(PC)")
-        print("opcode is 0x" + String(format: "%2X",opcode) )
-        print("CB prefix is \(cbMode)")
-        print("HL: \(HL)")
+        if dbgPr == true {
+            print("opcode is 0x" + String(format: "%2X",opcode) )
+            print("CB prefix is \(cbMode)")
+            print("HL: \(HL)")
         }
+
+//        if PC == 0x0C {
+//        print("PC is \(PC)")
+//        print("opcode is 0x" + String(format: "%2X",opcode) )
+//        print("CB prefix is \(cbMode)")
+//        print("HL: \(HL)")
+//        }
 
         
         if cbMode == true {

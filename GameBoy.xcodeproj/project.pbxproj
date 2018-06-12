@@ -20,6 +20,7 @@
 		AB801B8F20C02D4500B0AEBF /* cpu_helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */; };
 		AB801B9120C02D8300B0AEBF /* ram.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9020C02D8300B0AEBF /* ram.swift */; };
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
+		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu_helper.swift; sourceTree = "<group>"; };
 		AB801B9020C02D8300B0AEBF /* ram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ram.swift; sourceTree = "<group>"; };
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
+		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,7 +102,7 @@
 		AB6E8AA61DBBA64F0072CF49 /* GameBoy */ = {
 			isa = PBXGroup;
 			children = (
-				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
+				AB958DF820D0072F00A186EA /* roms */,
 				AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */,
 				AB6E8AB41DBBA6980072CF49 /* cpu.swift */,
 				AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */,
@@ -115,6 +117,15 @@
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
 			);
 			path = GameBoy;
+			sourceTree = "<group>";
+		};
+		AB958DF820D0072F00A186EA /* roms */ = {
+			isa = PBXGroup;
+			children = (
+				AB958DF720D0072400A186EA /* bgbtest.gb */,
+				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
+			);
+			path = roms;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -211,6 +222,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
 				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,

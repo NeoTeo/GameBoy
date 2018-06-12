@@ -29,6 +29,8 @@ class Gameboy : SYSTEM {
 //        print("Interval is \(interval)")
 //        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
         
+        // Load the rom first because the the boot rom will overwrite the first part
+        bodgeRomLoader()
         // bodge some code into ram
         bodgeBootLoader()
         
@@ -74,7 +76,18 @@ class Gameboy : SYSTEM {
                 return
         }
         
-        //        ram.insert(data: bootBinary, at: 0x0000)
         try? ram.replace(data: bootBinary, from: 0x0000)
+    }
+    
+    func bodgeRomLoader() {
+        let binaryName = "bgbtest.gb"
+        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+            let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
+            else {
+                print("Failed to load rom binary.")
+                return
+        }
+        
+        try? ram.replace(data: romBinary, from: 0x0000)
     }
 }

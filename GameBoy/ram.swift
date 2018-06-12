@@ -23,8 +23,8 @@ class RAM : MEMORY {
     }
     
     func read16(at location: UInt16) -> UInt16 {
-        let msb = ram[Int(location)]
-        let lsb = ram[Int(location+1)]
+        let lsb = ram[Int(location)]
+        let msb = ram[Int(location+1)]
         return (UInt16(msb) << 8) | UInt16(lsb)
     }
     
