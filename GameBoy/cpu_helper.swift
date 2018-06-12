@@ -34,7 +34,11 @@ extension CPU {
             try dec16(argType: .HL)
             return oldHL
             
-        case .Cptr: return read8(at: 0xFF00 + UInt16(C))
+        case .HiRamC: return read8(at: 0xFF00 + UInt16(C))
+        case .HiRamI8:
+            let val = try getVal8(for: .i8)
+            return read8(at: 0xFF00 + UInt16(val))
+            
         case .i8: return read8(at: PC)
         case .i16ptr:
             let dest = try getVal16(for: .i16)
@@ -71,7 +75,10 @@ extension CPU {
         case .HLptrInc: write(at: HL, with: val) ; try inc16(argType: .HL)
         case .HLptrDec: write(at: HL, with: val) ; try dec16(argType: .HL)
             
-        case .Cptr: write(at: 0xFF00 + UInt16(C), with: val)
+        case .HiRamC: write(at: 0xFF00 + UInt16(C), with: val)
+        case .HiRamI8:
+            let offset = try getVal8(for: .i8)
+            write(at: 0xFF00 + UInt16(offset), with: val)
             
         case .i8: write(at: PC, with: val)
         

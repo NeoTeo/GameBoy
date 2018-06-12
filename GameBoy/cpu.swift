@@ -178,7 +178,8 @@ class CPU {
         case HLptrInc
         case HLptrDec
         
-        case Cptr
+        case HiRamC
+        case HiRamI8
         
         case i8
         case i8ptr
@@ -457,13 +458,15 @@ class CPU {
         ops[0xD6] = (.sub, (.A, .i8), 8)
         ops[0xDC] = (.call, (.Carry, .i16), 24)
 
+        ops[0xE0] = (.ld8_8, (.HiRamI8, .A), 12)
         ops[0xE1] = (.pop, (.HL, .noReg), 12)
-        ops[0xE2] = (.ld8_8, (.Cptr, .A), 8)
+        ops[0xE2] = (.ld8_8, (.HiRamC, .A), 8)
         ops[0xE5] = (.push, (.noReg, .HL), 16)
         ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16)
         
+        ops[0xF0] = (.ld8_8, (.A, .HiRamI8), 12)
         ops[0xF1] = (.pop, (.AF, .noReg), 12)
-        ops[0xF2] = (.ld8_8, (.A, .Cptr), 8)
+        ops[0xF2] = (.ld8_8, (.A, .HiRamC), 8)
         ops[0xF3] = (.di, (.noReg, .noReg), 4)
         ops[0xF5] = (.push, (.noReg, .AF), 16)
         ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16)

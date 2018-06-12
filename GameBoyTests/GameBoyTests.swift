@@ -577,7 +577,7 @@ class GameBoyTests: XCTestCase {
         for i in 0x40 ..< 0x80 {
             if i != 0x76 { opsToTest.append(UInt8(i)) }
         }
-        opsToTest += [0xE2, 0xF2, 0xEA, 0xFA]
+        opsToTest += [0xE0, 0xF0, 0xE2, 0xF2, 0xEA, 0xFA]
         
 
         // FIXME: move testval inside the ops loop
@@ -587,7 +587,9 @@ class GameBoyTests: XCTestCase {
             
             // Write the opcode to RAM
             gb.cpu.write(at: 0xC000, with: op)
-            
+            // Clear High Ram and the i8 following the opcode.
+            gb.cpu.write(at: 0xFF00, with: UInt16(0x0000))
+            gb.cpu.write(at: 0xC001, with: UInt8(0x00))
             // Get the registers involved in the operation
             guard let (_,regs,ticks) = gb.cpu.ops[op] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
@@ -614,11 +616,13 @@ class GameBoyTests: XCTestCase {
             // or destination register then has [inc|dec]remented the HL by one
             // and we now need to reset it so we can read it.
             _ = checkForHLptrIncDec(regs: regs)
-            
+
+            // Set PC to just after opcode in case the getVal needs to read an immediate value.
+            gb.cpu.PC = 0xC001
             // Read the value at the destination address
             let resVal = try! gb.cpu.getVal8(for: destReg)
             // Check that the value matches the value in register A
-            XCTAssert( resVal == testVal )
+            XCTAssert(resVal == testVal, "Error for op \(op)")
 
         }
     }
