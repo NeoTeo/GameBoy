@@ -42,6 +42,10 @@ class CPU {
     var PC: UInt16 = 0      // Program Counter
     var SP: UInt16 = 0      // Stack Pointer
     
+    var IME: Bool = false   // Interrupt Master Enable
+    var IF: UInt8 = 0       // Interrupt Flags
+    var IE: UInt8 = 0       // Interrupt Enable
+    
     struct FlagRegister {
         init(rawValue: UInt8, Z: Bool = false, N: Bool = false, H: Bool = false, C: Bool = false) {
             self.rawValue = rawValue
@@ -105,7 +109,8 @@ class CPU {
             H = UInt8(newValue >> 8)
         }
     }
-    
+
+
     var ram: MEMORY!
     var subOpCycles: UInt8 = 1
     
@@ -120,6 +125,8 @@ class CPU {
         case cp
         case cpl
         case daa
+        case di
+        case ei
         case inc8
         case inc16
         case jr
@@ -142,7 +149,6 @@ class CPU {
         case stop
         case sub
         case xor
-        
     }
     
     enum CbOpType {
@@ -171,6 +177,8 @@ class CPU {
         case SPptr
         case HLptrInc
         case HLptrDec
+        
+        case Cptr
         
         case i8
         case i8ptr
@@ -436,27 +444,33 @@ class CPU {
         ops[0xBF] = (.cp, (.A, .A), 4)
 
         ops[0xC1] = (.pop, (.BC, .noReg), 12)
-        
         ops[0xC4] = (.call, (.NotZero, .i16), 24)
+        ops[0xC5] = (.push, (.noReg, .BC), 16)
+        ops[0xCB] = (.cb, (.noReg, .noReg), 4)
         ops[0xCC] = (.call, (.Zero, .i16), 24)
         ops[0xCD] = (.call, (.noReg, .i16), 24)
-        ops[0xD4] = (.call, (.NoCarry, .i16), 24)
-        ops[0xC4] = (.call, (.Carry, .i16), 24)
-        
-        ops[0xCB] = (.cb, (.noReg, .noReg), 4)
-        ops[0xD1] = (.pop, (.DE, .noReg), 12)
-        ops[0xE1] = (.pop, (.HL, .noReg), 12)
-        ops[0xF1] = (.pop, (.AF, .noReg), 12)
-        
-        ops[0xC5] = (.push, (.noReg, .BC), 16)
-        ops[0xD5] = (.push, (.noReg, .DE), 16)
-        ops[0xE5] = (.push, (.noReg, .HL), 16)
-        ops[0xF5] = (.push, (.noReg, .AF), 16)
-        
         ops[0xCE] = (.adc8_8, (.A, .i8), 8)
-        ops[0xD6] = (.sub, (.A, .i8), 8)
         
+        ops[0xD1] = (.pop, (.DE, .noReg), 12)
+        ops[0xD4] = (.call, (.NoCarry, .i16), 24)
+        ops[0xD5] = (.push, (.noReg, .DE), 16)
+        ops[0xD6] = (.sub, (.A, .i8), 8)
+        ops[0xDC] = (.call, (.Carry, .i16), 24)
 
+        ops[0xE1] = (.pop, (.HL, .noReg), 12)
+        ops[0xE2] = (.ld8_8, (.Cptr, .A), 8)
+        ops[0xE5] = (.push, (.noReg, .HL), 16)
+        ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16)
+        
+        ops[0xF1] = (.pop, (.AF, .noReg), 12)
+        ops[0xF2] = (.ld8_8, (.A, .Cptr), 8)
+        ops[0xF3] = (.di, (.noReg, .noReg), 4)
+        ops[0xF5] = (.push, (.noReg, .AF), 16)
+        ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16)
+        ops[0xFB] = (.ei, (.noReg, .noReg), 4)
+
+        // --------------------------
+        
         // CB prefix operations
         cbOps[0x40] = (.bit, (.u3_0, .B), 8)
         cbOps[0x41] = (.bit, (.u3_0, .C), 8)
@@ -542,16 +556,26 @@ class CPU {
     
     var cbMode = false
 
+//    var prevTime: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()
+    
     func clockTick() {
+
+//        if timeTaken > 0.000001 { print("time taken: \(timeTaken)") }
+        
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
 
         /// Read from ram
         let opcode = read8(at: PC)
 
+        
+        if PC == 12 {
         print("PC is \(PC)")
         print("opcode is 0x" + String(format: "%2X",opcode) )
         print("CB prefix is \(cbMode)")
+        print("HL: \(HL)")
+        }
+
         
         if cbMode == true {
             handleCbOps(opcode: opcode) }
@@ -563,7 +587,7 @@ class CPU {
     func handleOps(opcode: UInt8) {
         
         guard let (op, args, cycles) = ops[opcode] else {
-            print("ERROR reading from ops table")
+            print("ERROR reading from ops table for opcode \(opcode)")
             return
         }
         
@@ -592,14 +616,14 @@ class CPU {
                 cpl()
             case .daa:
                 daa()
-            case .ld8_8:
-                try ld8_8(argTypes: args)
-            case .ld16_16:
-                try ld16_16(argTypes: args)
             case .dec8:
                 try dec8(argType: args.0)
             case .dec16:
                 try dec16(argType: args.0)
+            case .di:
+                di()
+            case .ei:
+                ei()
             case .halt:
                 halt()
             case .inc8:
@@ -608,6 +632,10 @@ class CPU {
                 try inc16(argType: args.0)
             case .jr:
                 try jr(argTypes: args)
+            case .ld8_8:
+                try ld8_8(argTypes: args)
+            case .ld16_16:
+                try ld16_16(argTypes: args)
             case .nop:
                 break
             case .or:

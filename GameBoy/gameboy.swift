@@ -12,9 +12,10 @@ class Gameboy : SYSTEM {
     
     var cpu: CPU
     var ram: MEMORY
+    var clockRate: Double
     
     init() {
-        
+        clockRate = 0
         cpu = CPU()
         ram = RAM(size: 0xFFFF)
         // Connect the cpu with the memory
@@ -22,19 +23,46 @@ class Gameboy : SYSTEM {
         cpu.reset()
     }
     
-    func start(clockRate: Int) {
+    func start(clock: Double) {
         
-        let interval = TimeInterval( 1 / clockRate )
-        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
+        clockRate = TimeInterval( 1 / clock )
+//        print("Interval is \(interval)")
+//        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
         
         // bodge some code into ram
         bodgeBootLoader()
         
-        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
+        //runCycle(timer: Timer.init())
+        runCycle()
+//        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
-    func runCycle(timer: Timer) {
+    var totElaps: UInt64 = 0
+    var count: UInt64 = 1
+    
+
+    func runCycle() {
+
+        let startTime = DispatchTime.now()
         cpu.clockTick()
+        let endTime = DispatchTime.now()
+
+        let elapsed = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
+        
+//        totElaps = (totElaps + elapsed)
+//        let avg = totElaps / count
+//        count += 1
+        
+        let clockInNs = clockRate * 1_000_000_000
+//        if count % 100000 == 0 { print("avg elapsed \(avg). elapsed \(Double(elapsed)), ClockRate: \(clockInNs), diff: \(clockInNs - Double(elapsed))") }
+        
+    
+        // Set a timer to fire in (clockRate - elapsed) seconds
+        let interval = Int(max(clockInNs - Double(elapsed), 0))
+        
+        let teo = DispatchTime.now() + .nanoseconds(interval)
+        
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
     }
     
     func bodgeBootLoader() {

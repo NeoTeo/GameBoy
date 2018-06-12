@@ -11,6 +11,7 @@ import Foundation
 protocol SYSTEM {
     var cpu: CPU { get }
     var ram: MEMORY { get }
+    var clockRate: Double { get }
     
-    func start(clockRate: Int)
+    func start(clock: Double)
 }

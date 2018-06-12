@@ -186,10 +186,20 @@ extension CPU {
         try set(val: nn, for: argType)
     }
 
+    // Disable interrupts
+    func di() {
+        IME = false
+    }
+    
+    // Interrupt enable
+    func ei() {
+        IME = true
+    }
+
     func halt() {
         print("CPU in low power mode.")
     }
-
+    
     // INC A, B, C, D, E, H, L, (HL)
     // Flags affected:
     // Z - Set if result is zero.
@@ -259,12 +269,7 @@ extension CPU {
         let source = argTypes.1
         let target = argTypes.0
         
-//        if source == .i8 {
-//            n = read8(at: PC)
-//            incPc() // reading from RAM increases the PC
-//        } else {
-            n = try getVal8(for: source)
-//        }
+        n = try getVal8(for: source)
         
         try set(val: n, for: target)
     }

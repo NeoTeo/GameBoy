@@ -578,6 +578,7 @@ class GameBoyTests: XCTestCase {
             if i != 0x76 { opsToTest.append(UInt8(i)) }
         }
         opsToTest += [0xE2, 0xF2, 0xEA, 0xFA]
+        
 
         // FIXME: move testval inside the ops loop
         // Set a random number as the test value

@@ -34,7 +34,11 @@ extension CPU {
             try dec16(argType: .HL)
             return oldHL
             
+        case .Cptr: return read8(at: 0xFF00 + UInt16(C))
         case .i8: return read8(at: PC)
+        case .i16ptr:
+            let dest = try getVal16(for: .i16)
+            return read8(at: dest)
             
         case .u3_0: return 0
         case .u3_1: return 1
@@ -67,8 +71,14 @@ extension CPU {
         case .HLptrInc: write(at: HL, with: val) ; try inc16(argType: .HL)
         case .HLptrDec: write(at: HL, with: val) ; try dec16(argType: .HL)
             
-        case .i8: write(at: PC, with: val)
+        case .Cptr: write(at: 0xFF00 + UInt16(C), with: val)
             
+        case .i8: write(at: PC, with: val)
+        
+        case .i16ptr: // Load an 8 bit value into a destination
+            let dest = try getVal16(for: .i16)
+            write(at: dest, with: val)
+
         default: throw CPUError.UnknownRegister
         }
     }
@@ -167,5 +177,17 @@ extension CPU {
         case .NotZero: return F.Z == false
         default: return nil
         }
+    }
+
+    func isFlagSet(for bit: UInt8, in register: UInt8) -> Bool {
+        return ((register >> bit) & 0x1) == 0x1
+    }
+    
+    func setFlag(for bit: UInt8, in register: UInt8) -> UInt8 {
+        return register | (1 << bit)
+    }
+    
+    func toggleFlag(for bit: UInt8, in register: UInt8) -> UInt8 {
+        return register ^ (1 << bit)
     }
 }

@@ -16,8 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Insert code here to initialize your application
-        //let gb = Gameboy()
-        //gb.start(clockRate: 4194304)
+//        let gb = Gameboy()
+//        gb.start(clock: 4194304)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
