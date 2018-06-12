@@ -87,7 +87,7 @@ extension CPU {
         }
         
         // put the address after the CALL instruction onto the stack
-        let returnAddress = PC &+ 3
+        let returnAddress = PC &+ 2
         try set(val: returnAddress, for: .BC)
         try push(argTypes: (.noReg, .BC))
         
@@ -253,11 +253,13 @@ extension CPU {
             offset = try getVal8(for: targetArg)
         }
         
+        
         // The offset is a (-128 to 127) value. Treat as 2's complement.
         let isNegative = (offset & 0x80) == 0x80
         let tval = Int(offset & 0x7f)
+        
         let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
-        // Jump to PC + offset
+        
         guard newPc < ram.size, newPc >= 0 else {
             throw CPUError.RamError
         }
@@ -308,8 +310,8 @@ extension CPU {
     
     func push(argTypes: (ArgType, ArgType)) throws {
         let val = try getVal16(for: argTypes.1)
-        try set(val: val, for: .SPptr)
         SP = SP &- 2
+        try set(val: val, for: .SPptr)
     }
     
     // Rotate destination register(or value pointed to by it) left through carry.

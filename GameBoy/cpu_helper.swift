@@ -39,10 +39,10 @@ extension CPU {
             let val = try getVal8(for: .i8)
             return read8(at: 0xFF00 + UInt16(val))
             
-        case .i8: return read8(at: PC)
+        case .i8: return read8(at: PC, incPC: true)
         case .i16ptr:
             let dest = try getVal16(for: .i16)
-            return read8(at: dest)
+            return read8(at: dest, incPC: true)
             
         case .u3_0: return 0
         case .u3_1: return 1
@@ -100,7 +100,7 @@ extension CPU {
             
         case .SPptr: return read16(at: SP)
             
-        case .i16: return read16(at: PC)
+        case .i16: return read16(at: PC, incPC: true)
             
         default: throw CPUError.UnknownRegister
         }
@@ -127,15 +127,16 @@ extension CPU {
     }
     
     // Wrappers to increment PC as appropriate
-    func read8(at location: UInt16) -> UInt8 {
+    func read8(at location: UInt16, incPC: Bool = false) -> UInt8 {
         let val = ram.read8(at: location)
-        incPc()
+        if incPC == true { incPc() }
         return val
     }
     
-    func read16(at location: UInt16) -> UInt16 {
+    func read16(at location: UInt16, incPC: Bool = false) -> UInt16 {
         let val = ram.read16(at: location)
-        incPc(2)
+        if incPC == true { incPc(2) }
+        
         return val
     }
     

@@ -365,7 +365,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.PC = 0xC001
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -409,7 +409,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.write(at: 0xC000, with: op)
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -480,11 +480,9 @@ class GameBoyTests: XCTestCase {
         XCTAssert( gb.cpu.SP == 0xC00E )
 
         // Assert that the value pointed to by the stack pointer is the address we called from: 0xC004
-        // First move the SP back to where it was
-        gb.cpu.SP = 0xC010
         
         let startAddress = try! gb.cpu.getVal16(for: .SPptr)
-        XCTAssert( startAddress == 0xC004 )
+        XCTAssert( startAddress == 0xC003 )
     }
     
     /* DAA truth table
@@ -596,7 +594,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.write(at: 0xFF00, with: UInt16(0x0000))
             gb.cpu.write(at: 0xC001, with: UInt8(0x00))
             // Get the registers involved in the operation
-            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -677,15 +675,40 @@ class GameBoyTests: XCTestCase {
 
     }
 
-    func testPush() {
+    func testPop() {
         
-        gb.cpu.AF = 0x4260
+        gb.cpu.BC = 0x0000
         
         // Place the instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0xF5)
+        gb.cpu.ram.write(at: 0xC000, with: 0xC1)
+        gb.cpu.ram.write(at: 0xC004, with: 0xEB)
+        gb.cpu.ram.write(at: 0xC005, with: 0x00)
         
+        let startSP: UInt16 = 0xC004
         // Set the stack pointer to point to a specific address
-        gb.cpu.SP = 0xC005
+        gb.cpu.SP = startSP
+        
+        // Set the PC to the top of RAM
+        gb.cpu.PC = 0xC000
+        
+        // Run the ticks that the instruction takes
+        for _ in 0 ..< 16 { gb.cpu.clockTick() }
+        
+        
+        XCTAssert( gb.cpu.BC == 0x00EB)
+        
+    }
+
+    func testPush() {
+        
+        gb.cpu.BC = 0x00EB
+        
+        // Place the instruction in the top of RAM.
+        gb.cpu.ram.write(at: 0xC000, with: 0xC5)
+        
+        let startSP: UInt16 = 0xC006
+        // Set the stack pointer to point to a specific address
+        gb.cpu.SP = startSP
         
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
@@ -694,12 +717,12 @@ class GameBoyTests: XCTestCase {
         for _ in 0 ..< 16 { gb.cpu.clockTick() }
         
         // Read the value at the location (originally) pointed to by the SP
-        let val1 = gb.cpu.ram.read8(at: 0xC005)
-        let val2 = gb.cpu.ram.read8(at: 0xC006)
+        let val1 = gb.cpu.ram.read8(at: startSP - 1)
+        let val2 = gb.cpu.ram.read8(at: startSP - 2)
         
         // Check that the PC matches the expected data
-        XCTAssert( val1 == 0x60)
-        XCTAssert( val2 == 0x42)
+        XCTAssert( val1 == 0x00)
+        XCTAssert( val2 == 0xEB)
 
     }
     
@@ -898,7 +921,7 @@ extension GameBoyTests {
             gb.cpu.write(at: 0xC000, with: op)
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
