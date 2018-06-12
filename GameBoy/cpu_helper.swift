@@ -147,8 +147,8 @@ extension CPU {
     func write(at location: UInt16, with value: UInt16) {
         let msb = UInt8(value >> 8)
         let lsb = UInt8(value & 0xFF)
-        ram.write(at: location, with: msb)
-        ram.write(at: location+1, with: lsb)
+        ram.write(at: location, with: lsb)
+        ram.write(at: location+1, with: msb)
         // writes don't increment PC
     }
     
