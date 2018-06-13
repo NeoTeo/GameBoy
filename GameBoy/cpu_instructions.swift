@@ -314,6 +314,16 @@ extension CPU {
         try set(val: val, for: .SPptr)
     }
     
+    // Set the bit value in in the target argument in the byte referenced in the source argument to 0.
+    func res(argTypes: (ArgType, ArgType)) throws {
+        let bitToSet = try getVal8(for: argTypes.0)
+        let regVal = try getVal8(for: argTypes.1)
+        let result = regVal & (0xFF ^ (1 << bitToSet))
+        try set(val: result, for: argTypes.1)
+        
+        // Flags unaffected
+    }
+    
     // Rotate destination register(or value pointed to by it) left through carry.
     // C <- [7 <- 0] <- C
     func rl(argTypes: (ArgType, ArgType)) throws {
@@ -327,7 +337,6 @@ extension CPU {
         F.H = false
         F.Z = (result == 0x00)
     }
-
     
     // Rotate register A left through carry.
     // C <- [7 <- 0] <- C
@@ -391,6 +400,21 @@ extension CPU {
         F.H = false
         F.Z = false
     }
+
+    
+    // Rotate register right.
+    // [0] -> [7 -> 0] -> C
+    func rrc(argTypes: (ArgType, ArgType)) throws {
+        
+        let regVal = try getVal8(for: argTypes.0)
+        let carry = (regVal & 0x01) == 0x01
+        try set(val: (regVal >> 1) | (carry ? 0x80 : 0x00), for: argTypes.0)
+
+        F.C = carry
+        F.N = false
+        F.H = false
+        F.Z = false
+    }
     
     // Rotate register A right.
     // [0] -> [7 -> 0] -> C
@@ -432,6 +456,72 @@ extension CPU {
         F.H = false
     }
 
+    // Set the bit value in in the target argument in the byte referenced in the source argument to 1.
+    func set(argTypes: (ArgType, ArgType)) throws {
+        let bitToSet = try getVal8(for: argTypes.0)
+        let regVal = try getVal8(for: argTypes.1)
+        let result = regVal | (1 << bitToSet)
+        try set(val: result, for: argTypes.1)
+        
+        // Flags unaffected
+    }
+
+    /*
+     argTypes: (ArgType, ArgType)) throws     func rl(argTypes: (ArgType, ArgType)) throws {
+     let regVal = try getVal8(for: argTypes.0)
+     let oldCarry: UInt8 = (F.C == true) ? 0x01 : 0x00
+     let newCarry = (regVal >> 7) == 0x01
+     let result = (regVal << 1) | oldCarry
+     try set(val: result, for: argTypes.0)
+     F.C = newCarry
+     F.N = false
+     F.H = false
+     F.Z = (result == 0x00)
+     }
+
+ */
+    // Shift left arithmetic (shifts in 0 from right) register.
+    // C <- [7 <- 0] <- 0
+    func sla(argTypes: (ArgType, ArgType)) throws {
+        let regVal = try getVal8(for: argTypes.0)
+        let carry = (regVal >> 7) == 0x01
+        let result = regVal << 1
+        try set(val: result, for: argTypes.0)
+        
+        F.C = carry
+        F.N = false
+        F.H = false
+        F.Z = (result == 0x00)
+    }
+
+    // Shift right arithmetic (copies msb) register.
+    // [7] -> [7 -> 0] -> C
+    func sra(argTypes: (ArgType, ArgType)) throws {
+        let regVal = try getVal8(for: argTypes.0)
+        let carry = (regVal & 0x01) == 0x01
+        let result = (regVal & 0x80) | (regVal >> 1)
+        try set(val: result, for: argTypes.0)
+        
+        F.C = carry
+        F.N = false
+        F.H = false
+        F.Z = (result == 0x00)
+    }
+    
+    // Shift right logic register.
+    // 0 -> [7 -> 0] -> C
+    func srl(argTypes: (ArgType, ArgType)) throws {
+        let regVal = try getVal8(for: argTypes.0)
+        let carry = (regVal & 0x01) == 0x01
+        let result = regVal >> 1
+        try set(val: result, for: argTypes.0)
+        
+        F.C = carry
+        F.N = false
+        F.H = false
+        F.Z = (result == 0x00)
+    }
+
     func stop() {
         print("CPU in very low power mode.")
     }
@@ -454,6 +544,19 @@ extension CPU {
         F.N = true
         F.H = halfCarryUnderflow(term1: t1, term2: t2)
         F.C = overflow
+    }
+    
+    // Swap places of least significant four bits with the most significant bits.
+    func swap(argTypes: (ArgType, ArgType)) throws {
+        let regVal = try getVal8(for: argTypes.0)
+        let result = (regVal >> 4) | (regVal << 4)
+        try set(val: result, for: argTypes.0)
+        
+        F.C = false
+        F.N = false
+        F.H = false
+        F.Z = (result == 0x00)
+
     }
     
     func xor(argTypes: (ArgType, ArgType)) throws {
@@ -482,4 +585,5 @@ extension CPU {
         F.N = false
         F.H = true
     }
+    
 }

@@ -798,6 +798,14 @@ class GameBoyTests: XCTestCase {
         test(ops: opsToTest, and: testVals)
     }
     
+    func testSla() {
+        // FIXME: write this
+    }
+    
+    func testSra() {
+        // FIXME: write this
+    }
+
     func testSub() {
         let testVals: [(TestStartState, TestEndState)] = [
             (((0x00, 0x01), [.C(false), .H(false)]), (0xFF, [.C(true), .H(true), .N(true), .Z(false)])),

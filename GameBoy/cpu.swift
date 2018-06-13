@@ -154,7 +154,16 @@ class CPU {
     enum CbOpType {
         // cb prefix
         case bit
+        case res
         case rlc
+        case rrc
+        case rl
+        case rr
+        case set
+        case sla
+        case srl
+        case sra
+        case swap
     }
     
     enum ArgType {
@@ -476,6 +485,78 @@ class CPU {
         // --------------------------
         
         // CB prefix operations
+        cbOps[0x00] = (.rlc, (.B, .noReg), 8)
+        cbOps[0x01] = (.rlc, (.C, .noReg), 8)
+        cbOps[0x02] = (.rlc, (.D, .noReg), 8)
+        cbOps[0x03] = (.rlc, (.E, .noReg), 8)
+        cbOps[0x04] = (.rlc, (.H, .noReg), 8)
+        cbOps[0x05] = (.rlc, (.L, .noReg), 8)
+        cbOps[0x06] = (.rlc, (.HLptr, .noReg), 16)
+        cbOps[0x07] = (.rlc, (.A, .noReg), 8)
+
+        cbOps[0x08] = (.rrc, (.B, .noReg), 8)
+        cbOps[0x09] = (.rrc, (.C, .noReg), 8)
+        cbOps[0x0A] = (.rrc, (.D, .noReg), 8)
+        cbOps[0x0B] = (.rrc, (.E, .noReg), 8)
+        cbOps[0x0C] = (.rrc, (.H, .noReg), 8)
+        cbOps[0x0D] = (.rrc, (.L, .noReg), 8)
+        cbOps[0x0E] = (.rrc, (.HLptr, .noReg), 16)
+        cbOps[0x0F] = (.rrc, (.A, .noReg), 8)
+
+        cbOps[0x10] = (.rl, (.B, .noReg), 8)
+        cbOps[0x11] = (.rl, (.C, .noReg), 8)
+        cbOps[0x12] = (.rl, (.D, .noReg), 8)
+        cbOps[0x13] = (.rl, (.E, .noReg), 8)
+        cbOps[0x14] = (.rl, (.H, .noReg), 8)
+        cbOps[0x15] = (.rl, (.L, .noReg), 8)
+        cbOps[0x16] = (.rl, (.HLptr, .noReg), 16)
+        cbOps[0x17] = (.rl, (.A, .noReg), 8)
+        
+        cbOps[0x18] = (.rr, (.B, .noReg), 8)
+        cbOps[0x19] = (.rr, (.C, .noReg), 8)
+        cbOps[0x1A] = (.rr, (.D, .noReg), 8)
+        cbOps[0x1B] = (.rr, (.E, .noReg), 8)
+        cbOps[0x1C] = (.rr, (.H, .noReg), 8)
+        cbOps[0x1D] = (.rr, (.L, .noReg), 8)
+        cbOps[0x1E] = (.rr, (.HLptr, .noReg), 16)
+        cbOps[0x1F] = (.rr, (.A, .noReg), 8)
+
+        cbOps[0x20] = (.sla, (.B, .noReg), 8)
+        cbOps[0x21] = (.sla, (.C, .noReg), 8)
+        cbOps[0x22] = (.sla, (.D, .noReg), 8)
+        cbOps[0x23] = (.sla, (.E, .noReg), 8)
+        cbOps[0x24] = (.sla, (.H, .noReg), 8)
+        cbOps[0x25] = (.sla, (.L, .noReg), 8)
+        cbOps[0x26] = (.sla, (.HLptr, .noReg), 16)
+        cbOps[0x27] = (.sla, (.A, .noReg), 8)
+        
+        cbOps[0x28] = (.sra, (.B, .noReg), 8)
+        cbOps[0x29] = (.sra, (.C, .noReg), 8)
+        cbOps[0x2A] = (.sra, (.D, .noReg), 8)
+        cbOps[0x2B] = (.sra, (.E, .noReg), 8)
+        cbOps[0x2C] = (.sra, (.H, .noReg), 8)
+        cbOps[0x2D] = (.sra, (.L, .noReg), 8)
+        cbOps[0x2E] = (.sra, (.HLptr, .noReg), 16)
+        cbOps[0x2F] = (.sra, (.A, .noReg), 8)
+
+        cbOps[0x30] = (.swap, (.B, .noReg), 8)
+        cbOps[0x31] = (.swap, (.C, .noReg), 8)
+        cbOps[0x32] = (.swap, (.D, .noReg), 8)
+        cbOps[0x33] = (.swap, (.E, .noReg), 8)
+        cbOps[0x34] = (.swap, (.H, .noReg), 8)
+        cbOps[0x35] = (.swap, (.L, .noReg), 8)
+        cbOps[0x36] = (.swap, (.HLptr, .noReg), 16)
+        cbOps[0x37] = (.swap, (.A, .noReg), 8)
+        
+        cbOps[0x38] = (.srl, (.B, .noReg), 8)
+        cbOps[0x39] = (.srl, (.C, .noReg), 8)
+        cbOps[0x3A] = (.srl, (.D, .noReg), 8)
+        cbOps[0x3B] = (.srl, (.E, .noReg), 8)
+        cbOps[0x3C] = (.srl, (.H, .noReg), 8)
+        cbOps[0x3D] = (.srl, (.L, .noReg), 8)
+        cbOps[0x3E] = (.srl, (.HLptr, .noReg), 16)
+        cbOps[0x3F] = (.srl, (.A, .noReg), 8)
+
         cbOps[0x40] = (.bit, (.u3_0, .B), 8)
         cbOps[0x41] = (.bit, (.u3_0, .C), 8)
         cbOps[0x42] = (.bit, (.u3_0, .D), 8)
@@ -548,6 +629,150 @@ class CPU {
         cbOps[0x7E] = (.bit, (.u3_7, .HLptr), 12)
         cbOps[0x7F] = (.bit, (.u3_7, .A), 8)
 
+        cbOps[0x80] = (.res, (.u3_0, .B), 8)
+        cbOps[0x81] = (.res, (.u3_0, .C), 8)
+        cbOps[0x82] = (.res, (.u3_0, .D), 8)
+        cbOps[0x83] = (.res, (.u3_0, .E), 8)
+        cbOps[0x84] = (.res, (.u3_0, .H), 8)
+        cbOps[0x85] = (.res, (.u3_0, .L), 8)
+        cbOps[0x86] = (.res, (.u3_0, .HLptr), 12)
+        cbOps[0x87] = (.res, (.u3_0, .A), 8)
+        
+        cbOps[0x88] = (.res, (.u3_1, .B), 8)
+        cbOps[0x89] = (.res, (.u3_1, .C), 8)
+        cbOps[0x8A] = (.res, (.u3_1, .D), 8)
+        cbOps[0x8B] = (.res, (.u3_1, .E), 8)
+        cbOps[0x8C] = (.res, (.u3_1, .H), 8)
+        cbOps[0x8D] = (.res, (.u3_1, .L), 8)
+        cbOps[0x8E] = (.res, (.u3_1, .HLptr), 12)
+        cbOps[0x8F] = (.res, (.u3_1, .A), 8)
+
+        cbOps[0x90] = (.res, (.u3_2, .B), 8)
+        cbOps[0x91] = (.res, (.u3_2, .C), 8)
+        cbOps[0x92] = (.res, (.u3_2, .D), 8)
+        cbOps[0x93] = (.res, (.u3_2, .E), 8)
+        cbOps[0x94] = (.res, (.u3_2, .H), 8)
+        cbOps[0x95] = (.res, (.u3_2, .L), 8)
+        cbOps[0x96] = (.res, (.u3_2, .HLptr), 12)
+        cbOps[0x97] = (.res, (.u3_2, .A), 8)
+        
+        cbOps[0x98] = (.res, (.u3_3, .B), 8)
+        cbOps[0x99] = (.res, (.u3_3, .C), 8)
+        cbOps[0x9A] = (.res, (.u3_3, .D), 8)
+        cbOps[0x9B] = (.res, (.u3_3, .E), 8)
+        cbOps[0x9C] = (.res, (.u3_3, .H), 8)
+        cbOps[0x9D] = (.res, (.u3_3, .L), 8)
+        cbOps[0x9E] = (.res, (.u3_3, .HLptr), 12)
+        cbOps[0x9F] = (.res, (.u3_3, .A), 8)
+        
+        cbOps[0xA0] = (.res, (.u3_4, .B), 8)
+        cbOps[0xA1] = (.res, (.u3_4, .C), 8)
+        cbOps[0xA2] = (.res, (.u3_4, .D), 8)
+        cbOps[0xA3] = (.res, (.u3_4, .E), 8)
+        cbOps[0xA4] = (.res, (.u3_4, .H), 8)
+        cbOps[0xA5] = (.res, (.u3_4, .L), 8)
+        cbOps[0xA6] = (.res, (.u3_4, .HLptr), 12)
+        cbOps[0xA7] = (.res, (.u3_4, .A), 8)
+        
+        cbOps[0xA8] = (.res, (.u3_5, .B), 8)
+        cbOps[0xA9] = (.res, (.u3_5, .C), 8)
+        cbOps[0xAA] = (.res, (.u3_5, .D), 8)
+        cbOps[0xAB] = (.res, (.u3_5, .E), 8)
+        cbOps[0xAC] = (.res, (.u3_5, .H), 8)
+        cbOps[0xAD] = (.res, (.u3_5, .L), 8)
+        cbOps[0xAE] = (.res, (.u3_5, .HLptr), 12)
+        cbOps[0xAF] = (.res, (.u3_5, .A), 8)
+        
+        cbOps[0xB0] = (.res, (.u3_6, .B), 8)
+        cbOps[0xB1] = (.res, (.u3_6, .C), 8)
+        cbOps[0xB2] = (.res, (.u3_6, .D), 8)
+        cbOps[0xB3] = (.res, (.u3_6, .E), 8)
+        cbOps[0xB4] = (.res, (.u3_6, .H), 8)
+        cbOps[0xB5] = (.res, (.u3_6, .L), 8)
+        cbOps[0xB6] = (.res, (.u3_6, .HLptr), 12)
+        cbOps[0xB7] = (.res, (.u3_6, .A), 8)
+        
+        cbOps[0xB8] = (.res, (.u3_7, .B), 8)
+        cbOps[0xB9] = (.res, (.u3_7, .C), 8)
+        cbOps[0xBA] = (.res, (.u3_7, .D), 8)
+        cbOps[0xBB] = (.res, (.u3_7, .E), 8)
+        cbOps[0xBC] = (.res, (.u3_7, .H), 8)
+        cbOps[0xBD] = (.res, (.u3_7, .L), 8)
+        cbOps[0xBE] = (.res, (.u3_7, .HLptr), 12)
+        cbOps[0xBF] = (.res, (.u3_7, .A), 8)
+
+        cbOps[0xC0] = (.set, (.u3_0, .B), 8)
+        cbOps[0xC1] = (.set, (.u3_0, .C), 8)
+        cbOps[0xC2] = (.set, (.u3_0, .D), 8)
+        cbOps[0xC3] = (.set, (.u3_0, .E), 8)
+        cbOps[0xC4] = (.set, (.u3_0, .H), 8)
+        cbOps[0xC5] = (.set, (.u3_0, .L), 8)
+        cbOps[0xC6] = (.set, (.u3_0, .HLptr), 12)
+        cbOps[0xC7] = (.set, (.u3_0, .A), 8)
+        
+        cbOps[0xC8] = (.set, (.u3_1, .B), 8)
+        cbOps[0xC9] = (.set, (.u3_1, .C), 8)
+        cbOps[0xCA] = (.set, (.u3_1, .D), 8)
+        cbOps[0xCB] = (.set, (.u3_1, .E), 8)
+        cbOps[0xCC] = (.set, (.u3_1, .H), 8)
+        cbOps[0xCD] = (.set, (.u3_1, .L), 8)
+        cbOps[0xCE] = (.set, (.u3_1, .HLptr), 12)
+        cbOps[0xCF] = (.set, (.u3_1, .A), 8)
+        
+        cbOps[0xD0] = (.set, (.u3_2, .B), 8)
+        cbOps[0xD1] = (.set, (.u3_2, .C), 8)
+        cbOps[0xD2] = (.set, (.u3_2, .D), 8)
+        cbOps[0xD3] = (.set, (.u3_2, .E), 8)
+        cbOps[0xD4] = (.set, (.u3_2, .H), 8)
+        cbOps[0xD5] = (.set, (.u3_2, .L), 8)
+        cbOps[0xD6] = (.set, (.u3_2, .HLptr), 12)
+        cbOps[0xD7] = (.set, (.u3_2, .A), 8)
+        
+        cbOps[0xD8] = (.set, (.u3_3, .B), 8)
+        cbOps[0xD9] = (.set, (.u3_3, .C), 8)
+        cbOps[0xDA] = (.set, (.u3_3, .D), 8)
+        cbOps[0xDB] = (.set, (.u3_3, .E), 8)
+        cbOps[0xDC] = (.set, (.u3_3, .H), 8)
+        cbOps[0xDD] = (.set, (.u3_3, .L), 8)
+        cbOps[0xDE] = (.set, (.u3_3, .HLptr), 12)
+        cbOps[0xDF] = (.set, (.u3_3, .A), 8)
+        
+        cbOps[0xE0] = (.set, (.u3_4, .B), 8)
+        cbOps[0xE1] = (.set, (.u3_4, .C), 8)
+        cbOps[0xE2] = (.set, (.u3_4, .D), 8)
+        cbOps[0xE3] = (.set, (.u3_4, .E), 8)
+        cbOps[0xE4] = (.set, (.u3_4, .H), 8)
+        cbOps[0xE5] = (.set, (.u3_4, .L), 8)
+        cbOps[0xE6] = (.set, (.u3_4, .HLptr), 12)
+        cbOps[0xE7] = (.set, (.u3_4, .A), 8)
+        
+        cbOps[0xE8] = (.set, (.u3_5, .B), 8)
+        cbOps[0xE9] = (.set, (.u3_5, .C), 8)
+        cbOps[0xEA] = (.set, (.u3_5, .D), 8)
+        cbOps[0xEB] = (.set, (.u3_5, .E), 8)
+        cbOps[0xEC] = (.set, (.u3_5, .H), 8)
+        cbOps[0xED] = (.set, (.u3_5, .L), 8)
+        cbOps[0xEE] = (.set, (.u3_5, .HLptr), 12)
+        cbOps[0xEF] = (.set, (.u3_5, .A), 8)
+        
+        cbOps[0xF0] = (.set, (.u3_6, .B), 8)
+        cbOps[0xF1] = (.set, (.u3_6, .C), 8)
+        cbOps[0xF2] = (.set, (.u3_6, .D), 8)
+        cbOps[0xF3] = (.set, (.u3_6, .E), 8)
+        cbOps[0xF4] = (.set, (.u3_6, .H), 8)
+        cbOps[0xF5] = (.set, (.u3_6, .L), 8)
+        cbOps[0xF6] = (.set, (.u3_6, .HLptr), 12)
+        cbOps[0xF7] = (.set, (.u3_6, .A), 8)
+        
+        cbOps[0xF8] = (.set, (.u3_7, .B), 8)
+        cbOps[0xF9] = (.set, (.u3_7, .C), 8)
+        cbOps[0xFA] = (.set, (.u3_7, .D), 8)
+        cbOps[0xFB] = (.set, (.u3_7, .E), 8)
+        cbOps[0xFC] = (.set, (.u3_7, .H), 8)
+        cbOps[0xFD] = (.set, (.u3_7, .L), 8)
+        cbOps[0xFE] = (.set, (.u3_7, .HLptr), 12)
+        cbOps[0xFF] = (.set, (.u3_7, .A), 8)
+
     }
 
     
@@ -571,7 +796,7 @@ class CPU {
 
         var dbgPr = false
         
-        if PC == 0x28 {
+        if PC == 0x95 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -713,6 +938,24 @@ class CPU {
 
             case .rlc:
                 try rlc(argType: args.0)
+            case .rrc:
+                try rrc(argTypes: args)
+            case .rl:
+                try rl(argTypes: args)
+            case .rr:
+                try rr(argTypes: args)
+            case .res:
+                try res(argTypes: args)
+            case .set:
+                try set(argTypes: args)
+            case .sla:
+                try sla(argTypes: args)
+            case .srl:
+                try srl(argTypes: args)
+            case .sra:
+                try sra(argTypes: args)
+            case .swap:
+                try swap(argTypes: args)
             }
         } catch {
             print("Error executing opcodes \(error) \(op)")
