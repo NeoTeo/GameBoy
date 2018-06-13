@@ -332,6 +332,41 @@ extension CPU {
         // Flags unaffected
     }
     
+    /*
+     if let passCondition = checkCondition(for: targetArg) {
+     // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
+     offset = try getVal8(for: sourceArg)
+     // skip after we get the val to ensure that we've incremented the PC
+     // if an immediate value was accessed.
+     guard passCondition == true else { return }
+     } else {
+     // there was no condition so the targetArg is the offset
+     offset = try getVal8(for: targetArg)
+     }
+ */
+    // Return from subroutine
+    func ret(argTypes: (ArgType, ArgType)) throws {
+        let targetArg = argTypes.0
+        
+        // Check if we have a condition and the condition is satisfied.
+        if let passCondition = checkCondition(for: targetArg) {
+            guard passCondition == true else { return }
+        }
+        
+        // Read the two bytes at the address pointed to by the SP
+        let retAddress = try getVal16(for: .SPptr)
+
+        // FIXME: Additional checking for stack pointer overflow?
+        SP = SP &+ 2
+
+        PC = retAddress
+    }
+    
+    func reti() throws {
+        try ret(argTypes: (.noReg, .noReg))
+        IME = false
+    }
+    
     // Rotate destination register(or value pointed to by it) left through carry.
     // C <- [7 <- 0] <- C
     func rl(argTypes: (ArgType, ArgType)) throws {

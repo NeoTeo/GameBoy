@@ -139,6 +139,8 @@ class CPU {
         case or
         case pop
         case push
+        case ret
+        case reti
         case rlca
         case rla
         case rr
@@ -454,18 +456,24 @@ class CPU {
         ops[0xBE] = (.cp, (.A, .HLptr), 8, 1)
         ops[0xBF] = (.cp, (.A, .A), 4, 1)
 
+        ops[0xC0] = (.ret, (.NotZero, .noReg), 20, 1)
         ops[0xC1] = (.pop, (.BC, .noReg), 12, 1)
         ops[0xC4] = (.call, (.NotZero, .i16), 24, 3)
         ops[0xC5] = (.push, (.noReg, .BC), 16, 1)
+        ops[0xC8] = (.ret, (.Zero, .noReg), 20, 1)
+        ops[0xC9] = (.ret, (.noReg, .noReg), 16, 1)
         ops[0xCB] = (.cb, (.noReg, .noReg), 4, 1)
         ops[0xCC] = (.call, (.Zero, .i16), 24, 3)
         ops[0xCD] = (.call, (.noReg, .i16), 24, 3)
         ops[0xCE] = (.adc8_8, (.A, .i8), 8, 2)
         
+        ops[0xD0] = (.ret, (.NoCarry, .noReg), 20, 1)
         ops[0xD1] = (.pop, (.DE, .noReg), 12, 1)
         ops[0xD4] = (.call, (.NoCarry, .i16), 24, 3)
         ops[0xD5] = (.push, (.noReg, .DE), 16, 1)
         ops[0xD6] = (.sub, (.A, .i8), 8, 2)
+        ops[0xD8] = (.ret, (.Carry, .noReg), 20, 1)
+        ops[0xD9] = (.reti, (.noReg, .noReg), 16, 1)
         ops[0xDC] = (.call, (.Carry, .i16), 24, 3)
 
         ops[0xE0] = (.ld8_8, (.HiRamI8, .A), 12, 2)
@@ -796,7 +804,7 @@ class CPU {
 
         var dbgPr = false
         
-        if PC == 0xA3 {
+        if PC == 0x2E {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -885,6 +893,10 @@ class CPU {
                 try pop(argTypes: args)
             case .push:
                 try push(argTypes: args)
+            case .ret:
+                try ret(argTypes: args)
+            case .reti:
+                try reti()
             case .rlca:
                 try rlca()
             case .rla:
