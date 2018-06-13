@@ -9,9 +9,9 @@
 import Foundation
 
 protocol MEMORY {
-    var size: UInt16 { get }
+    var size: Int { get }
     
-    init(size: UInt16)
+    init(size: Int) throws
     func read8(at location: UInt16) -> UInt8
     func read16(at location: UInt16) -> UInt16
     mutating func write(at location: UInt16, with value: UInt8)

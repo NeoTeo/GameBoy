@@ -796,7 +796,7 @@ class CPU {
 
         var dbgPr = false
         
-        if PC == 0x95 {
+        if PC == 0xA3 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }

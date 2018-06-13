@@ -80,6 +80,10 @@ extension CPU {
         let targetArg = argTypes.0
         let sourceArg = argTypes.1
         
+        // Make sure we get the call address (so we inc the PC if the arg is an
+        // immediate) before we have a chance to fail the condition.
+        let callAddress = try getVal16(for: sourceArg)
+        
         // If checkCondition returns nil there was no condition so we ignore it.
         // If there was a condition we only continue if it passed.
         if let passCondition = checkCondition(for: targetArg) {
@@ -87,11 +91,13 @@ extension CPU {
         }
         
         // put the address after the CALL instruction onto the stack
-        let returnAddress = PC &+ 2
-        try set(val: returnAddress, for: .BC)
-        try push(argTypes: (.noReg, .BC))
+        let returnAddress = PC
+//        try set(val: returnAddress, for: .BC)
+//        try push(argTypes: (.noReg, .BC))
         
-        let callAddress = try getVal16(for: sourceArg)
+        SP = SP &- 2
+        try set(val: returnAddress, for: .SPptr)
+        
         PC = callAddress
     }
 
@@ -246,8 +252,10 @@ extension CPU {
         
         if let passCondition = checkCondition(for: targetArg) {
             // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
-            guard passCondition == true else { return }
             offset = try getVal8(for: sourceArg)
+            // skip after we get the val to ensure that we've incremented the PC
+            // if an immediate value was accessed.
+            guard passCondition == true else { return }
         } else {
             // there was no condition so the targetArg is the offset
             offset = try getVal8(for: targetArg)

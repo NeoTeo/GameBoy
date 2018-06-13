@@ -10,14 +10,15 @@ import Foundation
 
 class RAM : MEMORY {
     
-    let size: UInt16// in bytes
+    let size: Int// in bytes
     var ram: [UInt8]
     
     public enum RamError : Error {
         case Overflow
     }
     
-    required init(size: UInt16) {
+    required init(size: Int) throws {
+        guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
         ram = Array(repeating: 0, count: Int(size))
     }
@@ -42,8 +43,8 @@ class RAM : MEMORY {
         //ram.insert(contentsOf: data, at: Int(address))
         let start = Int(address)
         let end = start+data.count
-        guard end < ram.count else { throw RamError.Overflow }
-        ram.replaceSubrange(start..<end, with: data)
+        guard end < size else { throw RamError.Overflow }
+        ram.replaceSubrange(start ..< end, with: data)
     }
 }
 
@@ -51,13 +52,17 @@ class RAM : MEMORY {
 extension RAM {
     
     func debugPrint(from: UInt16, bytes: UInt16) {
-        guard from < size, (from + bytes < size) else {
+        let from = Int(from)
+        let bytes = Int(bytes)
+        guard from < size, (from + bytes <= size) else {
             print("debugPrint out of bounds error")
             return
         }
         
         var count = 0
         for index in from ..< from + bytes {
+            
+            if count == 0 { print(String(format: "%02X : ", index), terminator: " ") }
             
             print(String(format: "%02X", ram[Int(index)]), terminator: " ")
             

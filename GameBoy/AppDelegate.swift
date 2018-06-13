@@ -15,9 +15,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
-        let gb = Gameboy()
-        gb.start(clock: 4194304)
+        do {
+            // Insert code here to initialize your application
+            let gb = try Gameboy()
+            gb.start(clock: 4194304)
+        } catch {
+            print("Failed to init Gameboy system: \(error)")
+        }
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {

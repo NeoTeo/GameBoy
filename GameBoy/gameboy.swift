@@ -14,10 +14,11 @@ class Gameboy : SYSTEM {
     var ram: MEMORY
     var clockRate: Double
     
-    init() {
+    init() throws {
         clockRate = 0
         cpu = CPU()
-        ram = RAM(size: 0xFFFF)
+        
+        ram = try RAM(size: 0x10000)
         // Connect the cpu with the memory
         cpu.ram = ram
         cpu.reset()
