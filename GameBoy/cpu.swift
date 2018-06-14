@@ -129,6 +129,7 @@ class CPU {
         case ei
         case inc8
         case inc16
+        case jp
         case jr
         case dec8
         case dec16
@@ -146,6 +147,7 @@ class CPU {
         case rr
         case rra
         case rrca
+        case rst
         case sbc
         case scf
         case stop
@@ -205,6 +207,7 @@ class CPU {
         case Carry       // Execute if C is set
         case NoCarry     // Execute if C is not set
 
+        // An unsigned 3bit value ranging from 0 to 7
         case u3_0
         case u3_1
         case u3_2
@@ -218,6 +221,10 @@ class CPU {
         // Because ArgType contains cases with associated values Swift will not
         // automatically synthesize the equality operator. So we'll have to do it.
         
+        // I could embed the ArgType into an Arg enum that could either be an
+        // ArgType or an ArgVal and thus just use scalar directly when appropriate.
+        // The cost is added complexity which I'd rather avoid. This, although
+        // more verbose, is also clearer to read.
 //        static func ==(lhs: ArgType, rhs: ArgType) -> Bool {
 //            switch (lhs, rhs) {
 //            case let (.u3(a), .u3(b)):
@@ -226,6 +233,16 @@ class CPU {
 //                return lhs == rhs
 //            }
 //        }
+        
+        // Restart vectors
+        case vec00h
+        case vec08h
+        case vec10h
+        case vec18h
+        case vec20h
+        case vec28h
+        case vec30h
+        case vec38h
     }
 
     // An op consists of an instruction id, a tuple of argument ids, a cycle count
@@ -269,7 +286,7 @@ class CPU {
         ops[0x15] = (.dec8, (.D, .noReg), 4, 1)
         ops[0x16] = (.ld8_8, (.D, .i8), 8, 2)
         ops[0x17] = (.rla, (.noReg, .noReg), 4, 1)
-        ops[0x18] = (.jr, (.i8, .noReg), 12, 2)
+        ops[0x18] = (.jr, (.noReg, .i8), 12, 2)
         ops[0x19] = (.add16_16, (.HL, .DE), 8, 1)
         ops[0x1A] = (.ld8_8, (.A, .DEptr), 8, 1)
         ops[0x1B] = (.dec16, (.DE, .noReg), 8, 1)
@@ -458,37 +475,54 @@ class CPU {
 
         ops[0xC0] = (.ret, (.NotZero, .noReg), 20, 1)
         ops[0xC1] = (.pop, (.BC, .noReg), 12, 1)
+        ops[0xC2] = (.jp, (.NotZero, .i16), 16, 3)
+        ops[0xC3] = (.jp, (.noReg, .i16), 16, 3)
         ops[0xC4] = (.call, (.NotZero, .i16), 24, 3)
         ops[0xC5] = (.push, (.noReg, .BC), 16, 1)
+        ops[0xC7] = (.rst, (.vec00h, .noReg), 16, 1)
         ops[0xC8] = (.ret, (.Zero, .noReg), 20, 1)
         ops[0xC9] = (.ret, (.noReg, .noReg), 16, 1)
+        ops[0xCA] = (.jp, (.Zero, .i16), 16, 3)
         ops[0xCB] = (.cb, (.noReg, .noReg), 4, 1)
         ops[0xCC] = (.call, (.Zero, .i16), 24, 3)
         ops[0xCD] = (.call, (.noReg, .i16), 24, 3)
         ops[0xCE] = (.adc8_8, (.A, .i8), 8, 2)
+        ops[0xCF] = (.rst, (.vec08h, .noReg), 16, 1)
         
         ops[0xD0] = (.ret, (.NoCarry, .noReg), 20, 1)
         ops[0xD1] = (.pop, (.DE, .noReg), 12, 1)
+        ops[0xD2] = (.jp, (.NoCarry, .i16), 16, 3)
         ops[0xD4] = (.call, (.NoCarry, .i16), 24, 3)
         ops[0xD5] = (.push, (.noReg, .DE), 16, 1)
         ops[0xD6] = (.sub, (.A, .i8), 8, 2)
+        ops[0xD7] = (.rst, (.vec10h, .noReg), 16, 1)
         ops[0xD8] = (.ret, (.Carry, .noReg), 20, 1)
         ops[0xD9] = (.reti, (.noReg, .noReg), 16, 1)
+        ops[0xDA] = (.jp, (.Carry, .i16), 16, 3)
         ops[0xDC] = (.call, (.Carry, .i16), 24, 3)
+        ops[0xDE] = (.sbc, (.A, .i8), 8, 2)
+        ops[0xDF] = (.rst, (.vec18h, .noReg), 16, 1)
 
         ops[0xE0] = (.ld8_8, (.HiRamI8, .A), 12, 2)
         ops[0xE1] = (.pop, (.HL, .noReg), 12, 1)
         ops[0xE2] = (.ld8_8, (.HiRamC, .A), 8, 2)
         ops[0xE5] = (.push, (.noReg, .HL), 16, 1)
+        ops[0xE7] = (.rst, (.vec20h, .noReg), 16, 1)
+        ops[0xE9] = (.jp, (.noReg, .HLptr), 4, 1)
         ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16, 3)
+        ops[0xEE] = (.xor, (.i8, .noReg), 8, 2)
+        ops[0xEF] = (.rst, (.vec28h, .noReg), 16, 1)
         
         ops[0xF0] = (.ld8_8, (.A, .HiRamI8), 12, 2)
         ops[0xF1] = (.pop, (.AF, .noReg), 12, 1)
         ops[0xF2] = (.ld8_8, (.A, .HiRamC), 8, 2)
         ops[0xF3] = (.di, (.noReg, .noReg), 4, 1)
         ops[0xF5] = (.push, (.noReg, .AF), 16, 1)
+        ops[0xD7] = (.rst, (.vec30h, .noReg), 16, 1)
         ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16, 3)
         ops[0xFB] = (.ei, (.noReg, .noReg), 4, 1)
+        ops[0xFE] = (.cp, (.A, .i8), 8, 1)
+        ops[0xFF] = (.rst, (.vec38h, .noReg), 16, 1)
 
         // --------------------------
         
@@ -804,7 +838,9 @@ class CPU {
 
         var dbgPr = false
         
-        if PC == 0x2E {
+        // Never reaches 6A because we don't have a v-blank yet
+        if PC == 0x6A {
+//        if PC <= 0x38 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -879,8 +915,8 @@ class CPU {
                 try inc8(argType: args.0)
             case .inc16:
                 try inc16(argType: args.0)
-            case .jr:
-                try jr(argTypes: args)
+            case .jp: try jp(argTypes: args)
+            case .jr: try jr(argTypes: args)
             case .ld8_8:
                 try ld8_8(argTypes: args)
             case .ld16_16:
@@ -907,19 +943,13 @@ class CPU {
                 try rrca()
                 //                print("operation \(op) not yet implemented")
                 //                break
-                
-            case .sbc:
-                try sbc(argTypes: args)
-            case .scf:
-                scf()
-            case .stop:
-                stop()
-            case .sub:
-                try sub8_8(argTypes: args)
-            case .xor:
-                try xor(argTypes: args)
-            case .rr:
-                try rr(argTypes: args)
+            case .rst: try rst(argTypes: args)
+            case .sbc: try sbc(argTypes: args)
+            case .scf: scf()
+            case .stop: stop()
+            case .sub: try sub8_8(argTypes: args)
+            case .xor: try xor(argTypes: args)
+            case .rr: try rr(argTypes: args)
             }
             
         } catch {

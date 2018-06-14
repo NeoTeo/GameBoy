@@ -77,23 +77,20 @@ extension CPU {
     // Push the address after the CALL instruction (PC+3) onto the stack and
     // jump to the label in source arg. Can also take conditions in target arg.
     func call(argTypes: (ArgType, ArgType)) throws {
-        let targetArg = argTypes.0
-        let sourceArg = argTypes.1
-        
+        let conditionArg = argTypes.0
+        let addressArg = argTypes.1
         // Make sure we get the call address (so we inc the PC if the arg is an
         // immediate) before we have a chance to fail the condition.
-        let callAddress = try getVal16(for: sourceArg)
+        let callAddress = try getVal16(for: addressArg)
         
         // If checkCondition returns nil there was no condition so we ignore it.
         // If there was a condition we only continue if it passed.
-        if let passCondition = checkCondition(for: targetArg) {
+        if let passCondition = checkCondition(for: conditionArg) {
             guard passCondition == true else { return }
         }
         
         // put the address after the CALL instruction onto the stack
         let returnAddress = PC
-//        try set(val: returnAddress, for: .BC)
-//        try push(argTypes: (.noReg, .BC))
         
         SP = SP &- 2
         try set(val: returnAddress, for: .SPptr)
@@ -245,20 +242,38 @@ extension CPU {
         try set(val: nn, for: argType)
     }
     
-    func jr(argTypes: (ArgType, ArgType)) throws {
-        let targetArg = argTypes.0
-        let sourceArg = argTypes.1
-        var offset: UInt8 = 0
+    // Jump to the address given in the target argument. If there is a condition
+    // the address will be in the source argument.
+    func jp(argTypes: (ArgType, ArgType)) throws {
+        let conditionArg = argTypes.0
+        let addressArg = argTypes.1
         
-        if let passCondition = checkCondition(for: targetArg) {
-            // if we have a conditional jump and the condition is satisfied we use sourceArg as offset
-            offset = try getVal8(for: sourceArg)
+        
+        let address = try getVal16(for: addressArg)
+        
+        // Check if we have a conditional jump and the condition is satisfied.
+        if let passCondition = checkCondition(for: conditionArg) {
             // skip after we get the val to ensure that we've incremented the PC
             // if an immediate value was accessed.
             guard passCondition == true else { return }
-        } else {
-            // there was no condition so the targetArg is the offset
-            offset = try getVal8(for: targetArg)
+        }
+        
+        PC = address
+    }
+    
+    // Jump to an offset from the current PC. When there is a condition in the source arg
+    // the jump will only occur if the condition is satisfied.
+    func jr(argTypes: (ArgType, ArgType)) throws {
+        let conditionArg = argTypes.0
+        let offsetArg = argTypes.1
+        
+        let offset = try getVal8(for: offsetArg)
+        
+        // Check if we have a conditional jump and the condition is satisfied.
+        if let passCondition = checkCondition(for: conditionArg) {
+            // Skip only _after_ we get the val to ensure that we've incremented the PC
+            // if an immediate value was accessed.
+            guard passCondition == true else { return }
         }
         
         
@@ -346,10 +361,10 @@ extension CPU {
  */
     // Return from subroutine
     func ret(argTypes: (ArgType, ArgType)) throws {
-        let targetArg = argTypes.0
+        let conditionArg = argTypes.0
         
         // Check if we have a condition and the condition is satisfied.
-        if let passCondition = checkCondition(for: targetArg) {
+        if let passCondition = checkCondition(for: conditionArg) {
             guard passCondition == true else { return }
         }
         
@@ -468,6 +483,17 @@ extension CPU {
         F.N = false
         F.H = false
         F.Z = false
+    }
+    
+    func rst(argTypes: (ArgType, ArgType)) throws {
+        let vector = try getVal8(for: argTypes.0)
+        
+        // push the PC (which is now pointing to the instruction after the RST) onto the stack.
+        SP = SP &- 2
+        try set(val: PC, for: .SPptr)
+        
+        // go to the vector
+        PC = UInt16(vector)
     }
 
     func sbc(argTypes: (ArgType, ArgType)) throws {

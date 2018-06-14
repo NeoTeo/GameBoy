@@ -53,6 +53,14 @@ extension CPU {
         case .u3_6: return 6
         case .u3_7: return 7
             
+        case .vec00h: return 0x00
+        case .vec10h: return 0x10
+        case .vec18h: return 0x18
+        case .vec20h: return 0x20
+        case .vec28h: return 0x28
+        case .vec30h: return 0x30
+        case .vec38h: return 0x38
+            
         default: throw CPUError.UnknownRegister
         }
     }
