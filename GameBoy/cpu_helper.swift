@@ -222,6 +222,6 @@ extension CPU {
         print(String(format: "PC: %2X", PC))
         print("-----------------")
         print("F: \(F)")
-        print("IMA: \(IME)")
+        print("IME: \(IME)")
     }
 }

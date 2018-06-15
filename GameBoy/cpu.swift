@@ -110,6 +110,8 @@ class CPU {
 
 
     var mmu: MMU!
+    var timer: Timer!
+    
     var subOpCycles: UInt8 = 1
     
     enum OpType {
@@ -264,6 +266,13 @@ class CPU {
         HL = 0x0000 //0x014D
         SP = 0x0000 //0xFFFE
         PC = 0x0000
+        
+        timer.setClock(hertz: 60)
+        timer.start {
+            // For now fake a vsync
+//            mmu.IF = self.setFlag(for: DmgMmu.InterruptFlag.vblank.rawValue , in: mmu.IF)
+            self.mmu.setIF(flag: .vblank)
+        }
     
         // Move this to definition of ops
         ops[0x00] = (.nop, (.noReg, .noReg), 4, 1)
@@ -842,7 +851,7 @@ class CPU {
         var dbgPr = false
         
         // Never reaches 6A because we don't have a v-blank yet
-        if PC == 0x6A {
+        if PC == 0x64 {
 //        if PC <= 0x38 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true

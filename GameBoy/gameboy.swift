@@ -12,6 +12,8 @@ class Gameboy : SYSTEM {
     
     var cpu: CPU
     var mmu: MMU
+    var timer: Timer
+    
     var clockRate: Double
     
     init() throws {
@@ -19,8 +21,13 @@ class Gameboy : SYSTEM {
         cpu = CPU()
         
         mmu = try DmgMmu(size: 0x10000)
+        
         // Connect the cpu with the memory
         cpu.mmu = mmu
+        
+        // Make a timer
+        timer = Timer()
+        cpu.timer = timer
         cpu.reset()
     }
     
