@@ -136,28 +136,28 @@ extension CPU {
     
     // Wrappers to increment PC as appropriate
     func read8(at location: UInt16, incPC: Bool = false) -> UInt8 {
-        let val = ram.read8(at: location)
+        let val = mmu.read8(at: location)
         if incPC == true { incPc() }
         return val
     }
     
     func read16(at location: UInt16, incPC: Bool = false) -> UInt16 {
-        let val = ram.read16(at: location)
+        let val = mmu.read16(at: location)
         if incPC == true { incPc(2) }
         
         return val
     }
     
     func write(at location: UInt16, with value: UInt8) {
-        ram.write(at: location, with: value)
+        mmu.write(at: location, with: value)
         // writes don't increment PC
     }
     
     func write(at location: UInt16, with value: UInt16) {
         let msb = UInt8(value >> 8)
         let lsb = UInt8(value & 0xFF)
-        ram.write(at: location, with: lsb)
-        ram.write(at: location+1, with: msb)
+        mmu.write(at: location, with: lsb)
+        mmu.write(at: location+1, with: msb)
         // writes don't increment PC
     }
     

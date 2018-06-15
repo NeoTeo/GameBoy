@@ -1,5 +1,5 @@
 //
-//  memory.swift
+//  Mmu.swift
 //  GameBoy
 //
 //  Created by Teo Sartori on 31/05/2018.
@@ -8,8 +8,10 @@
 
 import Foundation
 
-protocol MEMORY {
+protocol MMU {
     var size: Int { get }
+    var IE: UInt8 { get set }
+    var IF: UInt8 { get set }
     
     init(size: Int) throws
     func read8(at location: UInt16) -> UInt8

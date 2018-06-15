@@ -55,7 +55,11 @@ class GameBoyTests: XCTestCase {
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        gb = Gameboy()
+        do {
+            gb = try Gameboy()
+        } catch {
+            print("Error creating Gameboy instance.")
+        }
     }
     
     override func tearDown() {
@@ -143,7 +147,7 @@ class GameBoyTests: XCTestCase {
     func testInc8HalfCarry() {
         
         gb.cpu.AF = 0x0f00
-        gb.cpu.ram.write(at: 0x0000, with: 0x3C) // Add instruction INC A
+        gb.cpu.mmu.write(at: 0x0000, with: 0x3C) // Add instruction INC A
         
         // Run four ticks that the INC A takes
         for _ in 0 ..< 4 { gb.cpu.clockTick() }
@@ -157,7 +161,7 @@ class GameBoyTests: XCTestCase {
     func testDec8HalfCarry() {
         
         gb.cpu.AF = 0x01020
-        gb.cpu.ram.write(at: 0x0000, with: 0x3D) // Add instruction INC A
+        gb.cpu.mmu.write(at: 0x0000, with: 0x3D) // Add instruction INC A
         
         // Run four ticks that the INC A takes
         for _ in 0 ..< 4 { gb.cpu.clockTick() }
@@ -193,7 +197,7 @@ class GameBoyTests: XCTestCase {
             // Set the register to a value
             try? gb.cpu.set(val: startValue, for: reg)
             // Set the memory location 0xC000 to the instruction opcode
-            gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
+            gb.cpu.mmu.write(at: 0xC000, with: opCodes[opIdx])
             opIdx += 1
             // Set the PC to the instruction location
             gb.cpu.PC = 0xC000
@@ -220,7 +224,7 @@ class GameBoyTests: XCTestCase {
             // Set the register to a value
             try? gb.cpu.set(val: startValue, for: reg)
             // Set the memory location 0xC000 to the instruction opcode
-            gb.cpu.ram.write(at: 0xC000, with: opCodes[opIdx])
+            gb.cpu.mmu.write(at: 0xC000, with: opCodes[opIdx])
             opIdx += 1
             // Set the PC to the instruction location
             gb.cpu.PC = 0xC000
@@ -237,10 +241,10 @@ class GameBoyTests: XCTestCase {
     func testIncDecHLptr() {
         
         // Set the memory location 0xC000 to the instruction INC (HL)
-        gb.cpu.ram.write(at: 0xC000, with: 0x34)
+        gb.cpu.mmu.write(at: 0xC000, with: 0x34)
         
         // Set the memory location at 0xC001 to the value 0x42
-        gb.cpu.ram.write(at: 0xC001, with: 0x42)
+        gb.cpu.mmu.write(at: 0xC001, with: 0x42)
         
         // Set the HL register to the address 1 byte below the instruction
         gb.cpu.HL = 0xC001
@@ -252,19 +256,19 @@ class GameBoyTests: XCTestCase {
         for _ in 0 ..< 12 { gb.cpu.clockTick() }
 
         // Check that the value in memory location 0xC001 is now 0x43
-        var incVal = gb.cpu.ram.read8(at: 0xC001)
+        var incVal = gb.cpu.mmu.read8(at: 0xC001)
         
         XCTAssert(incVal == 0x43)
         
         // Now decrement it again.
         // Set the memory location 0xC002 to the instruction DEC (HL)
-        gb.cpu.ram.write(at: 0xC002, with: 0x35)
+        gb.cpu.mmu.write(at: 0xC002, with: 0x35)
 
         // Run 12 ticks that the DEC (HL) takes
         for _ in 0 ..< 12 { gb.cpu.clockTick() }
         
         // Check that the value in memory location 0xC001 is now 0x42
-        incVal = gb.cpu.ram.read8(at: 0xC001)
+        incVal = gb.cpu.mmu.read8(at: 0xC001)
         
         XCTAssert(incVal == 0x42)
 
@@ -275,9 +279,9 @@ class GameBoyTests: XCTestCase {
         // Clear the BC register
         gb.cpu.BC = 0x0000
         // Place the LD BC, i16 instruction in the top of RAM
-        gb.cpu.ram.write(at: 0xC000, with: 0x01)
+        gb.cpu.mmu.write(at: 0xC000, with: 0x01)
         // Place the 16 bit value to copy into the BC register in the next two bytes
-        try? gb.cpu.ram.replace(data: [0x69, 0x42], from: 0xC001)
+        try? gb.cpu.mmu.replace(data: [0x69, 0x42], from: 0xC001)
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run 12 ticks that the instruction takes
@@ -293,7 +297,7 @@ class GameBoyTests: XCTestCase {
         // Set the A register to the value 0x42
         gb.cpu.A = 0x42
         // Set the byte at the top of RAM to be be the LD (BC), A instruction
-        gb.cpu.ram.write(at: 0xC000, with: 0x02)
+        gb.cpu.mmu.write(at: 0xC000, with: 0x02)
         // Set the PC to the top of the RAM
         gb.cpu.PC = 0xC000
         // Run 8 ticks that the instruction takes
@@ -311,9 +315,9 @@ class GameBoyTests: XCTestCase {
         // Clear the SP register
         gb.cpu.SP = testVal
         // Place the LD BC, i16 instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0x08)
+        gb.cpu.mmu.write(at: 0xC000, with: 0x08)
         // Write the destination location as a 16 bit value in RAM just after the opcode.
-        try? gb.cpu.ram.replace(data: [0x03, 0xC0], from: 0xC001)
+        try? gb.cpu.mmu.replace(data: [0x03, 0xC0], from: 0xC001)
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run the ticks that the instruction takes
@@ -463,10 +467,10 @@ class GameBoyTests: XCTestCase {
         gb.cpu.F.Z = false
         
         // Write the instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0xC4)
+        gb.cpu.mmu.write(at: 0xC000, with: 0xC4)
         
         // Write the destination location as a 16 bit value in RAM just after the opcode.
-        try? gb.cpu.ram.replace(data: [0x0A, 0xC0], from: 0xC001)
+        try? gb.cpu.mmu.replace(data: [0x0A, 0xC0], from: 0xC001)
         
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
@@ -531,15 +535,15 @@ class GameBoyTests: XCTestCase {
         gb.cpu.F.rawValue = 0x00
         let zFlag: [Bool] = [false, false, false, true]
         let offs: [UInt8] = [0x02, 0x00, 0x86, 0x42]
-        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88, 0xC001]
+        let pcLoc: [UInt16] = [0xC004, 0xC002, 0xBF88, 0xC002]
         
         for i in 0 ..< offs.count {
             gb.cpu.F.Z = zFlag[i]
             // Place the JR NZ, i8 instruction in the top of RAM.
-            gb.cpu.ram.write(at: 0xC000, with: 0x20)
+            gb.cpu.mmu.write(at: 0xC000, with: 0x20)
             
             // Write the jump offset in RAM in the byte after the opcode.
-            gb.cpu.ram.write(at: 0xC001, with: offs[i])
+            gb.cpu.mmu.write(at: 0xC001, with: offs[i])
             
             // Set the PC to the top of RAM
             gb.cpu.PC = 0xC000
@@ -653,14 +657,14 @@ class GameBoyTests: XCTestCase {
 //        for i in 0 ..< offs.count {
 //            gb.cpu.F.Z = zFlag[i]
             // Place the instruction in the top of RAM.
-            gb.cpu.ram.write(at: 0xC000, with: 0xF1)
+            gb.cpu.mmu.write(at: 0xC000, with: 0xF1)
         
             // Set the stack pointer to point to a specific address
             gb.cpu.SP = 0xC005
         
             // Write two bytes of known values at the location pointed to by the SP
-            gb.cpu.ram.write(at: 0xC005, with: 0xA0)
-            gb.cpu.ram.write(at: 0xC006, with: 0x42)
+            gb.cpu.mmu.write(at: 0xC005, with: 0xA0)
+            gb.cpu.mmu.write(at: 0xC006, with: 0x42)
             
             // Set the PC to the top of RAM
             gb.cpu.PC = 0xC000
@@ -680,9 +684,9 @@ class GameBoyTests: XCTestCase {
         gb.cpu.BC = 0x0000
         
         // Place the instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0xC1)
-        gb.cpu.ram.write(at: 0xC004, with: 0xEB)
-        gb.cpu.ram.write(at: 0xC005, with: 0x00)
+        gb.cpu.mmu.write(at: 0xC000, with: 0xC1)
+        gb.cpu.mmu.write(at: 0xC004, with: 0xEB)
+        gb.cpu.mmu.write(at: 0xC005, with: 0x00)
         
         let startSP: UInt16 = 0xC004
         // Set the stack pointer to point to a specific address
@@ -704,7 +708,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.BC = 0x00EB
         
         // Place the instruction in the top of RAM.
-        gb.cpu.ram.write(at: 0xC000, with: 0xC5)
+        gb.cpu.mmu.write(at: 0xC000, with: 0xC5)
         
         let startSP: UInt16 = 0xC006
         // Set the stack pointer to point to a specific address
@@ -717,8 +721,8 @@ class GameBoyTests: XCTestCase {
         for _ in 0 ..< 16 { gb.cpu.clockTick() }
         
         // Read the value at the location (originally) pointed to by the SP
-        let val1 = gb.cpu.ram.read8(at: startSP - 1)
-        let val2 = gb.cpu.ram.read8(at: startSP - 2)
+        let val1 = gb.cpu.mmu.read8(at: startSP - 1)
+        let val2 = gb.cpu.mmu.read8(at: startSP - 2)
         
         // Check that the PC matches the expected data
         XCTAssert( val1 == 0x00)
@@ -877,8 +881,8 @@ extension GameBoyTests {
             }
             
             // Place the CB instruction in the top of RAM.
-            gb.cpu.ram.write(at: 0xC000, with: 0xCB)
-            gb.cpu.ram.write(at: 0xC001, with: op)
+            gb.cpu.mmu.write(at: 0xC000, with: 0xCB)
+            gb.cpu.mmu.write(at: 0xC001, with: op)
 
             guard let testStates = testVals[op] else { continue }
             

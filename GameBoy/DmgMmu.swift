@@ -1,5 +1,5 @@
 //
-//  ram.swift
+//  DmgMmu.swift
 //  GameBoy
 //
 //  Created by Teo Sartori on 31/05/2018.
@@ -8,11 +8,29 @@
 
 import Foundation
 
-class RAM : MEMORY {
+class DmgMmu : MMU {
     
     let size: Int// in bytes
     var ram: [UInt8]
     
+    // constants
+    let IEAddress = 0xFFFF
+    let IFAddress = 0xFF0F
+    
+    // The IE and IF registers are mapped to specific memory locations.
+    
+    // Interrupt Enable.
+    var IE: UInt8 {
+        get { return ram[IEAddress] }
+        set { ram[IEAddress] = newValue }
+    }
+
+    // Interrupt Flags
+    var IF: UInt8 {
+        get { return ram[IFAddress] }
+        set { ram[IFAddress] = newValue }
+    }
+
     public enum RamError : Error {
         case Overflow
     }
@@ -46,10 +64,28 @@ class RAM : MEMORY {
         guard end < size else { throw RamError.Overflow }
         ram.replaceSubrange(start ..< end, with: data)
     }
+    
+    // Interrupt MMU functions
+    public enum InterruptFlag : UInt8 {
+        case vblank  = 0
+        case lcdStat = 2
+        case timer   = 4
+        case serial  = 8
+        case joypad  = 16
+    }
+    
+    func setIE(flag: InterruptFlag) {
+        IE = IE | UInt8(1 << flag.rawValue)
+    }
+
+    func setIF(flag: InterruptFlag) {
+        IF = IF | UInt8(1 << flag.rawValue)
+    }
+
 }
 
 // Helper functions
-extension RAM {
+extension DmgMmu {
     
     func debugPrint(from: UInt16, bytes: UInt16) {
         let from = Int(from)

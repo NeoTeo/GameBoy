@@ -11,16 +11,16 @@ import Foundation
 class Gameboy : SYSTEM {
     
     var cpu: CPU
-    var ram: MEMORY
+    var mmu: MMU
     var clockRate: Double
     
     init() throws {
         clockRate = 0
         cpu = CPU()
         
-        ram = try RAM(size: 0x10000)
+        mmu = try DmgMmu(size: 0x10000)
         // Connect the cpu with the memory
-        cpu.ram = ram
+        cpu.mmu = mmu
         cpu.reset()
     }
     
@@ -77,7 +77,7 @@ class Gameboy : SYSTEM {
                 return
         }
         
-        try? ram.replace(data: bootBinary, from: 0x0000)
+        try? mmu.replace(data: bootBinary, from: 0x0000)
     }
     
     func bodgeRomLoader() {
@@ -89,6 +89,6 @@ class Gameboy : SYSTEM {
                 return
         }
         
-        try? ram.replace(data: romBinary, from: 0x0000)
+        try? mmu.replace(data: romBinary, from: 0x0000)
     }
 }

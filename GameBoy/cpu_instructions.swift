@@ -283,7 +283,7 @@ extension CPU {
         
         let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
         
-        guard newPc < ram.size, newPc >= 0 else {
+        guard newPc < mmu.size, newPc >= 0 else {
             throw CPUError.RamError
         }
         PC = newPc

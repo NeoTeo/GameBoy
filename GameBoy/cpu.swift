@@ -43,8 +43,6 @@ class CPU {
     var SP: UInt16 = 0      // Stack Pointer
     
     var IME: Bool = false   // Interrupt Master Enable
-    var IF: UInt8 = 0       // Interrupt Flags
-    var IE: UInt8 = 0       // Interrupt Enable
     
     struct FlagRegister {
         init(rawValue: UInt8, Z: Bool = false, N: Bool = false, H: Bool = false, C: Bool = false) {
@@ -111,7 +109,7 @@ class CPU {
     }
 
 
-    var ram: MEMORY!
+    var mmu: MMU!
     var subOpCycles: UInt8 = 1
     
     enum OpType {
@@ -243,6 +241,13 @@ class CPU {
         case vec28h
         case vec30h
         case vec38h
+        
+        // Interrupt vectors
+        case vec40h  // vblank
+        case vec48h  // LCD status
+        case vec50h  // timer
+        case vec58h  // serial
+        case vec60h  // joypad
     }
 
     // An op consists of an instruction id, a tuple of argument ids, a cycle count
@@ -830,8 +835,6 @@ class CPU {
 //    var prevTime: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()
     
     func clockTick() {
-
-//        if timeTaken > 0.000001 { print("time taken: \(timeTaken)") }
         
         subOpCycles -= 1
         if subOpCycles > 0 {  return }
@@ -867,6 +870,30 @@ class CPU {
         else {
             handleOps(opcode: opcode)
         }
+        
+        // Check for interrupts
+        if (IME == true) && (mmu.IE != 0) && (mmu.IF != 0) {
+            
+            let interrupt = DmgMmu.InterruptFlag(rawValue: mmu.IE & mmu.IF)!
+            var vector: ArgType = .noReg
+            
+            switch interrupt {
+            case .vblank:
+                vector = .vec40h
+            case .lcdStat:
+                vector = .vec48h
+            case .timer:
+                mmu.IF = toggleFlag(for: interrupt.rawValue, in: mmu.IF)
+                vector = .vec50h
+            case .serial:
+                vector = .vec58h
+            case .joypad:
+                vector = .vec60h
+            }
+            
+            try! rst(argTypes: (vector, .noReg))
+        }
+
     }
 
     func handleOps(opcode: UInt8) {

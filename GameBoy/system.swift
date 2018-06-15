@@ -10,7 +10,7 @@ import Foundation
 
 protocol SYSTEM {
     var cpu: CPU { get }
-    var ram: MEMORY { get }
+    var mmu: MMU { get }
     var clockRate: Double { get }
     
     func start(clock: Double)
