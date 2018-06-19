@@ -67,7 +67,7 @@ extension LCD : MmuDelegate {
              Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
              Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
              */
-            if isSet(bit: (1 << 7), in: value) {
+            if isSet(bit: 7, in: value) {
                 start()
             } else {
                 // Only allowed to stop during v-blank.

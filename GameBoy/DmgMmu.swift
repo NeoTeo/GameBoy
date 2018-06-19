@@ -59,7 +59,7 @@ class DmgMmu : MMU {
     // addresses and for remapping, etc.
     func read8(at location: UInt16) throws -> UInt8 {
         switch location {
-        case 0xFF00 ... 0xFFFF: // We're in remapped country
+        case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
                 print("MMU error: Unsupported register address.")
@@ -91,21 +91,29 @@ class DmgMmu : MMU {
     func write(at location: UInt16, with value: UInt8) {
         
         switch location {
-        case 0xFF00 ... 0xFFFF: // We're in remapped country
+        case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
                 print("MMU error: Unsupported register address.")
                 return
             }
             
+            // FIXME: Perhaps better to figure out which subsystem (lcd, timer, etc)
+            // the write is mapping to and pass the write on with a single call to
+            // the appropriate delegate. Right now we have just the one delegate so...
+            // But something like
+            // switch location { case range of lcd: pass on to lcd case range of timer: pass to timer...
             switch mmuReg {
+            case .lcdc:
+                ram[Int(location)] = value
+                delegate?.set(value: value, on: mmuReg)
             case .ly: break // Read only, ignore
             case .lyc:
-                delegate?.set(value: value, on: .lyc)
+                delegate?.set(value: value, on: mmuReg)
             case .scy: // vertical scroll
                 ram[Int(location)] = value
                 // let the LCD know we've updated the value
-                delegate?.set(value: value, on: .scy)
+                delegate?.set(value: value, on: mmuReg)
             default:
                 return
             }
