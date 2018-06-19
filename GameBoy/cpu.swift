@@ -538,7 +538,7 @@ class CPU {
         ops[0xFE] = (.cp, (.A, .i8), 8, 1)
         ops[0xFF] = (.rst, (.vec38h, .noReg), 16, 1)
 
-        // --------------------------
+        // -------------------------- change to array when complete
         
         // CB prefix operations
         cbOps[0x00] = (.rlc, (.B, .noReg), 8)
@@ -851,14 +851,21 @@ class CPU {
         var dbgPr = false
         
         // Never reaches 6A because we don't have a v-blank yet
-        if PC == 0x64 {
+//        if PC == 0x59 {
+        if PC == 0x13 {
 //        if PC <= 0x38 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
         
-        /// Read from ram
-        let opcode = read8(at: PC, incPC: true)
+        /// Read from ram.
+        guard let opcode = try? read8(at: PC, incPC: true) else {
+            print("clockTick failed to read opcode.")
+            return
+        }
+        
+        // We may have to do some checking on the PC
+        // https://realboyemulator.wordpress.com/2013/01/18/emulating-the-core-2/
         
         if dbgPr == true {
             print("opcode is 0x" + String(format: "%2X",opcode) )
@@ -866,45 +873,54 @@ class CPU {
             print("HL: \(HL)")
         }
 
-//        if PC == 0x0C {
-//        print("PC is \(PC)")
-//        print("opcode is 0x" + String(format: "%2X",opcode) )
-//        print("CB prefix is \(cbMode)")
-//        print("HL: \(HL)")
-//        }
-
-        
         if cbMode == true {
             handleCbOps(opcode: opcode) }
         else {
             handleOps(opcode: opcode)
         }
         
+        interruptHandler()
+    }
+
+    func interruptHandler() {
         // Check for interrupts
         if (IME == true) && (mmu.IE != 0) && (mmu.IF != 0) {
             
-            let interrupt = DmgMmu.InterruptFlag(rawValue: mmu.IE & mmu.IF)!
+            // Immediately disable interrupts
+            IME = false
+            
+            //            let interrupt = DmgMmu.InterruptFlag(rawValue: mmu.IE & mmu.IF)!
+            let interrupts = mmu.IE & mmu.IF
             var vector: ArgType = .noReg
             
-            switch interrupt {
-            case .vblank:
-                vector = .vec40h
-            case .lcdStat:
-                vector = .vec48h
-            case .timer:
-                mmu.IF = toggleFlag(for: interrupt.rawValue, in: mmu.IF)
-                vector = .vec50h
-            case .serial:
-                vector = .vec58h
-            case .joypad:
-                vector = .vec60h
+            // Execute by priority.
+            for i in 0 ..< 5 {
+                if ((interrupts >> i) & 0x1) == 0x1 {
+                    // Mask out the triggered interrupt
+                    let interrupt = interrupts & (1 << i)
+                    
+                    // Clear the flag
+                    mmu.IF = clear(bit: interrupt, in: mmu.IF)
+                    
+                    let int = mmuInterruptFlag(rawValue: interrupt)!
+                    switch int {
+                    case .vblank: vector = .vec40h
+                    case .lcdStat: vector = .vec48h
+                    case .timer: vector = .vec50h
+                    case .serial: vector = .vec58h
+                    case .joypad: vector = .vec60h
+                    }
+                    
+                    try! rst(argTypes: (vector, .noReg))
+                    
+                    // Only one interrupt gets executed unless IME has been re-enabled
+                    // by the interrupt code.
+                    if IME == false { break }
+                }
             }
-            
-            try! rst(argTypes: (vector, .noReg))
         }
-
     }
-
+    
     func handleOps(opcode: UInt8) {
         
         guard let (op, args, cycles, bytes) = ops[opcode] else {

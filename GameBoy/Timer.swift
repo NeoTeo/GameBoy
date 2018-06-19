@@ -13,6 +13,25 @@ class Timer {
     var clockRate: Double = 0
     var running: Bool = false
     
+    // Timer
+    var TIMA: UInt8 = 0
+    
+    // Modulo register of TIMA.
+    // When TIMA overflows, the TMA data is loaded into TIMA.
+    var TMA: UInt8 = 0
+    
+    // Timer input clock
+    // Bits 0 and 1 are the input clock select
+    // 00: f/2^10 = 4096 KHz
+    // 01: f/2^4 = 262144 KHz
+    // 10: f/2^6 = 65536 KHz
+    // 11: f/2^8 = 16384 KHz
+    //
+    // Bit 3 is Timer Stop
+    // 0: Stop timer
+    // 1: Start Timer
+    var TAC: UInt8 = 0
+    
     var timeoutCallback: (()->Void)?
     
     func setClock(hertz: UInt16) {

@@ -8,16 +8,29 @@
 
 import Foundation
 
+protocol MmuDelegate {
+    func set(value: UInt8, on register: MmuRegister)
+    
+}
+
 class DmgMmu : MMU {
     
     let size: Int// in bytes
     var ram: [UInt8]
     
-    // constants
+    var delegate: MmuDelegate?
+    
+    enum MmuError : Error {
+        case invalidAddress
+    }
+    
+    // Constants
+    //
+    // The IE and IF registers are mapped to specific memory locations.
     let IEAddress = 0xFFFF
     let IFAddress = 0xFF0F
     
-    // The IE and IF registers are mapped to specific memory locations.
+    let registerStartAddr: UInt16 = 0xFF00
     
     // Interrupt Enable.
     var IE: UInt8 {
@@ -25,7 +38,7 @@ class DmgMmu : MMU {
         set { ram[IEAddress] = newValue }
     }
 
-    // Interrupt Flags
+    // Interrupt Flags. Set by hardware (eg. timer) when the relevant interrupts trigger.
     var IF: UInt8 {
         get { return ram[IFAddress] }
         set { ram[IFAddress] = newValue }
@@ -39,24 +52,97 @@ class DmgMmu : MMU {
         guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
         ram = Array(repeating: 0, count: Int(size))
+        delegate = nil
     }
     
+    // FIXME: For all r/w functions: Add some checks for writing to illegal
+    // addresses and for remapping, etc.
+    func read8(at location: UInt16) throws -> UInt8 {
+        switch location {
+        case 0xFF00 ... 0xFFFF: // We're in remapped country
+            
+            guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
+                print("MMU error: Unsupported register address.")
+                throw MmuError.invalidAddress
+            }
+            
+            switch mmuReg {
+            case .ly: // Read only
+                return ram[Int(location)]
+            default:
+                throw MmuError.invalidAddress
+            }
+
+        default:
+            // deal with it as a direct memory access.
+            return ram[Int(location)]
+        }
+//        
+//        // If we get this far something's gone wrong.
+//        throw MmuError.invalidAddress
+    }
+
     func read16(at location: UInt16) -> UInt16 {
         let lsb = ram[Int(location)]
         let msb = ram[Int(location+1)]
         return (UInt16(msb) << 8) | UInt16(lsb)
     }
     
-    func read8(at location: UInt16) -> UInt8 {
-        return ram[Int(location)]
-    }
-    
-    // FIXME: Add some checks for writing to illegal addresses.
     func write(at location: UInt16, with value: UInt8) {
+        
+        switch location {
+        case 0xFF00 ... 0xFFFF: // We're in remapped country
+            
+            guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
+                print("MMU error: Unsupported register address.")
+                return
+            }
+            
+            switch mmuReg {
+            case .ly: break // Read only, ignore
+            case .lyc:
+                delegate?.set(value: value, on: .lyc)
+            case .scy: // vertical scroll
+                ram[Int(location)] = value
+                // let the LCD know we've updated the value
+                delegate?.set(value: value, on: .scy)
+            default:
+                return
+            }
+            
+        default:
+            // deal with it as a direct memory access.
+            ram[Int(location)] = value
+        }
+    }
+}
+
+// Called by the LCD.
+extension DmgMmu : LcdDelegate {
+    
+    func set(value: UInt8, on register: MmuRegister) {
+        // All LCD registers are defined as offsets relative to 0xFF00
+        let location = registerStartAddr + UInt16(register.rawValue)
         ram[Int(location)] = value
     }
     
-    // Helper functions
+    func getValue(for register: MmuRegister) -> UInt8 {
+        let location = registerStartAddr + UInt16(register.rawValue)
+        return ram[Int(location)]
+    }
+}
+
+// Helper functions
+extension DmgMmu {
+
+    func setIE(flag: mmuInterruptFlag) {
+        IE = IE | UInt8(1 << flag.rawValue)
+    }
+    
+    func setIF(flag: mmuInterruptFlag) {
+        IF = IF | UInt8(1 << flag.rawValue)
+    }
+    
     func replace(data: [UInt8], from address: UInt16) throws {
         //ram.insert(contentsOf: data, at: Int(address))
         let start = Int(address)
@@ -64,29 +150,7 @@ class DmgMmu : MMU {
         guard end < size else { throw RamError.Overflow }
         ram.replaceSubrange(start ..< end, with: data)
     }
-    
-    // Interrupt MMU functions
-    public enum InterruptFlag : UInt8 {
-        case vblank  = 0
-        case lcdStat = 2
-        case timer   = 4
-        case serial  = 8
-        case joypad  = 16
-    }
-    
-    func setIE(flag: InterruptFlag) {
-        IE = IE | UInt8(1 << flag.rawValue)
-    }
 
-    func setIF(flag: InterruptFlag) {
-        IF = IF | UInt8(1 << flag.rawValue)
-    }
-
-}
-
-// Helper functions
-extension DmgMmu {
-    
     func debugPrint(from: UInt16, bytes: UInt16) {
         let from = Int(from)
         let bytes = Int(bytes)

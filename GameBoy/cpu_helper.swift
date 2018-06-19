@@ -21,28 +21,28 @@ extension CPU {
         case .H: return H
         case .L: return L
             
-        case .BCptr: return read8(at: BC)
-        case .DEptr: return read8(at: DE)
-        case .HLptr: return read8(at: HL)
+        case .BCptr: return try read8(at: BC)
+        case .DEptr: return try read8(at: DE)
+        case .HLptr: return try read8(at: HL)
             
         case .HLptrInc:
-            let oldHL = read8(at: HL)
+            let oldHL = try read8(at: HL)
             try inc16(argType: .HL)
             return oldHL
         case .HLptrDec:
-            let oldHL = read8(at: HL)
+            let oldHL = try read8(at: HL)
             try dec16(argType: .HL)
             return oldHL
             
-        case .HiRamC: return read8(at: 0xFF00 + UInt16(C))
+        case .HiRamC: return try read8(at: 0xFF00 + UInt16(C))
         case .HiRamI8:
             let val = try getVal8(for: .i8)
-            return read8(at: 0xFF00 + UInt16(val))
+            return try read8(at: 0xFF00 + UInt16(val))
             
-        case .i8: return read8(at: PC, incPC: true)
+        case .i8: return try read8(at: PC, incPC: true)
         case .i16ptr:
             let dest = try getVal16(for: .i16)
-            return read8(at: dest, incPC: true)
+            return try read8(at: dest, incPC: true)
             
         case .u3_0: return 0
         case .u3_1: return 1
@@ -61,7 +61,8 @@ extension CPU {
         case .vec30h: return 0x30
         case .vec38h: return 0x38
             
-        default: throw CPUError.UnknownRegister
+        default:
+            throw CPUError.UnknownRegister
         }
     }
     
@@ -135,8 +136,8 @@ extension CPU {
     }
     
     // Wrappers to increment PC as appropriate
-    func read8(at location: UInt16, incPC: Bool = false) -> UInt8 {
-        let val = mmu.read8(at: location)
+    func read8(at location: UInt16, incPC: Bool = false) throws -> UInt8 {
+        let val = try mmu.read8(at: location)
         if incPC == true { incPc() }
         return val
     }
@@ -194,18 +195,6 @@ extension CPU {
         default: return nil
         }
     }
-
-    func isFlagSet(for bit: UInt8, in register: UInt8) -> Bool {
-        return ((register >> bit) & 0x1) == 0x1
-    }
-    
-    func setFlag(for bit: UInt8, in register: UInt8) -> UInt8 {
-        return register | (1 << bit)
-    }
-    
-    func toggleFlag(for bit: UInt8, in register: UInt8) -> UInt8 {
-        return register ^ (1 << bit)
-    }
 }
 
 // Debug helper functions
@@ -225,3 +214,21 @@ extension CPU {
         print("IME: \(IME)")
     }
 }
+
+// Global helpers
+func isSet(bit: UInt8, in byte: UInt8) -> Bool {
+    return ((byte >> bit) & 0x1) == 0x1
+}
+
+func set(bit: UInt8, in byte: UInt8) -> UInt8 {
+    return byte | (1 << bit)
+}
+
+func clear(bit: UInt8, in byte: UInt8) -> UInt8 {
+    return (byte & ~(1 << bit))
+}
+
+func toggle(bit: UInt8, in byte: UInt8) -> UInt8 {
+    return byte ^ (1 << bit)
+}
+

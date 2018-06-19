@@ -12,6 +12,7 @@ class Gameboy : SYSTEM {
     
     var cpu: CPU
     var mmu: MMU
+    var lcd: LCD
     var timer: Timer
     
     var clockRate: Double
@@ -21,7 +22,11 @@ class Gameboy : SYSTEM {
         cpu = CPU()
         
         mmu = try DmgMmu(size: 0x10000)
+        lcd = LCD()
         
+        // Connect lcd and mmu
+        lcd.delegate = mmu
+        mmu.delegate = lcd
         // Connect the cpu with the memory
         cpu.mmu = mmu
         

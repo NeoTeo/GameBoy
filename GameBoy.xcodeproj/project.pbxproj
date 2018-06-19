@@ -10,6 +10,7 @@
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
 		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
+		AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5DAA3A20D802D000BF58D3 /* lcd.swift */; };
 		AB66B0C220D3FB6E000498BB /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB66B0C120D3FB6E000498BB /* Timer.swift */; };
 		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
@@ -40,7 +41,8 @@
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
 		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
-		AB66B0C120D3FB6E000498BB /* Timer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Timer.swift; path = GameBoy/Timer.swift; sourceTree = "<group>"; };
+		AB5DAA3A20D802D000BF58D3 /* lcd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lcd.swift; sourceTree = "<group>"; };
+		AB66B0C120D3FB6E000498BB /* Timer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
 		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -86,7 +88,6 @@
 		AB6E8A9B1DBBA64F0072CF49 = {
 			isa = PBXGroup;
 			children = (
-				AB66B0C120D3FB6E000498BB /* Timer.swift */,
 				AB6E8AA61DBBA64F0072CF49 /* GameBoy */,
 				AB3D07041E2E6968009BDF00 /* GameBoyTests */,
 				AB6E8AA51DBBA64F0072CF49 /* Products */,
@@ -113,8 +114,10 @@
 				AB801B8A20C02CB800B0AEBF /* system.swift */,
 				AB801B9220C02DAD00B0AEBF /* gameboy.swift */,
 				AB59ADE020AEE6560055A60F /* BinaryLoader.swift */,
+				AB5DAA3A20D802D000BF58D3 /* lcd.swift */,
 				AB801B8C20C02CE200B0AEBF /* Mmu.swift */,
 				AB801B9020C02D8300B0AEBF /* DmgMmu.swift */,
+				AB66B0C120D3FB6E000498BB /* Timer.swift */,
 				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
 				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
@@ -255,6 +258,7 @@
 				AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */,
 				AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */,
 				AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */,
+				AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */,
 				AB801B8D20C02CE200B0AEBF /* Mmu.swift in Sources */,
 				AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */,
 			);
