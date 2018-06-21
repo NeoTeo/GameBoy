@@ -125,8 +125,8 @@ extension Timer : MmuDelegate {
 extension Timer {
     
     // Calculate the number of timer ticks to system ticks.
-    // Eg if the system clock is 4194304 then a clock select of 00
-    // will need 4194304 / 4096 = 1024 system ticks to one timer tick.
+    // Eg if the system clock is 1_048_576 then a clock select of 00
+    // will need 1048576 / 4096 = 256 system ticks to one timer tick.
     func calcTickModulo(from clockSelect: UInt8) -> Int {
         switch (clockSelect & 0x3) {
         case 0x00: return Int(systemClock / 4096) // f/2^10 = 4096

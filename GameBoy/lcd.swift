@@ -13,15 +13,39 @@ protocol LcdDelegate {
     func getValue(for register: MmuRegister) -> UInt8
 }
 
-//enum LcdRegister : UInt8 {
-//    case lcdc   // LCD control
-//    case stat   // LCD status info
-//    case scy    // scroll y register
-//    case scx    // scroll x register
-//    case ly     // LCD y coordinate (scanline y position) (read only)
-//    case lyc    // LY compare register (read/write)
-//}
-
+/*
+       <--+ 20 clocks +-> <--------+ 43 clocks +---------> <---------+ 51 clocks +--------->
+       |------------------|--------------------------------|---------------------------------+
+ ^     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ +     |                  |                                |                                 |
+ 144   |                  |                                |                                 |
+ lines |                  |                                |                                 |
+ +     |      OAM         |                                |                                 |
+ |     |      Search      |       Pixel Transfer           |              H-Blank            |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ |     |                  |                                |                                 |
+ v     |                  |                                |                                 |
+       +-------------------------------------------------------------------------------------+
+ 10    |                                     V-Blank                                         |
+ lines +-------------------------------------------------------------------------------------+
+ 
+ The clocks above are at RAM clock speed which is 1/4 of the system clock of 4_194_304.
+ That's 4194304 / 4 = 1048576
+ So if we have 154 lines * 114 clocks = 17556 clocks per screen (at 1/4 max clock speed)
+ and 17556 clocks per screen * 4 = 70224 clocks per screen at max clock speed.
+ and a refresh rate of 4194304 / 70224 = 59,7
+ */
 class LCD {
     // keep a reference to the mmu where we have registers mapped to I/O
     var delegate: LcdDelegate?
@@ -31,8 +55,13 @@ class LCD {
     var ticks: Int
     
     init(sysClock: Double) {
-        // Bodge a 60 hz
-        tickModulo = Int(sysClock / 60)
+        // Given a system clock of 4194304 and
+        // 4194304 / 70224 = 59,7 (~60 hz)
+        // calculate divisor
+        let ramClock: Double = 1048576
+        let screenClocks: Double = 17556
+        let rate = screenClocks * (sysClock / ramClock)
+        tickModulo = Int((sysClock / rate).rounded())
         ticks = tickModulo
     }
     

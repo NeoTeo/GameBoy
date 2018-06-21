@@ -21,7 +21,7 @@ class Gameboy : SYSTEM {
     init(clock: Double) throws {
         clockRate = 0
         systemClock = clock
-        cpu = CPU()
+        cpu = CPU(sysClock: systemClock)
         
         mmu = try DmgMmu(size: 0x10000)
         lcd = LCD(sysClock: systemClock)

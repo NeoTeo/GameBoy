@@ -257,6 +257,11 @@ class CPU {
     // FIXME: Make this into an array and add all the ops as part of its definition.
     var ops =  [UInt8 : (OpType, (ArgType, ArgType), UInt8, UInt8)]()
     var cbOps = [UInt8 : (CbOpType, (ArgType, ArgType), UInt8)]()
+    var systemClock: Double
+    let maxClock: Double = 4_194_304
+    init(sysClock: Double) {
+        systemClock = sysClock
+    }
     
     func reset() {
         // Set initial register values as in DMG/GB
@@ -927,9 +932,14 @@ class CPU {
             return
         }
                 
-        // TODO: Consider using the functions directly in the table instead since they
+        // FIXME: Bodge until I get each instruction to return the cycles it uses.
+        // In the meantime this ensures that the cycles, currently defined at 4MHz,
+        // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
+        // will count as 12 * (1_048_576 / 4_194_304) = 3 cycles
+        subOpCycles = UInt8(Double(cycles) * (systemClock / maxClock))
+        
+        // TODO: Consider using the functions directly in the op-table instead since they
         // all take args anyway
-        subOpCycles = cycles
         do {
             switch op {
             case .adc8_8:
