@@ -61,6 +61,8 @@ class LCD {
         let ramClock: Double = 1048576
         let screenClocks: Double = 17556
         let rate = screenClocks * (sysClock / ramClock)
+        
+        // A bodge to simulate a 60 Hz v-blank signal
         tickModulo = Int((sysClock / rate).rounded())
         ticks = tickModulo
     }
@@ -77,21 +79,9 @@ class LCD {
     }
     
     func start() {
-        
-        // debug. Start a timer to fake vsync.
-//        dbgTimer = Timer()
-//        dbgTimer?.selectClock(rate: 0x01)
-//        dbgTimer?.setClock(hertz: 60)
-//        dbgTimer?.start {
-//
-//            // LY holds the vertical position of the scanline. With a resolution of
-//            // 240x144 the bottom Y pos is 144 or 0x90
-//            self.delegate?.set(value: 0x90, on: .ly)
-//        }
     }
     
     func stop() {
-//        dbgTimer?.stop()
     }
     
 }
