@@ -13,5 +13,5 @@ protocol SYSTEM {
     var mmu: MMU { get }
     var clockRate: Double { get }
     
-    func start(clock: Double)
+    func start()
 }

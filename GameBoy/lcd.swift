@@ -26,24 +26,45 @@ class LCD {
     // keep a reference to the mmu where we have registers mapped to I/O
     var delegate: LcdDelegate?
     
-    var dbgTimer: Timer?
+//    var dbgTimer: Timer?
+    var tickModulo: Int
+    var ticks: Int
+    
+    init(sysClock: Double) {
+        // Bodge a 60 hz
+        tickModulo = Int(sysClock / 60)
+        ticks = tickModulo
+    }
+    
+    func refresh() {
+        
+        ticks -= 1
+        if ticks == 0 {
+            ticks = tickModulo
+            
+            // do stuff
+            delegate?.set(value: 0x90, on: .ly)
+        }
+    }
     
     func start() {
         
         // debug. Start a timer to fake vsync.
-        dbgTimer = Timer()
-        dbgTimer?.setClock(hertz: 60)
-        dbgTimer?.start {
-        
-            // LY holds the vertical position of the scanline. With a resolution of
-            // 240x144 the bottom Y pos is 144 or 0x90
-            self.delegate?.set(value: 0x90, on: .ly)
-        }
+//        dbgTimer = Timer()
+//        dbgTimer?.selectClock(rate: 0x01)
+//        dbgTimer?.setClock(hertz: 60)
+//        dbgTimer?.start {
+//
+//            // LY holds the vertical position of the scanline. With a resolution of
+//            // 240x144 the bottom Y pos is 144 or 0x90
+//            self.delegate?.set(value: 0x90, on: .ly)
+//        }
     }
     
     func stop() {
-        dbgTimer?.stop()
+//        dbgTimer?.stop()
     }
+    
 }
 
 // Called by the MMU
@@ -84,6 +105,4 @@ extension LCD : MmuDelegate {
             return
         }
     }
-    
-
 }

@@ -267,12 +267,12 @@ class CPU {
         SP = 0x0000 //0xFFFE
         PC = 0x0000
         
-        timer.setClock(hertz: 60)
-        timer.start {
-            // For now fake a vsync
-//            mmu.IF = self.setFlag(for: DmgMmu.InterruptFlag.vblank.rawValue , in: mmu.IF)
-            self.mmu.setIF(flag: .vblank)
-        }
+//        timer.setClock(hertz: 60)
+//        timer.start {
+//            // For now fake a vsync
+////            mmu.IF = self.setFlag(for: DmgMmu.InterruptFlag.vblank.rawValue , in: mmu.IF)
+//            self.mmu.setIF(flag: .vblank)
+//        }
     
         // Move this to definition of ops
         ops[0x00] = (.nop, (.noReg, .noReg), 4, 1)
@@ -852,7 +852,7 @@ class CPU {
         
         // Never reaches 6A because we don't have a v-blank yet
 //        if PC == 0x68 {
-        if PC == 0x6A {
+        if PC == 0xFE {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }

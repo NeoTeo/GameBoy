@@ -293,10 +293,13 @@ extension CPU {
         var n: UInt8
         let source = argTypes.1
         let target = argTypes.0
-        
+        do {
         n = try getVal8(for: source)
         
         try set(val: n, for: target)
+        } catch {
+            print("ld Error: \(error)")
+        }
     }
     
     // Load a 16 bit source into a 16 bit destination

@@ -17,8 +17,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         do {
             // Insert code here to initialize your application
-            let gb = try Gameboy()
-            gb.start(clock: 4194304)
+            let gb = try Gameboy(clock: 4194304)
+            gb.start()
         } catch {
             print("Failed to init Gameboy system: \(error)")
         }

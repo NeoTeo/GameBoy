@@ -15,30 +15,36 @@ class Gameboy : SYSTEM {
     var lcd: LCD
     var timer: Timer
     
+    var systemClock: Double
     var clockRate: Double
     
-    init() throws {
+    init(clock: Double) throws {
         clockRate = 0
+        systemClock = clock
         cpu = CPU()
         
         mmu = try DmgMmu(size: 0x10000)
-        lcd = LCD()
+        lcd = LCD(sysClock: systemClock)
         
         // Connect lcd and mmu
         lcd.delegate = mmu
-        mmu.delegate = lcd
+        mmu.delegateLcd = lcd
         // Connect the cpu with the memory
         cpu.mmu = mmu
         
         // Make a timer
-        timer = Timer()
+        timer = Timer(sysClock: systemClock)
+        timer.delegateMmu = mmu
         cpu.timer = timer
         cpu.reset()
     }
     
-    func start(clock: Double) {
+    func start() {
         
-        clockRate = TimeInterval( 1 / clock )
+        clockRate = TimeInterval( 1 / systemClock )
+        
+        // Set the timer clock
+        timer.selectClock(rate: 0x00)
 //        print("Interval is \(interval)")
 //        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
         
@@ -60,17 +66,17 @@ class Gameboy : SYSTEM {
 
         let startTime = DispatchTime.now()
         cpu.clockTick()
+        
+        // Tick the timer
+        timer.tick()
+        lcd.refresh()
+        
         let endTime = DispatchTime.now()
 
         let elapsed = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
         
-//        totElaps = (totElaps + elapsed)
-//        let avg = totElaps / count
-//        count += 1
         
         let clockInNs = clockRate * 1_000_000_000
-//        if count % 100000 == 0 { print("avg elapsed \(avg). elapsed \(Double(elapsed)), ClockRate: \(clockInNs), diff: \(clockInNs - Double(elapsed))") }
-        
     
         // Set a timer to fire in (clockRate - elapsed) seconds
         let interval = Int(max(clockInNs - Double(elapsed), 0))

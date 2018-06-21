@@ -18,7 +18,8 @@ class DmgMmu : MMU {
     let size: Int// in bytes
     var ram: [UInt8]
     
-    var delegate: MmuDelegate?
+    var delegateLcd: MmuDelegate?
+    var delegateTimer: MmuDelegate?
     
     enum MmuError : Error {
         case invalidAddress
@@ -52,7 +53,7 @@ class DmgMmu : MMU {
         guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
         ram = Array(repeating: 0, count: Int(size))
-        delegate = nil
+        delegateLcd = nil
     }
     
     // FIXME: For all r/w functions: Add some checks for writing to illegal
@@ -69,6 +70,9 @@ class DmgMmu : MMU {
             switch mmuReg {
             case .ly: // Read only
                 return ram[Int(location)]
+            case .scy:
+                return ram[Int(location)]
+                
             default:
                 throw MmuError.invalidAddress
             }
@@ -104,16 +108,32 @@ class DmgMmu : MMU {
             // But something like
             // switch location { case range of lcd: pass on to lcd case range of timer: pass to timer...
             switch mmuReg {
+            // Timer registers
+            case .div:
+                delegateTimer?.set(value: value, on: mmuReg)
+                break
+            case .tima:
+                delegateTimer?.set(value: value, on: mmuReg)
+                break
+            case .tma:
+                delegateTimer?.set(value: value, on: mmuReg)
+                break
+            case .tac:
+                delegateTimer?.set(value: value, on: mmuReg)
+                break
+                
             case .lcdc:
                 ram[Int(location)] = value
-                delegate?.set(value: value, on: mmuReg)
+                delegateLcd?.set(value: value, on: mmuReg)
             case .ly: break // Read only, ignore
             case .lyc:
-                delegate?.set(value: value, on: mmuReg)
+                delegateLcd?.set(value: value, on: mmuReg)
             case .scy: // vertical scroll
                 ram[Int(location)] = value
                 // let the LCD know we've updated the value
-                delegate?.set(value: value, on: mmuReg)
+                delegateLcd?.set(value: value, on: mmuReg)
+            case .romoff: // switch out rom
+                print("switch out ROM")
             default:
                 return
             }
@@ -126,7 +146,7 @@ class DmgMmu : MMU {
 }
 
 // Called by the LCD.
-extension DmgMmu : LcdDelegate {
+extension DmgMmu : LcdDelegate, TimerDelegate {
     
     func set(value: UInt8, on register: MmuRegister) {
         // All LCD registers are defined as offsets relative to 0xFF00

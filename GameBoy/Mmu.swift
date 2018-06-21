@@ -8,12 +8,12 @@
 
 import Foundation
 
-protocol MMU : LcdDelegate {
+protocol MMU : LcdDelegate, TimerDelegate {
     var size: Int { get }
     var IE: UInt8 { get set }
     var IF: UInt8 { get set }
     
-    var delegate: MmuDelegate? { get set }
+    var delegateLcd: MmuDelegate? { get set }
     
     init(size: Int) throws
     func read8(at location: UInt16) throws -> UInt8
@@ -93,4 +93,6 @@ enum MmuRegister : UInt8 {
     case obp1 = 0x49    // OBJ palette data 1 (read/write)
     case wy = 0x4A      // window y-coordinate
     case wx = 0x4B      // window x-coordinate
+    
+    case romoff = 0x50  // disable rom
 }
