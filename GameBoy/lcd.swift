@@ -11,8 +11,12 @@ import Foundation
 protocol LcdDelegate {
     func set(value: UInt8, on register: MmuRegister)
     func getValue(for register: MmuRegister) -> UInt8
+    func read8(at location: UInt16) throws -> UInt8
 }
 
+protocol LcdDisplayDelegate {
+    func didUpdate(buffer: [UInt8])
+}
 /*
        <--+ 20 clocks +-> <--------+ 43 clocks +---------> <---------+ 51 clocks +--------->
        |------------------|--------------------------------|---------------------------------+
@@ -48,7 +52,8 @@ protocol LcdDelegate {
  */
 class LCD {
     // keep a reference to the mmu where we have registers mapped to I/O
-    var delegate: LcdDelegate?
+    var delegateMmu: LcdDelegate?
+    var delegateDisplay: LcdDisplayDelegate?
     
 //    var dbgTimer: Timer?
     var tickModulo: Int
@@ -72,9 +77,41 @@ class LCD {
         ticks -= 1
         if ticks == 0 {
             ticks = tickModulo
-            
+
+            // Early out if lcd is off
+            guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { return }
+
             // do stuff
-            delegate?.set(value: 0x90, on: .ly)
+            delegateMmu?.set(value: 0x90, on: .ly)
+            
+            do {
+                // Bodge to update display
+                // Eg. we build a new display buffer here and pass it on. Gotta be a better way.
+                // Each byte contains the data of two pixels
+                let pixelCount = 160 * 144
+                let byteCount =  pixelCount / 2 // Each byte in vram holds two pixels' data
+                var bufCount = 0
+                
+                // Our video buffer uses a byte per pixel
+                var vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
+                
+                for i in 0 ..< byteCount {
+                    // get pixel values at index i
+                    guard let pixels = try delegateMmu?.read8(at: 0x8000 & UInt16(i)) else { return }
+                    let p1 = pixels & UInt8(0x0F)
+                    let p2 = (pixels >> 4) & UInt8(0x0F)
+                    
+                    vbuf[bufCount] = p1
+                    bufCount += 1
+                    vbuf[bufCount] = p2
+                    bufCount += 1
+                }
+                
+                 delegateDisplay?.didUpdate(buffer: vbuf)
+                
+            } catch {
+                print("Lcd refresh error \(error)")
+            }
         }
     }
     
@@ -111,7 +148,7 @@ extension LCD : MmuDelegate {
                 start()
             } else {
                 // Only allowed to stop during v-blank.
-                if let lyVal = delegate?.getValue(for: .ly), lyVal >= UInt8(0x90) {
+                if let lyVal = delegateMmu?.getValue(for: .ly), lyVal >= UInt8(0x90) {
                     stop()
                 }
             }

@@ -856,8 +856,8 @@ class CPU {
         var dbgPr = false
         
         // Never reaches 6A because we don't have a v-blank yet
-//        if PC == 0x68 {
-        if PC == 0xFE {
+        if PC == 0x40 {
+//        if PC == 0xFE {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }

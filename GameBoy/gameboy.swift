@@ -27,7 +27,7 @@ class Gameboy : SYSTEM {
         lcd = LCD(sysClock: systemClock)
         
         // Connect lcd and mmu
-        lcd.delegate = mmu
+        lcd.delegateMmu = mmu
         mmu.delegateLcd = lcd
         // Connect the cpu with the memory
         cpu.mmu = mmu
@@ -38,6 +38,7 @@ class Gameboy : SYSTEM {
         cpu.timer = timer
         cpu.reset()
     }
+    
     
     func start() {
         
