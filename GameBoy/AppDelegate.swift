@@ -41,7 +41,7 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
     var dmgDisplayView: DmgDisplay!
     
     override func loadView() {
-        dmgDisplayView = DmgDisplay(frame: NSRect(x: 0, y: 0, width: 160, height: 133))
+        dmgDisplayView = DmgDisplay(frame: NSRect(x: 0, y: 0, width: 160, height: 144))
         self.view = dmgDisplayView
     }
     
