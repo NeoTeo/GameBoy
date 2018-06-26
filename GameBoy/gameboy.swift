@@ -56,22 +56,33 @@ class Gameboy : SYSTEM {
         
         //runCycle(timer: Timer.init())
         runCycle()
+        
+        dbgPrintAvgs()
 //        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
     var totElaps: UInt64 = 0
     var count: UInt64 = 1
     
-
+    var cpuAvg: Double = 0
+    var timerAvg: Double = 0
+    var lcdAvg: Double = 0
+    
     func runCycle() {
 
         let startTime = DispatchTime.now()
         cpu.clockTick()
-        
+        let cpuTime = DispatchTime.now()
+        cpuAvg = dbgCalcAvgTime(timeDiff: Double(cpuTime.uptimeNanoseconds - startTime.uptimeNanoseconds), for: cpuAvg)
         // Tick the timer
         timer.tick()
+        let timerTime = DispatchTime.now()
+        timerAvg = dbgCalcAvgTime(timeDiff: Double(timerTime.uptimeNanoseconds - cpuTime.uptimeNanoseconds), for: timerAvg)
+
         lcd.refresh()
-        
+        let lcdTime = DispatchTime.now()
+        lcdAvg = dbgCalcAvgTime(timeDiff: Double(lcdTime.uptimeNanoseconds - timerTime.uptimeNanoseconds), for: lcdAvg)
+
         let endTime = DispatchTime.now()
 
         let elapsed = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
@@ -87,6 +98,7 @@ class Gameboy : SYSTEM {
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
     }
     
+    
     func bodgeBootLoader() {
         let binaryName = "DMG_ROM.bin"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
@@ -101,8 +113,8 @@ class Gameboy : SYSTEM {
     }
     
     func bodgeRomLoader() {
-        let binaryName = "pkb.gb"
-//        let binaryName = "bgbtest.gb"
+//        let binaryName = "pkb.gb"
+        let binaryName = "bgbtest.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
@@ -113,5 +125,29 @@ class Gameboy : SYSTEM {
         
         //try? mmu.replace(data: romBinary, from: 0x0000)
         mmu.cartridgeRom = romBinary
+    }
+}
+
+let sampleCount: Double = 100000
+
+// Debugging extensions
+extension Gameboy {
+    
+    func dbgPrintAvgs() {
+        print("-----------------------------------------------")
+        print("Debug frequencies (Hz):")
+        print("cpu avg: \(1_000_000_000 / cpuAvg)")
+        print("timer avg: \(1_000_000_000 / timerAvg)")
+        print("lcd avg: \(1_000_000_000 / lcdAvg)")
+        print("-----------------------------------------------")
+        let dbgTimeout = DispatchTime.now() + .seconds(20)
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: dbgTimeout, execute: dbgPrintAvgs)
+    }
+    
+    func dbgCalcAvgTime(timeDiff: Double, for average: Double) -> Double {
+        var avg = average
+        avg -= avg / sampleCount
+        avg += timeDiff / sampleCount
+        return avg
     }
 }
