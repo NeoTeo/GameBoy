@@ -46,7 +46,7 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
     }
     
     func didUpdate(buffer: [UInt8]) {
-        print("Got update")
+        
         dmgDisplayView?.updateView(buffer: buffer)
         DispatchQueue.main.async {
             self.view.needsDisplay = true
@@ -80,7 +80,7 @@ class DmgDisplay : NSView {
         
         for y in 0 ..< h {
             for x in 0 ..< w {
-                let pixVal = pixelBuf[y*x]
+                let pixVal = pixelBuf[y * w + x]
                 var pixel = pixelColors[Int(pixVal)]
                 rep?.setPixel(UnsafeMutablePointer<Int>(&pixel) , atX: x, y: y)
             }
