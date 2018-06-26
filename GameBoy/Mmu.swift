@@ -13,11 +13,14 @@ protocol MMU : LcdDelegate, TimerDelegate {
     var IE: UInt8 { get set }
     var IF: UInt8 { get set }
     
+    var bootRom: [UInt8] { get set }
+    var cartridgeRom: [UInt8]? { get set }
+    
     var delegateLcd: MmuDelegate? { get set }
     
     init(size: Int) throws
     func read8(at location: UInt16) throws -> UInt8
-    func read16(at location: UInt16) -> UInt16
+    func read16(at location: UInt16) throws -> UInt16
     func write(at location: UInt16, with value: UInt8)
     
     // Helper function - might be useful for DMA
@@ -68,6 +71,7 @@ enum MmuRegister : UInt8 {
     case nr32 = 0x1C    // output level r/w
     case nr33 = 0x1D    // lower-order frequency w
     case nr34 = 0x1E    // higher-order frequency r/w
+    
     // Channel 4 - Noise
     case nr41 = 0x20    // sound length r/w
     case nr42 = 0x21    // envelope r/w

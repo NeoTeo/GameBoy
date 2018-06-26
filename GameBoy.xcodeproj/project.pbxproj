@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
+		AB4665E120E2333900E26B23 /* pkb.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E020E232A500E26B23 /* pkb.gb */; };
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
 		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
 		AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5DAA3A20D802D000BF58D3 /* lcd.swift */; };
@@ -39,6 +40,7 @@
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AB4665E020E232A500E26B23 /* pkb.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = pkb.gb; sourceTree = "<group>"; };
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
 		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
 		AB5DAA3A20D802D000BF58D3 /* lcd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lcd.swift; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				AB958DF720D0072400A186EA /* bgbtest.gb */,
+				AB4665E020E232A500E26B23 /* pkb.gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 			);
 			path = roms;
@@ -228,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB4665E120E2333900E26B23 /* pkb.gb in Resources */,
 				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
 				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,

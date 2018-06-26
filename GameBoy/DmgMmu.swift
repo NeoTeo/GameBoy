@@ -17,12 +17,18 @@ class DmgMmu : MMU {
     
     let size: Int// in bytes
     var ram: [UInt8]
+    var bootRom: [UInt8]
+    var cartridgeRom: [UInt8]?
+    
+    // Constants
+    let romSize = 0x8000
     
     var delegateLcd: MmuDelegate?
     var delegateTimer: MmuDelegate?
     
     enum MmuError : Error {
         case invalidAddress
+        case noCartridgeRom
     }
     
     // Constants
@@ -52,14 +58,27 @@ class DmgMmu : MMU {
     required init(size: Int) throws {
         guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
+        
         ram = Array(repeating: 0, count: Int(size))
+        bootRom = Array(repeating: 0, count: Int(romSize))
+        
         delegateLcd = nil
     }
     
     // FIXME: For all r/w functions: Add some checks for writing to illegal
     // addresses and for remapping, etc.
     func read8(at location: UInt16) throws -> UInt8 {
+        
+        let romDisabled = isSet(bit: 0, in: ram[Int(registerStartAddr + UInt16(MmuRegister.romoff.rawValue))])
         switch location {
+
+        case 0x0000 ... 0x00FF where romDisabled == false:
+                return bootRom[Int(location)]
+            
+        case 0x0000 ... 0x7FFF:
+            guard let cart = cartridgeRom else { throw MmuError.noCartridgeRom }
+            return cart[Int(location)]
+
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
@@ -77,6 +96,7 @@ class DmgMmu : MMU {
                 throw MmuError.invalidAddress
             }
 
+
         default:
             // deal with it as a direct memory access.
             return ram[Int(location)]
@@ -86,15 +106,21 @@ class DmgMmu : MMU {
 //        throw MmuError.invalidAddress
     }
 
-    func read16(at location: UInt16) -> UInt16 {
-        let lsb = ram[Int(location)]
-        let msb = ram[Int(location+1)]
+    func read16(at location: UInt16) throws -> UInt16 {
+//        let lsb = ram[Int(location)]
+//        let msb = ram[Int(location+1)]
+        let lsb = try read8(at: location)
+        let msb = try read8(at: location+1)
         return (UInt16(msb) << 8) | UInt16(lsb)
     }
     
     func write(at location: UInt16, with value: UInt8) {
         
         switch location {
+        case 0xFF30 ... 0xFF3F: // Wave pattern ram
+            // Just store
+            ram[Int(location)] = value
+            
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
@@ -134,11 +160,17 @@ class DmgMmu : MMU {
                 delegateLcd?.set(value: value, on: mmuReg)
             case .romoff: // switch out rom
                 print("switch out ROM")
+                ram[Int(location)] = value
             default:
                 return
             }
             
         default:
+            // Do nothing if we're trying to write to rom
+            if case (0x0000 ... 0x00FF) = location, isSet(bit: 0, in: ram[Int(registerStartAddr + UInt16( MmuRegister.romoff.rawValue))]) == false {
+                print("Attempting to write to ROM at location \(location). Ignoring.")
+                return
+            }
             // deal with it as a direct memory access.
             ram[Int(location)] = value
         }

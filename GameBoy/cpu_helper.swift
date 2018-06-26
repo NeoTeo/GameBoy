@@ -107,9 +107,9 @@ extension CPU {
         case .HL: return HL
         case .SP: return SP
             
-        case .SPptr: return read16(at: SP)
+        case .SPptr: return try read16(at: SP)
             
-        case .i16: return read16(at: PC, incPC: true)
+        case .i16: return try read16(at: PC, incPC: true)
             
         default: throw CPUError.UnknownRegister
         }
@@ -142,8 +142,8 @@ extension CPU {
         return val
     }
     
-    func read16(at location: UInt16, incPC: Bool = false) -> UInt16 {
-        let val = mmu.read16(at: location)
+    func read16(at location: UInt16, incPC: Bool = false) throws -> UInt16 {
+        let val = try mmu.read16(at: location)
         if incPC == true { incPc(2) }
         
         return val

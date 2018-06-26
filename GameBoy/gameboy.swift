@@ -96,11 +96,13 @@ class Gameboy : SYSTEM {
                 return
         }
         
-        try? mmu.replace(data: bootBinary, from: 0x0000)
+        //try? mmu.replace(data: bootBinary, from: 0x0000)
+        mmu.bootRom = bootBinary
     }
     
     func bodgeRomLoader() {
-        let binaryName = "bgbtest.gb"
+        let binaryName = "pkb.gb"
+//        let binaryName = "bgbtest.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
@@ -108,6 +110,8 @@ class Gameboy : SYSTEM {
                 return
         }
         
-        try? mmu.replace(data: romBinary, from: 0x0000)
+        
+        //try? mmu.replace(data: romBinary, from: 0x0000)
+        mmu.cartridgeRom = romBinary
     }
 }

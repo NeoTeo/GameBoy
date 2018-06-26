@@ -857,7 +857,7 @@ class CPU {
         
         // Never reaches 6A because we don't have a v-blank yet
 //        if PC == 0x86 {
-        if PC == 0xFE {
+        if PC == 0x27 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
