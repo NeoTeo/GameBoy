@@ -134,32 +134,61 @@ extension CPU {
     }
     
     /// Decimal Adjust A (accumulator)
-    /// Use the content of the flags to adjust the A register.
+    /// Use the content of the flags to adjust the A register after an ADD/ADC or SUB/SBC
     /// If the least significant four bits of A contain an non-BCD (ie > 9) or
     /// the H flag is set then add 0x06 to the A register.
     /// Then, if the four most significant bits are > 9 (or the C flag is set)
     /// then 0x60 is added to the A register.
     /// If the N register is set in any of these cases then we must subtract rather than add.
+    
+    // In BCD each nibble (4 bits of a byte) represents a value between 0 and 9.
+    // Adding two BCD values produces a valid result but the result, if above 9, is not in BCD itself.
+    // Eg. 7 (0111) + 7 (0111) = 14 (1110)
+    // To convert to BCD we must add 6 (0110) to the result:
+    // 14 (1110) + 6 (0110) = 20 (00010100) which is 14 in BCD.
+    // ** So the first rule is that whenever the resulting value is > 9 we should add 6 to it. **
+    
+    // Addition of two digits in BCD may yield results below 9 that are still not correct BCD.
+    // To know when to use the first rule of adding 6 we need to consider the carry for each nibble.
+    // If the addition of the least significant nibble produced a carry (aka half-carry) we need to add 6.
+    // If the addition of the most significant nibble _produced_a_carry_ we need to add 6 to that
+    // nibble (or 96 to the whole byte).
+    // Eg. 18 (0001 1000 in BCD) + 29 (0010 1001 in BCD) = 65 (0100 0001) or 41 in BCD which is wrong.
+    // The addition of the 8 (1000 in BCD) and the 9 (1001 in BCD) produces a (half) carry:
+    // 1000 + 1001 = [1]0001
+    // To convert the result to BCD we must add 6 to the least significant nibble:
+    // 0001 + 0110 = 0111
+    // In this case the addition of the most significant nibble was neither > 9 nor did it produce a
+    // a carry so it is already in valid BCD.
+    // So the rules are: If either nibble is > 9 or has produced a carry then that nibble needs to add 6.
+    
+    // Subtraction works on the two's complement (invert and add 1) of the whole byte being subtracted.
+    //
+    // Huge HT to this blog post: ipfs.io/ipfs/QmQpaFJjaLD1zf5F6uEKZ31LNQTyMCS6uUQsAb2naBNJcX
+
     func daa() {
         
         var overflow: Bool = false
-        if ((A & 0x0F) > 0x09) || (F.H == true) {
-            
-            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x06) : A.addingReportingOverflow(0x06)
-            F.C = F.C || overflow
-            //            A = (F.N == true) ? A &- 0x06 : A &+ 0x06 }
+        var correction = 0
+        var value = Int(A)
+        
+        if ((F.N == false) && (A & 0x0F) > 0x09) || (F.H == true) {
+            correction = 0x06
         }
 
-        if ((A >> 4) > 0x09) || (F.C == true) {
-            (A, overflow) = (F.N == true) ? A.subtractingReportingOverflow(0x60) : A.addingReportingOverflow(0x60)
-            F.C = F.C || overflow
-//            A = (F.N == true) ? A &- 0x60 : A &+ 0x60
+        if ((F.N == false) && (A  > 0x99)) || (F.C == true) {
+            correction |= 0x60
+            overflow = true
         }
         
+        value += (F.N == true) ? -correction : correction
+        
+        A = UInt8(value & 0xFF)
+        F.C = F.C || overflow
         F.Z = (A == 0)
         F.H = false
     }
-    
+
     // DEC A, B, C, D, E, H, L, (HL)
     func dec8(argType: ArgType) throws {
         var n: UInt8

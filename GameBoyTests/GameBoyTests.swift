@@ -56,7 +56,7 @@ class GameBoyTests: XCTestCase {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
         do {
-            gb = try Gameboy()
+            gb = try Gameboy(clock: 1_048_576)
         } catch {
             print("Error creating Gameboy instance.")
         }
@@ -323,7 +323,7 @@ class GameBoyTests: XCTestCase {
         // Run the ticks that the instruction takes
         for _ in 0 ..< 20 { gb.cpu.clockTick() }
         
-        let resVal = gb.cpu.read16(at: 0xC003)
+        let resVal = try! gb.cpu.read16(at: 0xC003)
         print("resval \(String(format: "%2X",resVal))")
         // Check that the result matches the testVal
         XCTAssert( resVal == testVal)
