@@ -865,10 +865,10 @@ class CPU {
         var dbgPr = false
         
 //        if PC == 0x86 {
-//        if PC == 0xC007 {
-//            print("PC is \(String(format: "%2X",PC))")
-//            dbgPr = true
-//        }
+        if PC == 0xC492 {
+            print("PC is \(String(format: "%2X",PC))")
+            dbgPr = true
+        }
         
         /// Read from ram.
         guard let opcode = try? read8(at: PC, incPC: true) else {

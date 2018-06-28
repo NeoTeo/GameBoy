@@ -60,8 +60,13 @@ class LCD {
     var ticks: Int
     
     let tileRamStart: UInt16 = 0x8000
+    
+    let hResolution = 160
+    let vResolution = 144
+
     // Each byte contains the data of two pixels
-    let pixelCount = 160 * 144
+    var pixelCount: Int
+    
     // Our video buffer uses a byte per pixel
     var vbuf: [UInt8]
 
@@ -73,6 +78,8 @@ class LCD {
         let ramClock: Double = 1048576
         let screenClocks: Double = 17556
         let rate = screenClocks * (sysClock / ramClock)
+        
+        pixelCount = hResolution * vResolution
         
         // A bodge to simulate a 60 Hz v-blank signal
         tickModulo = Int((sysClock / rate).rounded())
@@ -147,8 +154,8 @@ class LCD {
                     }
                 }
  */
-                for pixRow in 0 ..< 144 {
-                    for pixCol in 0 ..< 160 {
+                for pixRow in 0 ..< vResolution {
+                    for pixCol in 0 ..< hResolution {
 
                         // wrap left/top when overflowing past right/bottom
                         let x = UInt8((pixCol + Int(scx)) & 0xFF)
@@ -156,7 +163,7 @@ class LCD {
                         
                         let pixelValue = try pixelForCoord(x: x, y: y, at: bgTileRamStart)
                         
-                        vbuf[pixRow * 160 + pixCol] = pixelValue
+                        vbuf[pixRow * hResolution + pixCol] = pixelValue
                     }
                 }
                 delegateDisplay?.didUpdate(buffer: vbuf)
@@ -182,7 +189,11 @@ class LCD {
         // Each 2 bytes in tile memory correspond to a row of 8 pixels
         // So each tile is 16 bytes
         // Mask out three lower bits (same as y % 8) to get the row within the tile
-        let subY = row > 0 ? (y & 7) << 1 : 0
+//        let subY = row > 0 ? (y & 7) << 1 : 0
+        
+        // To calculate which row within the tile to start from we calc the remainder
+        // from dividing by 8 and then multiply by two because each tile row is two bytes.
+        let subY = (y & 7) << 1
         
         let tileOffset = tileRamStart + (UInt16(charData) << 4)
         
@@ -190,7 +201,8 @@ class LCD {
         let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(subY+1))
             
         // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
-        let subX = col > 0 ? 7 - (x & 7) : 7
+//        let subX = col > 0 ? 7 - (x & 7) : 7
+        let subX = 7 - (x & 7)
         
         // Each bit in each of the hi and lo bytes constitute a pixel whose
         // color value (0 to 3) is an index into a 4 colour CLUT.
