@@ -150,7 +150,11 @@ class LCD {
                 for pixRow in 0 ..< 144 {
                     for pixCol in 0 ..< 160 {
 
-                        let pixelValue = try pixelForCoord(x: UInt8(pixCol) + scx, y: UInt8(pixRow) + scy, at: bgTileRamStart)
+                        // wrap left/top when overflowing past right/bottom
+                        let x = UInt8((pixCol + Int(scx)) & 0xFF)
+                        let y = UInt8((pixRow + Int(scy)) & 0xFF)
+                        
+                        let pixelValue = try pixelForCoord(x: x, y: y, at: bgTileRamStart)
                         
                         vbuf[pixRow * 160 + pixCol] = pixelValue
                     }
@@ -168,8 +172,8 @@ class LCD {
         let bgTileRamStart: UInt16 = tileBase
         
         // Convert coords to col and rows in tile map
-        let col = x >> 3
-        let row = y >> 3
+        let col = (x >> 3)
+        let row = (y >> 3)
         
         // read the byte at the location
         let charData = try delegateMmu.read8(at: bgTileRamStart + (UInt16(row) << 5) + UInt16(col))

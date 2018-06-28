@@ -135,6 +135,7 @@ class CPU {
         case dec16
         case ld8_8
         case ld16_16
+        case ldhl
         case halt
         case nop
         case or
@@ -198,6 +199,8 @@ class CPU {
         case i8ptr
         case i16
         case i16ptr
+        
+//        case SPi8
         
         case noReg
         
@@ -498,6 +501,7 @@ class CPU {
         ops[0xC3] = (.jp, (.noReg, .i16), 16, 3)
         ops[0xC4] = (.call, (.NotZero, .i16), 24, 3)
         ops[0xC5] = (.push, (.noReg, .BC), 16, 1)
+        ops[0xC6] = (.add8_8, (.A, .i8), 8, 2)
         ops[0xC7] = (.rst, (.vec00h, .noReg), 16, 1)
         ops[0xC8] = (.ret, (.Zero, .noReg), 20, 1)
         ops[0xC9] = (.ret, (.noReg, .noReg), 16, 1)
@@ -526,10 +530,12 @@ class CPU {
         ops[0xE1] = (.pop, (.HL, .noReg), 12, 1)
         ops[0xE2] = (.ld8_8, (.HiRamC, .A), 8, 2)
         ops[0xE5] = (.push, (.noReg, .HL), 16, 1)
+        ops[0xE6] = (.and, (.A, .i8), 8, 2)
         ops[0xE7] = (.rst, (.vec20h, .noReg), 16, 1)
-        ops[0xE9] = (.jp, (.noReg, .HLptr), 4, 1)
+        ops[0xE8] = (.add16_16, (.SP, .i8), 16, 2)
+        ops[0xE9] = (.jp, (.noReg, .HL), 4, 1)
         ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16, 3)
-        ops[0xEE] = (.xor, (.i8, .noReg), 8, 2)
+        ops[0xEE] = (.xor, (.A, .i8), 8, 2)
         ops[0xEF] = (.rst, (.vec28h, .noReg), 16, 1)
         
         ops[0xF0] = (.ld8_8, (.A, .HiRamI8), 12, 2)
@@ -537,7 +543,10 @@ class CPU {
         ops[0xF2] = (.ld8_8, (.A, .HiRamC), 8, 2)
         ops[0xF3] = (.di, (.noReg, .noReg), 4, 1)
         ops[0xF5] = (.push, (.noReg, .AF), 16, 1)
-        ops[0xD7] = (.rst, (.vec30h, .noReg), 16, 1)
+        ops[0xF6] = (.or, (.A, .i8), 8, 2)
+        ops[0xF7] = (.rst, (.vec30h, .noReg), 16, 1)
+        ops[0xF8] = (.ldhl, (.noReg, .noReg), 12, 2)
+        ops[0xF9] = (.ld16_16, (.SP, .HL), 8, 1)
         ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16, 3)
         ops[0xFB] = (.ei, (.noReg, .noReg), 4, 1)
         ops[0xFE] = (.cp, (.A, .i8), 8, 1)
@@ -855,12 +864,11 @@ class CPU {
 
         var dbgPr = false
         
-        // Never reaches 6A because we don't have a v-blank yet
 //        if PC == 0x86 {
-        if PC == 0xFE {
-            print("PC is \(String(format: "%2X",PC))")
-            dbgPr = true
-        }
+//        if PC == 0xC007 {
+//            print("PC is \(String(format: "%2X",PC))")
+//            dbgPr = true
+//        }
         
         /// Read from ram.
         guard let opcode = try? read8(at: PC, incPC: true) else {
@@ -904,9 +912,14 @@ class CPU {
                     let interrupt = interrupts & (1 << i)
                     
                     // Clear the flag
-                    mmu.IF = clear(bit: interrupt, in: mmu.IF)
+                    let ifVal = mmu.IF
+                    mmu.IF = clear(bit: interrupt, in: ifVal)
                     
-                    let int = mmuInterruptFlag(rawValue: interrupt)!
+                    // TODO: do I really need this flag business to get the vectors?
+                    guard let int = mmuInterruptFlag(rawValue: interrupt) else {
+                        print("ERROR: Unsupported interrupt \(interrupt)")
+                        continue
+                    }
                     switch int {
                     case .vblank: vector = .vec40h
                     case .lcdStat: vector = .vec48h
@@ -915,7 +928,10 @@ class CPU {
                     case .joypad: vector = .vec60h
                     }
                     
-                    try! rst(argTypes: (vector, .noReg))
+                    do { try rst(argTypes: (vector, .noReg)) } catch {
+                        print("ERROR: failed interrupt call on vector \(vector): \(error)")
+                        continue
+                    }
                     
                     // Only one interrupt gets executed unless IME has been re-enabled
                     // by the interrupt code.
@@ -982,6 +998,8 @@ class CPU {
                 try ld8_8(argTypes: args)
             case .ld16_16:
                 try ld16_16(argTypes: args)
+            case .ldhl:
+                try ldhl()
             case .nop:
                 break
             case .or:
@@ -1014,7 +1032,7 @@ class CPU {
             }
             
         } catch {
-            print("Error executing opcodes \(error) \(op)")
+            print("Error executing opcodes \(error) \(op) with args \(args)")
         }
 
     }

@@ -57,7 +57,8 @@ class Gameboy : SYSTEM {
         //runCycle(timer: Timer.init())
         runCycle()
         
-        dbgPrintAvgs()
+        //dbgPrintAvgs()
+        //dbgPrintRegisters()
 //        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
@@ -114,7 +115,9 @@ class Gameboy : SYSTEM {
     
     func bodgeRomLoader() {
 //        let binaryName = "pkb.gb"
-        let binaryName = "bgbtest.gb"
+//        let binaryName = "cpu_instrs.gb"
+        let binaryName = "01special.gb"
+//        let binaryName = "bgbtest.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
@@ -142,6 +145,15 @@ extension Gameboy {
         print("-----------------------------------------------")
         let dbgTimeout = DispatchTime.now() + .seconds(20)
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: dbgTimeout, execute: dbgPrintAvgs)
+    }
+    
+    func dbgPrintRegisters() {
+      
+        print("Registers at \(Date()):")
+        cpu.debugRegisters()
+        print("-----------------------")
+        let dbgTimeout = DispatchTime.now() + .seconds(20)
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: dbgTimeout, execute: dbgPrintRegisters)
     }
     
     func dbgCalcAvgTime(timeDiff: Double, for average: Double) -> Double {

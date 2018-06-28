@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB09912A20E4E472003524CE /* 01special.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB09912920E4E46D003524CE /* 01special.gb */; };
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
-		AB4665E120E2333900E26B23 /* pkb.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E020E232A500E26B23 /* pkb.gb */; };
+		AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E420E285D200E26B23 /* cpu_instrs.gb */; };
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
 		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
 		AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5DAA3A20D802D000BF58D3 /* lcd.swift */; };
@@ -37,10 +38,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AB09912920E4E46D003524CE /* 01special.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 01special.gb; sourceTree = "<group>"; };
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AB4665E020E232A500E26B23 /* pkb.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = pkb.gb; sourceTree = "<group>"; };
+		AB4665E420E285D200E26B23 /* cpu_instrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = cpu_instrs.gb; sourceTree = "<group>"; };
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
 		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
 		AB5DAA3A20D802D000BF58D3 /* lcd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lcd.swift; sourceTree = "<group>"; };
@@ -130,8 +132,9 @@
 		AB958DF820D0072F00A186EA /* roms */ = {
 			isa = PBXGroup;
 			children = (
+				AB4665E420E285D200E26B23 /* cpu_instrs.gb */,
+				AB09912920E4E46D003524CE /* 01special.gb */,
 				AB958DF720D0072400A186EA /* bgbtest.gb */,
-				AB4665E020E232A500E26B23 /* pkb.gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 			);
 			path = roms;
@@ -231,11 +234,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB4665E120E2333900E26B23 /* pkb.gb in Resources */,
 				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
+				AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */,
 				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
+				AB09912A20E4E472003524CE /* 01special.gb in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

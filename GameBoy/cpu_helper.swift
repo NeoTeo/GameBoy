@@ -42,7 +42,7 @@ extension CPU {
         case .i8: return try read8(at: PC, incPC: true)
         case .i16ptr:
             let dest = try getVal16(for: .i16)
-            return try read8(at: dest, incPC: true)
+            return try read8(at: dest)
             
         case .u3_0: return 0
         case .u3_1: return 1
@@ -60,6 +60,12 @@ extension CPU {
         case .vec28h: return 0x28
         case .vec30h: return 0x30
         case .vec38h: return 0x38
+        
+        case .vec40h: return 0x40   // vblank
+        case .vec48h: return 0x48   // lcdc status
+        case .vec50h: return 0x50   // timer overflow
+        case .vec58h: return 0x58   // serial transfer completion
+        case .vec60h: return 0x60   // p10-p13 input signal goes low
             
         default:
             throw CPUError.UnknownRegister
@@ -108,8 +114,16 @@ extension CPU {
         case .SP: return SP
             
         case .SPptr: return try read16(at: SP)
+//        case .SPi8:
+//            // Read the i8 first
+//            let val = try read8(at: PC, incPC: true)
+//            return SP + UInt16(val)
             
-        case .i16: return try read16(at: PC, incPC: true)
+        case .i16:
+            return try read16(at: PC, incPC: true)
+            
+        case .i8:   // Special case for ADD SP, i8
+            return UInt16(try read8(at: PC, incPC: true))
             
         default: throw CPUError.UnknownRegister
         }

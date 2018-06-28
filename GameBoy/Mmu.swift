@@ -28,7 +28,14 @@ protocol MMU : LcdDelegate, TimerDelegate {
     func setIF(flag: mmuInterruptFlag)
     //func insert(data: [UInt8], at address: UInt16)
     func replace(data: [UInt8], from address: UInt16) throws
-    func debugPrint(from: UInt16, bytes: UInt16)
+//    func debugPrint(from: UInt16, bytes: UInt16)
+    func debugPrint(from: UInt16, bytes: UInt16, type: MemoryType)
+}
+
+enum MemoryType {
+    case bootRom
+    case cartRom
+    case mainRam
 }
 
 // Interrupt MMU functions in order of priority

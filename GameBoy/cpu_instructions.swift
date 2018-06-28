@@ -28,7 +28,7 @@ extension CPU {
         let (result, overflow2) = res1.addingReportingOverflow(oldC)
         let H2 = halfCarryOverflow(term1: res1, term2: oldC)
         
-        print("overflow1: \(overflow1) and overflow2: \(overflow2)")
+//        print("overflow1: \(overflow1) and overflow2: \(overflow2)")
         try set(val: result, for: argTypes.0)
         
         F.Z = (result == 0)
@@ -43,7 +43,9 @@ extension CPU {
         let (result, overflow) = t1.addingReportingOverflow(t2)
         try set(val: result, for: argTypes.0)
         
-        //        F.Z = (result == 0) // does not affect
+        // Special case for ADD SP, i8
+        if argTypes.0 == .SP { F.Z = false }
+        
         F.N = false
         F.H = halfCarryOverflow(term1: t1, term2: t2)
         F.C = overflow
@@ -55,7 +57,8 @@ extension CPU {
         let (result, overflow) = t1.addingReportingOverflow(t2)
         try set(val: result, for: argTypes.0)
         
-        F.Z = (result == 0)
+        // As a special case, if the instruction is ADD SP, i8 we reset the Z flag.
+        F.Z = (argTypes.0 == .SP) ? false : (result == 0)
         F.N = false
         F.H = halfCarryOverflow(term1: t1, term2: t2)
         F.C = overflow
@@ -242,15 +245,14 @@ extension CPU {
         try set(val: nn, for: argType)
     }
     
-    // Jump to the address given in the target argument. If there is a condition
-    // the address will be in the source argument.
+    // Jump to the address given in the target argument. When there is a condition in the source arg
+    // the jump will only occur if the condition is satisfied.
     func jp(argTypes: (ArgType, ArgType)) throws {
         let conditionArg = argTypes.0
         let addressArg = argTypes.1
         
         
         let address = try getVal16(for: addressArg)
-        
         // Check if we have a conditional jump and the condition is satisfied.
         if let passCondition = checkCondition(for: conditionArg) {
             // skip after we get the val to ensure that we've incremented the PC
@@ -310,8 +312,24 @@ extension CPU {
         
         let srcVal = try getVal16(for: source)
         try set(val: srcVal, for: target)
+        
     }
 
+    // Special case LD for LDHL (aka. LD HL, SP+r8)
+    func ldhl() throws {
+        
+        let r8 = UInt16(try getVal8(for: .i8))
+        let (result, overflow) = SP.addingReportingOverflow(r8)
+        
+        
+        F.Z = false
+        F.N = false
+        F.H = halfCarryOverflow(term1: SP, term2: r8)
+        F.C = overflow
+
+        HL = result
+    }
+    
     func or(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A. Can be optimized away.
         let t2 = try getVal8(for: argTypes.1)
@@ -381,8 +399,8 @@ extension CPU {
     }
     
     func reti() throws {
+        ei()
         try ret(argTypes: (.noReg, .noReg))
-        IME = false
     }
     
     // Rotate destination register(or value pointed to by it) left through carry.

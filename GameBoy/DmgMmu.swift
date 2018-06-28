@@ -81,21 +81,22 @@ class DmgMmu : MMU {
 
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
-            guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
-                print("MMU error: Unsupported register address.")
-                throw MmuError.invalidAddress
+            if let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) {
+                // FIXME: Do we even need to do this?
+                // Only to deal with special cases that don't just return the byte at the location.
+                switch mmuReg {
+                case .ly: // Read only
+                    return ram[Int(location)]
+                case .scy, .scx:
+                    return ram[Int(location)]
+                    
+                default:
+                    throw MmuError.invalidAddress
+                }
             }
             
-            switch mmuReg {
-            case .ly: // Read only
-                return ram[Int(location)]
-            case .scy:
-                return ram[Int(location)]
-                
-            default:
-                throw MmuError.invalidAddress
-            }
-
+            print("MMU error: Unsupported register address: \(location & 0xFF).")
+            return ram[Int(location)]
 
         default:
             // deal with it as a direct memory access.
@@ -124,7 +125,7 @@ class DmgMmu : MMU {
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
-                print("MMU error: Unsupported register address.")
+                print("MMU write error: Unsupported register address \(location & 0xFF).")
                 return
             }
             
@@ -154,10 +155,13 @@ class DmgMmu : MMU {
             case .ly: break // Read only, ignore
             case .lyc:
                 delegateLcd?.set(value: value, on: mmuReg)
-            case .scy: // vertical scroll
+                
+            case .scy, .scx: // horizontal/vertical scroll
                 ram[Int(location)] = value
+                
                 // let the LCD know we've updated the value
                 delegateLcd?.set(value: value, on: mmuReg)
+                
             case .romoff: // switch out rom
                 print("switch out ROM")
                 ram[Int(location)] = value
@@ -194,7 +198,7 @@ extension DmgMmu : LcdDelegate, TimerDelegate {
 
 // Helper functions
 extension DmgMmu {
-
+    
     func setIE(flag: mmuInterruptFlag) {
         IE = IE | UInt8(1 << flag.rawValue)
     }
@@ -211,7 +215,7 @@ extension DmgMmu {
         ram.replaceSubrange(start ..< end, with: data)
     }
 
-    func debugPrint(from: UInt16, bytes: UInt16) {
+    func debugPrint(from: UInt16, bytes: UInt16, type: MemoryType = .mainRam) {
         let from = Int(from)
         let bytes = Int(bytes)
         guard from < size, (from + bytes <= size) else {
@@ -224,7 +228,12 @@ extension DmgMmu {
             
             if count == 0 { print(String(format: "%02X : ", index), terminator: " ") }
             
-            print(String(format: "%02X", ram[Int(index)]), terminator: " ")
+            switch type {
+            case .mainRam: print(String(format: "%02X", ram[Int(index)]), terminator: " ")
+            case .bootRom: print(String(format: "%02X", bootRom[Int(index)]), terminator: " ")
+            case .cartRom: print(String(format: "%02X", (cartridgeRom?[Int(index)])!), terminator: " ")
+            }
+            
             
             count = (count + 1) % 0x10
             if count == 0 { print("") }
