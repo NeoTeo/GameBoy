@@ -69,7 +69,7 @@ class DmgMmu : MMU {
     // addresses and for remapping, etc.
     func read8(at location: UInt16) throws -> UInt8 {
         
-        let romDisabled = isSet(bit: 0, in: ram[Int(registerStartAddr + UInt16(MmuRegister.romoff.rawValue))])
+        let romDisabled = isSet(bit: 0, in: ram[MmuRegister.romoff.rawValue])
         switch location {
 
         case 0x0000 ... 0x00FF where romDisabled == false:
@@ -79,9 +79,19 @@ class DmgMmu : MMU {
             guard let cart = cartridgeRom else { throw MmuError.noCartridgeRom }
             return cart[Int(location)]
 
+        case 0x8000 ... 0x9FFF: // VRAM
+            // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot read from VRAM
+            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else { return 0xFF }
+            return ram[Int(location)]
+            
+        case 0xFE00 ... 0xFE9F: // OAM RAM
+            // If the LCD is in mode 2 (reading from both OAM) we cannot read from OAM
+            guard (ram[MmuRegister.stat.rawValue] & 2) != 2 else { return 0xFF }
+            return ram[Int(location)]
+            
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
-            if let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) {
+            if let mmuReg = MmuRegister(rawValue: Int(location)) {
                 // FIXME: Do we even need to do this?
                 // Only to deal with special cases that don't just return the byte at the location.
                 switch mmuReg {
@@ -122,9 +132,19 @@ class DmgMmu : MMU {
             // Just store
             ram[Int(location)] = value
             
+        case 0x8000 ... 0x9FFF: // VRAM
+            // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot write to VRAM
+            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else { return }
+            ram[Int(location)] = value
+            
+        case 0xFE00 ... 0xFE9F: // OAM RAM
+            // If the LCD is in mode 2 (reading from both OAM) we cannot write to OAM
+            guard (ram[MmuRegister.stat.rawValue] & 2) != 2 else { return }
+            ram[Int(location)] = value
+
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
-            guard let mmuReg = MmuRegister(rawValue: UInt8(location & 0xFF)) else {
+            guard let mmuReg = MmuRegister(rawValue: Int(location)) else {
                 print("MMU write error: Unsupported register address \(location & 0xFF).")
                 return
             }
@@ -135,6 +155,13 @@ class DmgMmu : MMU {
             // But something like
             // switch location { case range of lcd: pass on to lcd case range of timer: pass to timer...
             switch mmuReg {
+                
+            // Serial registers
+            case .sc: // Serial control
+                // currently there's no serial comms implemented but we do set the required interrupt
+                ram[Int(location)] = value
+                if isSet(bit: 7, in: value) { setIF(flag: .serial) }
+                
             // Timer registers
             case .div:
                 delegateTimer?.set(value: value, on: mmuReg)
@@ -149,9 +176,14 @@ class DmgMmu : MMU {
                 delegateTimer?.set(value: value, on: mmuReg)
                 break
                 
+            // LCD registers
             case .lcdc:
                 ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)
+            case .stat: // LCD status register
+                ram[Int(location)] = value
+                delegateLcd?.set(value: value, on: mmuReg)
+                
             case .ly: break // Read only, ignore
             case .lyc:
                 delegateLcd?.set(value: value, on: mmuReg)
@@ -171,7 +203,7 @@ class DmgMmu : MMU {
             
         default:
             // Do nothing if we're trying to write to rom
-            if case (0x0000 ... 0x00FF) = location, isSet(bit: 0, in: ram[Int(registerStartAddr + UInt16( MmuRegister.romoff.rawValue))]) == false {
+            if case (0x0000 ... 0x00FF) = location, isSet(bit: 0, in: ram[MmuRegister.romoff.rawValue]) == false {
                 print("Attempting to write to ROM at location \(location). Ignoring.")
                 return
             }
@@ -185,26 +217,26 @@ class DmgMmu : MMU {
 extension DmgMmu : LcdDelegate, TimerDelegate {
     
     func set(value: UInt8, on register: MmuRegister) {
-        // All LCD registers are defined as offsets relative to 0xFF00
-        let location = registerStartAddr + UInt16(register.rawValue)
-        ram[Int(location)] = value
+        ram[register.rawValue] = value
     }
     
     func getValue(for register: MmuRegister) -> UInt8 {
-        let location = registerStartAddr + UInt16(register.rawValue)
-        return ram[Int(location)]
+        return ram[register.rawValue]
     }
 }
 
 // Helper functions
 extension DmgMmu {
     
+    
     func setIE(flag: mmuInterruptFlag) {
-        IE = IE | UInt8(1 << flag.rawValue)
+//        IE = IE | UInt8(1 << flag.rawValue)
+        IE = IE | UInt8(flag.rawValue)
     }
     
     func setIF(flag: mmuInterruptFlag) {
-        IF = IF | UInt8(1 << flag.rawValue)
+//        IF = IF | UInt8(1 << flag.rawValue)
+        IF = IF | UInt8(flag.rawValue)
     }
     
     func replace(data: [UInt8], from address: UInt16) throws {

@@ -88,6 +88,7 @@ class LCD {
          vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
     }
     
+    
     func refresh() {
         
         ticks -= 1
@@ -109,51 +110,13 @@ class LCD {
                 // Check which area of tile map ram is selected
                 let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
 
-                /*
                 // Each byte in the background tile ram contains a character code
                 // What gets displayed is determined by the scx and scy which define the position of the view.
                 // The background consists of an area of 32*32 tiles each of which is 8*8 pixels so
                 // the whole background is 256*256 pixels.
                 // Calculate which area of the bg we are displaying
                 // The tile row and column are scy / 8 and scx / 8
-                let row = scy / 8
-                let col = scx / 8
-                // The offset from the tile ram would be row * 32 + col
-                // Eg if the scy was 0x2A and scx was 0x1F then the offset from 0x9800 would be
-                // (0x2A / 8) * 32 + (0x1f / 8) = 0x05 * 32 + 0x03 = 0xA3
-                var index = 0
-
-                // FIXME: This needs to wrap
-                for r in row ..< row &+ 20 {
-                    for c in col ..< col &+ 18 {
-                        // read the byte at the location
-                        let charData = try delegateMmu.read8(at: bgTileRamStart + (UInt16(r) << 5) + UInt16(c))
-                        
-                        // go through the tile data at the given index in tile memory
-                        // Each 2 bytes in tile memory correspond to a row of 8 pixels
-                        // So each tile is 16 bytes
-                        let tileOffset = tileRamStart + (UInt16(charData) << 4)
-                        for tr in stride(from: 0, to: 16, by: 2) {
-                            let tileRowHi = try delegateMmu.read8(at: tileOffset + UInt16(tr))
-                            let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(tr+1))
-                            
-                            // Each pixel value is an index into a 4 color clut
-                            // Each bit in each of the hi and lo bytes constitute a pixel
-                            for bitPos in 0 ..< 8 {
-
-//                                let pixIdx = (((tileRowHi >> bitPos) & 0x01) << 1) + ((tileRowLo >> bitPos) & 0x01)
-                                let pixIdx = ((tileRowHi >> bitPos) & 0x02) + ((tileRowLo >> bitPos) & 0x01)
-                                
-                                // place this value in the buffer we are going to display
-                                // calc screen coords
-                                let y =
-                                vbuf[index] = pixIdx
-                                index += 1
-                            }
-                        }
-                    }
-                }
- */
+ 
                 for pixRow in 0 ..< vResolution {
                     for pixCol in 0 ..< hResolution {
 
@@ -161,7 +124,7 @@ class LCD {
                         let x = UInt8((pixCol + Int(scx)) & 0xFF)
                         let y = UInt8((pixRow + Int(scy)) & 0xFF)
                         
-                        let pixelValue = try pixelForCoord(x: x, y: y, at: bgTileRamStart)
+                        let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: bgTileRamStart)
                         
                         vbuf[pixRow * hResolution + pixCol] = pixelValue
                     }

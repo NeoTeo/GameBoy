@@ -42,7 +42,7 @@ class Gameboy : SYSTEM {
     
     func start() {
         
-        clockRate = TimeInterval( 1 / systemClock )
+        clockRate = systemClock //TimeInterval( 1 / systemClock )
         
         // Set the timer clock
         timer.selectClock(rate: 0x00)
@@ -57,7 +57,7 @@ class Gameboy : SYSTEM {
         //runCycle(timer: Timer.init())
         runCycle()
         
-        //dbgPrintAvgs()
+//        dbgPrintAvgs()
         //dbgPrintRegisters()
 //        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
@@ -68,35 +68,59 @@ class Gameboy : SYSTEM {
     var cpuAvg: Double = 0
     var timerAvg: Double = 0
     var lcdAvg: Double = 0
+    var cycleAvg: Double = 0
+    var cycleLast: DispatchTime = DispatchTime(uptimeNanoseconds: 0)
+    var testTimer: DispatchSourceTimer?
+    
+    var accu: UInt32 = 0
+    var cnt: UInt32 = 0
+    var gtot = [UInt32]()
     
     func runCycle() {
-
         let startTime = DispatchTime.now()
+//
+//        cycleAvg = dbgCalcAvgTime(timeDiff: Double(startTime.uptimeNanoseconds - cycleLast.uptimeNanoseconds), for: cycleAvg)
+////        print("delta: \(1_000_000_000 / Double(startTime.uptimeNanoseconds - cycleLast.uptimeNanoseconds))")
+//        cycleLast = startTime
+        
         cpu.clockTick()
-        let cpuTime = DispatchTime.now()
-        cpuAvg = dbgCalcAvgTime(timeDiff: Double(cpuTime.uptimeNanoseconds - startTime.uptimeNanoseconds), for: cpuAvg)
+//        let cpuTime = DispatchTime.now()
+//        cpuAvg = dbgCalcAvgTime(timeDiff: Double(cpuTime.uptimeNanoseconds - startTime.uptimeNanoseconds), for: cpuAvg)
         // Tick the timer
         timer.tick()
-        let timerTime = DispatchTime.now()
-        timerAvg = dbgCalcAvgTime(timeDiff: Double(timerTime.uptimeNanoseconds - cpuTime.uptimeNanoseconds), for: timerAvg)
-
+//        let timerTime = DispatchTime.now()
+//        timerAvg = dbgCalcAvgTime(timeDiff: Double(timerTime.uptimeNanoseconds - cpuTime.uptimeNanoseconds), for: timerAvg)
+//
         lcd.refresh()
-        let lcdTime = DispatchTime.now()
-        lcdAvg = dbgCalcAvgTime(timeDiff: Double(lcdTime.uptimeNanoseconds - timerTime.uptimeNanoseconds), for: lcdAvg)
-
+//        let lcdTime = DispatchTime.now()
+//        lcdAvg = dbgCalcAvgTime(timeDiff: Double(lcdTime.uptimeNanoseconds - timerTime.uptimeNanoseconds), for: lcdAvg)
+//
         let endTime = DispatchTime.now()
 
         let elapsed = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
-        
-        
-        let clockInNs = clockRate * 1_000_000_000
-    
+        accu = accu &+ UInt32(elapsed)
+        cnt += 1
+        if (accu & 0xFFFF) == 0 {
+            
+            gtot.append(accu/cnt)
+            let avg = Int(gtot.reduce(0, +)) / gtot.count
+            print("Avg: \(avg)")
+            accu = 0
+            cnt = 0
+        }
+//        let clockInNs = clockRate * 1_000_000_000
+        let clockInNs = 1_000_000_000 / clockRate
+ 
         // Set a timer to fire in (clockRate - elapsed) seconds
         let interval = Int(max(clockInNs - Double(elapsed), 0))
         
         let teo = DispatchTime.now() + .nanoseconds(interval)
         
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
+//        testTimer = DispatchSource.makeTimerSource()
+//        testTimer?.setEventHandler(handler: runCycle)
+//        testTimer?.schedule(deadline: teo)
+//        testTimer?.activate()
     }
     
     
@@ -116,7 +140,8 @@ class Gameboy : SYSTEM {
     func bodgeRomLoader() {
 //        let binaryName = "pkb.gb"
 //        let binaryName = "cpu_instrs.gb"
-        let binaryName = "01special.gb"
+        let binaryName = "02interrupts.gb"
+//        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
@@ -137,8 +162,18 @@ let sampleCount: Double = 100000
 extension Gameboy {
     
     func dbgPrintAvgs() {
+        // Frequency per second (hertz)
+        // The hertz is the reciprocal of seconds or 1/s
+        // Something that happens, eg. 4 times every second (or every quarter of a second; 1/4 sec)
+        // has a frequency of 1 / 0.25 = 4 hertz.
+        // Our values are in nanoseconds (1/1_000_000_000 of a second) so to convert to hertz
+        // we divide our value by a second's worth of nanoseconds.
+        // eg. a quarter of a second in nanoseconds is 1_000_000_000 / 4 = 250_000_000
+        // So if our frequency value was 250_000_000 we could calculate the Hertz:
+        // 250_000_000 / 1_000_000_000
         print("-----------------------------------------------")
         print("Debug frequencies (Hz):")
+        print("cycle avg: \(1_000_000_000 / cycleAvg)")
         print("cpu avg: \(1_000_000_000 / cpuAvg)")
         print("timer avg: \(1_000_000_000 / timerAvg)")
         print("lcd avg: \(1_000_000_000 / lcdAvg)")

@@ -275,6 +275,7 @@ class CPU {
         SP = 0x0000 //0xFFFE
         PC = 0x0000
         
+        mmu.IF = 0xE1
 //        timer.setClock(hertz: 60)
 //        timer.start {
 //            // For now fake a vsync
@@ -864,8 +865,8 @@ class CPU {
 
         var dbgPr = false
         
-//        if PC == 0x86 {
-        if PC == 0xC492 {
+//        if PC == 0xC7D8 {
+        if PC == 0xC2B5 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -913,7 +914,7 @@ class CPU {
                     
                     // Clear the flag
                     let ifVal = mmu.IF
-                    mmu.IF = clear(bit: interrupt, in: ifVal)
+                    mmu.IF = clear(bit: UInt8(i), in: ifVal)
                     
                     // TODO: do I really need this flag business to get the vectors?
                     guard let int = mmuInterruptFlag(rawValue: interrupt) else {
