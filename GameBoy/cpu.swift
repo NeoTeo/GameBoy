@@ -145,7 +145,6 @@ class CPU {
         case reti
         case rlca
         case rla
-        case rr
         case rra
         case rrca
         case rst
@@ -154,10 +153,10 @@ class CPU {
         case stop
         case sub
         case xor
-    }
-    
-    enum CbOpType {
-        // cb prefix
+        
+        
+        // CB prefix
+        
         case bit
         case res
         case rlc
@@ -258,8 +257,12 @@ class CPU {
     // An op consists of an instruction id, a tuple of argument ids, a cycle count
     // and a byte count.
     // FIXME: Make this into an array and add all the ops as part of its definition.
-    var ops =  [UInt8 : (OpType, (ArgType, ArgType), UInt8, UInt8)]()
-    var cbOps = [UInt8 : (CbOpType, (ArgType, ArgType), UInt8)]()
+//    var ops =  [UInt8 : (OpType, (ArgType, ArgType), UInt8, UInt8)]()
+    typealias Operation = (OpType, (ArgType, ArgType), UInt8)
+    var ops:  [Operation?]!
+//    var cbOps = [UInt8 : (CbOpType, (ArgType, ArgType), UInt8)]()
+    var cbOps: [Operation?]!
+    
     var systemClock: Double
     let maxClock: Double = 4_194_304
     init(sysClock: Double) {
@@ -276,285 +279,285 @@ class CPU {
         PC = 0x0000
         
         mmu.IF = 0xE1
+        
 //        timer.setClock(hertz: 60)
 //        timer.start {
 //            // For now fake a vsync
 ////            mmu.IF = self.setFlag(for: DmgMmu.InterruptFlag.vblank.rawValue , in: mmu.IF)
 //            self.mmu.setIF(flag: .vblank)
 //        }
-    
+        ops = Array<Operation?>(repeating: nil, count: 512)
         // Move this to definition of ops
-        ops[0x00] = (.nop, (.noReg, .noReg), 4, 1)
-        ops[0x01] = (.ld16_16, (.BC, .i16), 12, 3)
-        ops[0x02] = (.ld8_8, (.BCptr, .A), 8, 1)
-        ops[0x03] = (.inc16, (.BC, .noReg), 8, 1)
-        ops[0x04] = (.inc8, (.B, .noReg), 4, 1)
-        ops[0x05] = (.dec8, (.B, .noReg), 4, 1)
-        ops[0x06] = (.ld8_8, (.B, .i8), 8, 2)
-        ops[0x07] = (.rlca, (.noReg, .noReg), 4, 1) // not to confuse with RLC A of the CB prefix instructions
-        ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20, 3) // Usage: 1 opcode + 2 immediate = 3 bytes
-        ops[0x09] = (.add16_16, (.HL, .BC), 8, 1)
-        ops[0x0A] = (.ld8_8, (.A, .BCptr), 8, 1)
-        ops[0x0B] = (.dec16, (.BC, .noReg), 8, 1)
-        ops[0x0C] = (.inc8, (.C, .noReg), 4, 1)
-        ops[0x0D] = (.dec8, (.C, .noReg), 4, 1)
-        ops[0x0E] = (.ld8_8, (.C, .i8), 8, 2)
-        ops[0x0F] = (.rrca, (.noReg, .noReg), 4, 1)
+        ops[0x00] = (.nop, (.noReg, .noReg), 4)
+        ops[0x01] = (.ld16_16, (.BC, .i16), 12)
+        ops[0x02] = (.ld8_8, (.BCptr, .A), 8)
+        ops[0x03] = (.inc16, (.BC, .noReg), 8)
+        ops[0x04] = (.inc8, (.B, .noReg), 4)
+        ops[0x05] = (.dec8, (.B, .noReg), 4)
+        ops[0x06] = (.ld8_8, (.B, .i8), 8)
+        ops[0x07] = (.rlca, (.noReg, .noReg), 4) // not to confuse with RLC A of the CB prefix instructions
+        ops[0x08] = (.ld16_16, (.i16ptr, .SP), 20) // Usage: 1 opcode + 2 immediate = 3 bytes
+        ops[0x09] = (.add16_16, (.HL, .BC), 8)
+        ops[0x0A] = (.ld8_8, (.A, .BCptr), 8)
+        ops[0x0B] = (.dec16, (.BC, .noReg), 8)
+        ops[0x0C] = (.inc8, (.C, .noReg), 4)
+        ops[0x0D] = (.dec8, (.C, .noReg), 4)
+        ops[0x0E] = (.ld8_8, (.C, .i8), 8)
+        ops[0x0F] = (.rrca, (.noReg, .noReg), 4)
         
-        ops[0x10] = (.stop, (.noReg, .noReg), 4, 2)
-        ops[0x11] = (.ld16_16, (.DE, .i16), 12, 3)
-        ops[0x12] = (.ld8_8, (.DEptr, .A), 8, 1)
-        ops[0x13] = (.inc16, (.DE, .noReg), 8, 1)
-        ops[0x14] = (.inc8, (.D, .noReg), 4, 1)
-        ops[0x15] = (.dec8, (.D, .noReg), 4, 1)
-        ops[0x16] = (.ld8_8, (.D, .i8), 8, 2)
-        ops[0x17] = (.rla, (.noReg, .noReg), 4, 1)
-        ops[0x18] = (.jr, (.noReg, .i8), 12, 2)
-        ops[0x19] = (.add16_16, (.HL, .DE), 8, 1)
-        ops[0x1A] = (.ld8_8, (.A, .DEptr), 8, 1)
-        ops[0x1B] = (.dec16, (.DE, .noReg), 8, 1)
-        ops[0x1C] = (.inc8, (.E, .noReg), 4, 1)
-        ops[0x1D] = (.dec8, (.E, .noReg), 4, 1)
-        ops[0x1E] = (.ld8_8, (.E, .i8), 8, 2)
-        ops[0x1F] = (.rra, (.noReg, .noReg), 4, 1)
+        ops[0x10] = (.stop, (.noReg, .noReg), 4)
+        ops[0x11] = (.ld16_16, (.DE, .i16), 12)
+        ops[0x12] = (.ld8_8, (.DEptr, .A), 8)
+        ops[0x13] = (.inc16, (.DE, .noReg), 8)
+        ops[0x14] = (.inc8, (.D, .noReg), 4)
+        ops[0x15] = (.dec8, (.D, .noReg), 4)
+        ops[0x16] = (.ld8_8, (.D, .i8), 8)
+        ops[0x17] = (.rla, (.noReg, .noReg), 4)
+        ops[0x18] = (.jr, (.noReg, .i8), 12)
+        ops[0x19] = (.add16_16, (.HL, .DE), 8)
+        ops[0x1A] = (.ld8_8, (.A, .DEptr), 8)
+        ops[0x1B] = (.dec16, (.DE, .noReg), 8)
+        ops[0x1C] = (.inc8, (.E, .noReg), 4)
+        ops[0x1D] = (.dec8, (.E, .noReg), 4)
+        ops[0x1E] = (.ld8_8, (.E, .i8), 8)
+        ops[0x1F] = (.rra, (.noReg, .noReg), 4)
         
-        ops[0x20] = (.jr, (.NotZero, .i8), 12, 2)
-        ops[0x21] = (.ld16_16, (.HL, .i16), 12, 3)
-        ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8, 1)
-        ops[0x23] = (.inc16, (.HL, .noReg), 8, 1)
-        ops[0x24] = (.inc8, (.H, .noReg), 4, 1)
-        ops[0x25] = (.dec8, (.H, .noReg), 4, 1)
-        ops[0x26] = (.ld8_8, (.H, .i8), 8, 2)
-        ops[0x27] = (.daa, (.noReg, .noReg), 4, 1)
-        ops[0x28] = (.jr, (.Zero, .i8), 12, 2)
-        ops[0x29] = (.add16_16, (.HL, .HL), 8, 1)
-        ops[0x2A] = (.ld8_8, (.A, .HLptrInc), 8, 1)
-        ops[0x2B] = (.dec16, (.HL, .noReg), 8, 1)
-        ops[0x2C] = (.inc8, (.L, .noReg), 4, 1)
-        ops[0x2D] = (.dec8, (.L, .noReg), 4, 1)
-        ops[0x2E] = (.ld8_8, (.L, .i8), 8, 2)
-        ops[0x2F] = (.cpl, (.noReg, .noReg), 4, 1)
+        ops[0x20] = (.jr, (.NotZero, .i8), 12)
+        ops[0x21] = (.ld16_16, (.HL, .i16), 12)
+        ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
+        ops[0x23] = (.inc16, (.HL, .noReg), 8)
+        ops[0x24] = (.inc8, (.H, .noReg), 4)
+        ops[0x25] = (.dec8, (.H, .noReg), 4)
+        ops[0x26] = (.ld8_8, (.H, .i8), 8)
+        ops[0x27] = (.daa, (.noReg, .noReg), 4)
+        ops[0x28] = (.jr, (.Zero, .i8), 12)
+        ops[0x29] = (.add16_16, (.HL, .HL), 8)
+        ops[0x2A] = (.ld8_8, (.A, .HLptrInc), 8)
+        ops[0x2B] = (.dec16, (.HL, .noReg), 8)
+        ops[0x2C] = (.inc8, (.L, .noReg), 4)
+        ops[0x2D] = (.dec8, (.L, .noReg), 4)
+        ops[0x2E] = (.ld8_8, (.L, .i8), 8)
+        ops[0x2F] = (.cpl, (.noReg, .noReg), 4)
         
-        ops[0x30] = (.jr, (.NoCarry, .i8), 12, 2)
-        ops[0x31] = (.ld16_16, (.SP, .i16), 12, 3)
-        ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8, 1)
-        ops[0x33] = (.inc16, (.SP, .noReg), 8, 1)
-        ops[0x34] = (.inc8, (.HLptr, .noReg), 12, 1)
-        ops[0x35] = (.dec8, (.HLptr, .noReg), 12, 1)
-        ops[0x36] = (.ld8_8, (.HLptr, .i8), 12, 1)
-        ops[0x37] = (.scf, (.noReg, .noReg), 4, 1)
-        ops[0x38] = (.jr, (.Carry, .i8), 12, 2)
-        ops[0x39] = (.add16_16, (.HL, .SP), 8, 1)
-        ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8, 1)
-        ops[0x3B] = (.dec16, (.SP, .noReg), 8, 1)
-        ops[0x3C] = (.inc8, (.A, .noReg), 4, 1)
-        ops[0x3D] = (.dec8, (.A, .noReg), 4, 1)
-        ops[0x3E] = (.ld8_8, (.A, .i8), 8, 2)
-        ops[0x3F] = (.ccf, (.noReg, .noReg), 4, 1)
+        ops[0x30] = (.jr, (.NoCarry, .i8), 12)
+        ops[0x31] = (.ld16_16, (.SP, .i16), 12)
+        ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8)
+        ops[0x33] = (.inc16, (.SP, .noReg), 8)
+        ops[0x34] = (.inc8, (.HLptr, .noReg), 12)
+        ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
+        ops[0x36] = (.ld8_8, (.HLptr, .i8), 12)
+        ops[0x37] = (.scf, (.noReg, .noReg), 4)
+        ops[0x38] = (.jr, (.Carry, .i8), 12)
+        ops[0x39] = (.add16_16, (.HL, .SP), 8)
+        ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8)
+        ops[0x3B] = (.dec16, (.SP, .noReg), 8)
+        ops[0x3C] = (.inc8, (.A, .noReg), 4)
+        ops[0x3D] = (.dec8, (.A, .noReg), 4)
+        ops[0x3E] = (.ld8_8, (.A, .i8), 8)
+        ops[0x3F] = (.ccf, (.noReg, .noReg), 4)
         
-        ops[0x40] = (.ld8_8, (.B, .B), 4, 1) // ??
-        ops[0x41] = (.ld8_8, (.B, .C), 4, 1)
-        ops[0x42] = (.ld8_8, (.B, .D), 4, 1)
-        ops[0x43] = (.ld8_8, (.B, .E), 4, 1)
-        ops[0x44] = (.ld8_8, (.B, .H), 4, 1)
-        ops[0x45] = (.ld8_8, (.B, .L), 4, 1)
-        ops[0x46] = (.ld8_8, (.B, .HLptr), 8, 1)
-        ops[0x47] = (.ld8_8, (.B, .A), 4, 1)
+        ops[0x40] = (.ld8_8, (.B, .B), 4) // ??
+        ops[0x41] = (.ld8_8, (.B, .C), 4)
+        ops[0x42] = (.ld8_8, (.B, .D), 4)
+        ops[0x43] = (.ld8_8, (.B, .E), 4)
+        ops[0x44] = (.ld8_8, (.B, .H), 4)
+        ops[0x45] = (.ld8_8, (.B, .L), 4)
+        ops[0x46] = (.ld8_8, (.B, .HLptr), 8)
+        ops[0x47] = (.ld8_8, (.B, .A), 4)
         
-        ops[0x48] = (.ld8_8, (.C, .B), 4, 1)
-        ops[0x49] = (.ld8_8, (.C, .C), 4, 1) // ??
-        ops[0x4A] = (.ld8_8, (.C, .D), 4, 1)
-        ops[0x4B] = (.ld8_8, (.C, .E), 4, 1)
-        ops[0x4C] = (.ld8_8, (.C, .H), 4, 1)
-        ops[0x4D] = (.ld8_8, (.C, .L), 4, 1)
-        ops[0x4E] = (.ld8_8, (.C, .HLptr), 8, 1)
-        ops[0x4F] = (.ld8_8, (.C, .A), 4, 1)
+        ops[0x48] = (.ld8_8, (.C, .B), 4)
+        ops[0x49] = (.ld8_8, (.C, .C), 4) // ??
+        ops[0x4A] = (.ld8_8, (.C, .D), 4)
+        ops[0x4B] = (.ld8_8, (.C, .E), 4)
+        ops[0x4C] = (.ld8_8, (.C, .H), 4)
+        ops[0x4D] = (.ld8_8, (.C, .L), 4)
+        ops[0x4E] = (.ld8_8, (.C, .HLptr), 8)
+        ops[0x4F] = (.ld8_8, (.C, .A), 4)
         
-        ops[0x50] = (.ld8_8, (.D, .B), 4, 1)
-        ops[0x51] = (.ld8_8, (.D, .C), 4, 1)
-        ops[0x52] = (.ld8_8, (.D, .D), 4, 1) // ??
-        ops[0x53] = (.ld8_8, (.D, .E), 4, 1)
-        ops[0x54] = (.ld8_8, (.D, .H), 4, 1)
-        ops[0x55] = (.ld8_8, (.D, .L), 4, 1)
-        ops[0x56] = (.ld8_8, (.D, .HLptr), 8, 1)
-        ops[0x57] = (.ld8_8, (.D, .A), 4, 1)
+        ops[0x50] = (.ld8_8, (.D, .B), 4)
+        ops[0x51] = (.ld8_8, (.D, .C), 4)
+        ops[0x52] = (.ld8_8, (.D, .D), 4) // ??
+        ops[0x53] = (.ld8_8, (.D, .E), 4)
+        ops[0x54] = (.ld8_8, (.D, .H), 4)
+        ops[0x55] = (.ld8_8, (.D, .L), 4)
+        ops[0x56] = (.ld8_8, (.D, .HLptr), 8)
+        ops[0x57] = (.ld8_8, (.D, .A), 4)
         
-        ops[0x58] = (.ld8_8, (.E, .B), 4, 1)
-        ops[0x59] = (.ld8_8, (.E, .C), 4, 1)
-        ops[0x5A] = (.ld8_8, (.E, .D), 4, 1)
-        ops[0x5B] = (.ld8_8, (.E, .E), 4, 1) // ??
-        ops[0x5C] = (.ld8_8, (.E, .H), 4, 1)
-        ops[0x5D] = (.ld8_8, (.E, .L), 4, 1)
-        ops[0x5E] = (.ld8_8, (.E, .HLptr), 8, 1)
-        ops[0x5F] = (.ld8_8, (.E, .A), 4, 1)
+        ops[0x58] = (.ld8_8, (.E, .B), 4)
+        ops[0x59] = (.ld8_8, (.E, .C), 4)
+        ops[0x5A] = (.ld8_8, (.E, .D), 4)
+        ops[0x5B] = (.ld8_8, (.E, .E), 4) // ??
+        ops[0x5C] = (.ld8_8, (.E, .H), 4)
+        ops[0x5D] = (.ld8_8, (.E, .L), 4)
+        ops[0x5E] = (.ld8_8, (.E, .HLptr), 8)
+        ops[0x5F] = (.ld8_8, (.E, .A), 4)
 
-        ops[0x60] = (.ld8_8, (.H, .B), 4, 1)
-        ops[0x61] = (.ld8_8, (.H, .C), 4, 1)
-        ops[0x62] = (.ld8_8, (.H, .D), 4, 1)
-        ops[0x63] = (.ld8_8, (.H, .E), 4, 1)
-        ops[0x64] = (.ld8_8, (.H, .H), 4, 1) // ??
-        ops[0x65] = (.ld8_8, (.H, .L), 4, 1)
-        ops[0x66] = (.ld8_8, (.H, .HLptr), 8, 1)
-        ops[0x67] = (.ld8_8, (.H, .A), 4, 1)
+        ops[0x60] = (.ld8_8, (.H, .B), 4)
+        ops[0x61] = (.ld8_8, (.H, .C), 4)
+        ops[0x62] = (.ld8_8, (.H, .D), 4)
+        ops[0x63] = (.ld8_8, (.H, .E), 4)
+        ops[0x64] = (.ld8_8, (.H, .H), 4) // ??
+        ops[0x65] = (.ld8_8, (.H, .L), 4)
+        ops[0x66] = (.ld8_8, (.H, .HLptr), 8)
+        ops[0x67] = (.ld8_8, (.H, .A), 4)
         
-        ops[0x68] = (.ld8_8, (.L, .B), 4, 1)
-        ops[0x69] = (.ld8_8, (.L, .C), 4, 1)
-        ops[0x6A] = (.ld8_8, (.L, .D), 4, 1)
-        ops[0x6B] = (.ld8_8, (.L, .E), 4, 1)
-        ops[0x6C] = (.ld8_8, (.L, .H), 4, 1)
-        ops[0x6D] = (.ld8_8, (.L, .L), 4, 1) // ??
-        ops[0x6E] = (.ld8_8, (.L, .HLptr), 8, 1)
-        ops[0x6F] = (.ld8_8, (.L, .A), 4, 1)
+        ops[0x68] = (.ld8_8, (.L, .B), 4)
+        ops[0x69] = (.ld8_8, (.L, .C), 4)
+        ops[0x6A] = (.ld8_8, (.L, .D), 4)
+        ops[0x6B] = (.ld8_8, (.L, .E), 4)
+        ops[0x6C] = (.ld8_8, (.L, .H), 4)
+        ops[0x6D] = (.ld8_8, (.L, .L), 4) // ??
+        ops[0x6E] = (.ld8_8, (.L, .HLptr), 8)
+        ops[0x6F] = (.ld8_8, (.L, .A), 4)
         
-        ops[0x70] = (.ld8_8, (.HLptr, .B), 8, 1)
-        ops[0x71] = (.ld8_8, (.HLptr, .C), 8, 1)
-        ops[0x72] = (.ld8_8, (.HLptr, .D), 8, 1)
-        ops[0x73] = (.ld8_8, (.HLptr, .E), 8, 1)
-        ops[0x74] = (.ld8_8, (.HLptr, .H), 8, 1)
-        ops[0x75] = (.ld8_8, (.HLptr, .L), 8, 1)
-        ops[0x76] = (.halt, (.noReg, .noReg), 4, 1) // not properly implemented
-        ops[0x77] = (.ld8_8, (.HLptr, .A), 8, 1)
+        ops[0x70] = (.ld8_8, (.HLptr, .B), 8)
+        ops[0x71] = (.ld8_8, (.HLptr, .C), 8)
+        ops[0x72] = (.ld8_8, (.HLptr, .D), 8)
+        ops[0x73] = (.ld8_8, (.HLptr, .E), 8)
+        ops[0x74] = (.ld8_8, (.HLptr, .H), 8)
+        ops[0x75] = (.ld8_8, (.HLptr, .L), 8)
+        ops[0x76] = (.halt, (.noReg, .noReg), 4) // not properly implemented
+        ops[0x77] = (.ld8_8, (.HLptr, .A), 8)
         
-        ops[0x78] = (.ld8_8, (.A, .B), 4, 1)
-        ops[0x79] = (.ld8_8, (.A, .C), 4, 1)
-        ops[0x7A] = (.ld8_8, (.A, .D), 4, 1)
-        ops[0x7B] = (.ld8_8, (.A, .E), 4, 1)
-        ops[0x7C] = (.ld8_8, (.A, .H), 4, 1)
-        ops[0x7D] = (.ld8_8, (.A, .L), 4, 1)
-        ops[0x7E] = (.ld8_8, (.A, .HLptr), 8, 1)
-        ops[0x7F] = (.ld8_8, (.A, .A), 4, 1) // ??
+        ops[0x78] = (.ld8_8, (.A, .B), 4)
+        ops[0x79] = (.ld8_8, (.A, .C), 4)
+        ops[0x7A] = (.ld8_8, (.A, .D), 4)
+        ops[0x7B] = (.ld8_8, (.A, .E), 4)
+        ops[0x7C] = (.ld8_8, (.A, .H), 4)
+        ops[0x7D] = (.ld8_8, (.A, .L), 4)
+        ops[0x7E] = (.ld8_8, (.A, .HLptr), 8)
+        ops[0x7F] = (.ld8_8, (.A, .A), 4) // ??
         
-        ops[0x80] = (.add8_8, (.A, .B), 4, 1)
-        ops[0x81] = (.add8_8, (.A, .C), 4, 1)
-        ops[0x82] = (.add8_8, (.A, .D), 4, 1)
-        ops[0x83] = (.add8_8, (.A, .E), 4, 1)
-        ops[0x84] = (.add8_8, (.A, .H), 4, 1)
-        ops[0x85] = (.add8_8, (.A, .L), 4, 1)
-        ops[0x86] = (.add8_8, (.A, .HLptr), 8, 1)
-        ops[0x87] = (.add8_8, (.A, .A), 4, 1)
+        ops[0x80] = (.add8_8, (.A, .B), 4)
+        ops[0x81] = (.add8_8, (.A, .C), 4)
+        ops[0x82] = (.add8_8, (.A, .D), 4)
+        ops[0x83] = (.add8_8, (.A, .E), 4)
+        ops[0x84] = (.add8_8, (.A, .H), 4)
+        ops[0x85] = (.add8_8, (.A, .L), 4)
+        ops[0x86] = (.add8_8, (.A, .HLptr), 8)
+        ops[0x87] = (.add8_8, (.A, .A), 4)
         
-        ops[0x88] = (.adc8_8, (.A, .B), 4, 1)
-        ops[0x89] = (.adc8_8, (.A, .C), 4, 1)
-        ops[0x8A] = (.adc8_8, (.A, .D), 4, 1)
-        ops[0x8B] = (.adc8_8, (.A, .E), 4, 1)
-        ops[0x8C] = (.adc8_8, (.A, .H), 4, 1)
-        ops[0x8D] = (.adc8_8, (.A, .L), 4, 1)
-        ops[0x8E] = (.adc8_8, (.A, .HLptr), 8, 1)
-        ops[0x8F] = (.adc8_8, (.A, .A), 4, 1)
+        ops[0x88] = (.adc8_8, (.A, .B), 4)
+        ops[0x89] = (.adc8_8, (.A, .C), 4)
+        ops[0x8A] = (.adc8_8, (.A, .D), 4)
+        ops[0x8B] = (.adc8_8, (.A, .E), 4)
+        ops[0x8C] = (.adc8_8, (.A, .H), 4)
+        ops[0x8D] = (.adc8_8, (.A, .L), 4)
+        ops[0x8E] = (.adc8_8, (.A, .HLptr), 8)
+        ops[0x8F] = (.adc8_8, (.A, .A), 4)
         
-        ops[0x90] = (.sub, (.A, .B), 4, 1)
-        ops[0x91] = (.sub, (.A, .C), 4, 1)
-        ops[0x92] = (.sub, (.A, .D), 4, 1)
-        ops[0x93] = (.sub, (.A, .E), 4, 1)
-        ops[0x94] = (.sub, (.A, .H), 4, 1)
-        ops[0x95] = (.sub, (.A, .L), 4, 1)
-        ops[0x96] = (.sub, (.A, .HLptr), 8, 1)
-        ops[0x97] = (.sub, (.A, .A), 4, 1)
+        ops[0x90] = (.sub, (.A, .B), 4)
+        ops[0x91] = (.sub, (.A, .C), 4)
+        ops[0x92] = (.sub, (.A, .D), 4)
+        ops[0x93] = (.sub, (.A, .E), 4)
+        ops[0x94] = (.sub, (.A, .H), 4)
+        ops[0x95] = (.sub, (.A, .L), 4)
+        ops[0x96] = (.sub, (.A, .HLptr), 8)
+        ops[0x97] = (.sub, (.A, .A), 4)
         
-        ops[0x98] = (.sbc, (.A, .B), 4, 1)
-        ops[0x99] = (.sbc, (.A, .C), 4, 1)
-        ops[0x9A] = (.sbc, (.A, .D), 4, 1)
-        ops[0x9B] = (.sbc, (.A, .E), 4, 1)
-        ops[0x9C] = (.sbc, (.A, .H), 4, 1)
-        ops[0x9D] = (.sbc, (.A, .L), 4, 1)
-        ops[0x9E] = (.sbc, (.A, .HLptr), 8, 1)
-        ops[0x9F] = (.sbc, (.A, .A), 4, 1)
+        ops[0x98] = (.sbc, (.A, .B), 4)
+        ops[0x99] = (.sbc, (.A, .C), 4)
+        ops[0x9A] = (.sbc, (.A, .D), 4)
+        ops[0x9B] = (.sbc, (.A, .E), 4)
+        ops[0x9C] = (.sbc, (.A, .H), 4)
+        ops[0x9D] = (.sbc, (.A, .L), 4)
+        ops[0x9E] = (.sbc, (.A, .HLptr), 8)
+        ops[0x9F] = (.sbc, (.A, .A), 4)
 
-        ops[0xA0] = (.and, (.A, .B), 4, 1)
-        ops[0xA1] = (.and, (.A, .C), 4, 1)
-        ops[0xA2] = (.and, (.A, .D), 4, 1)
-        ops[0xA3] = (.and, (.A, .E), 4, 1)
-        ops[0xA4] = (.and, (.A, .H), 4, 1)
-        ops[0xA5] = (.and, (.A, .L), 4, 1)
-        ops[0xA6] = (.and, (.A, .HLptr), 8, 1)
-        ops[0xA7] = (.and, (.A, .A), 4, 1)
+        ops[0xA0] = (.and, (.A, .B), 4)
+        ops[0xA1] = (.and, (.A, .C), 4)
+        ops[0xA2] = (.and, (.A, .D), 4)
+        ops[0xA3] = (.and, (.A, .E), 4)
+        ops[0xA4] = (.and, (.A, .H), 4)
+        ops[0xA5] = (.and, (.A, .L), 4)
+        ops[0xA6] = (.and, (.A, .HLptr), 8)
+        ops[0xA7] = (.and, (.A, .A), 4)
 
-        ops[0xA8] = (.xor, (.A, .B), 4, 1)
-        ops[0xA9] = (.xor, (.A, .C), 4, 1)
-        ops[0xAA] = (.xor, (.A, .D), 4, 1)
-        ops[0xAB] = (.xor, (.A, .E), 4, 1)
-        ops[0xAC] = (.xor, (.A, .H), 4, 1)
-        ops[0xAD] = (.xor, (.A, .L), 4, 1)
-        ops[0xAE] = (.xor, (.A, .HLptr), 8, 1)
-        ops[0xAF] = (.xor, (.A, .A), 4, 1)
+        ops[0xA8] = (.xor, (.A, .B), 4)
+        ops[0xA9] = (.xor, (.A, .C), 4)
+        ops[0xAA] = (.xor, (.A, .D), 4)
+        ops[0xAB] = (.xor, (.A, .E), 4)
+        ops[0xAC] = (.xor, (.A, .H), 4)
+        ops[0xAD] = (.xor, (.A, .L), 4)
+        ops[0xAE] = (.xor, (.A, .HLptr), 8)
+        ops[0xAF] = (.xor, (.A, .A), 4)
         
-        ops[0xB0] = (.or, (.A, .B), 4, 1)
-        ops[0xB1] = (.or, (.A, .C), 4, 1)
-        ops[0xB2] = (.or, (.A, .D), 4, 1)
-        ops[0xB3] = (.or, (.A, .E), 4, 1)
-        ops[0xB4] = (.or, (.A, .H), 4, 1)
-        ops[0xB5] = (.or, (.A, .L), 4, 1)
-        ops[0xB6] = (.or, (.A, .HLptr), 8, 1)
-        ops[0xB7] = (.or, (.A, .A), 4, 1)
+        ops[0xB0] = (.or, (.A, .B), 4)
+        ops[0xB1] = (.or, (.A, .C), 4)
+        ops[0xB2] = (.or, (.A, .D), 4)
+        ops[0xB3] = (.or, (.A, .E), 4)
+        ops[0xB4] = (.or, (.A, .H), 4)
+        ops[0xB5] = (.or, (.A, .L), 4)
+        ops[0xB6] = (.or, (.A, .HLptr), 8)
+        ops[0xB7] = (.or, (.A, .A), 4)
 
-        ops[0xB8] = (.cp, (.A, .B), 4, 1)
-        ops[0xB9] = (.cp, (.A, .C), 4, 1)
-        ops[0xBA] = (.cp, (.A, .D), 4, 1)
-        ops[0xBB] = (.cp, (.A, .E), 4, 1)
-        ops[0xBC] = (.cp, (.A, .H), 4, 1)
-        ops[0xBD] = (.cp, (.A, .L), 4, 1)
-        ops[0xBE] = (.cp, (.A, .HLptr), 8, 1)
-        ops[0xBF] = (.cp, (.A, .A), 4, 1)
+        ops[0xB8] = (.cp, (.A, .B), 4)
+        ops[0xB9] = (.cp, (.A, .C), 4)
+        ops[0xBA] = (.cp, (.A, .D), 4)
+        ops[0xBB] = (.cp, (.A, .E), 4)
+        ops[0xBC] = (.cp, (.A, .H), 4)
+        ops[0xBD] = (.cp, (.A, .L), 4)
+        ops[0xBE] = (.cp, (.A, .HLptr), 8)
+        ops[0xBF] = (.cp, (.A, .A), 4)
 
-        ops[0xC0] = (.ret, (.NotZero, .noReg), 20, 1)
-        ops[0xC1] = (.pop, (.BC, .noReg), 12, 1)
-        ops[0xC2] = (.jp, (.NotZero, .i16), 16, 3)
-        ops[0xC3] = (.jp, (.noReg, .i16), 16, 3)
-        ops[0xC4] = (.call, (.NotZero, .i16), 24, 3)
-        ops[0xC5] = (.push, (.noReg, .BC), 16, 1)
-        ops[0xC6] = (.add8_8, (.A, .i8), 8, 2)
-        ops[0xC7] = (.rst, (.vec00h, .noReg), 16, 1)
-        ops[0xC8] = (.ret, (.Zero, .noReg), 20, 1)
-        ops[0xC9] = (.ret, (.noReg, .noReg), 16, 1)
-        ops[0xCA] = (.jp, (.Zero, .i16), 16, 3)
-        ops[0xCB] = (.cb, (.noReg, .noReg), 4, 1)
-        ops[0xCC] = (.call, (.Zero, .i16), 24, 3)
-        ops[0xCD] = (.call, (.noReg, .i16), 24, 3)
-        ops[0xCE] = (.adc8_8, (.A, .i8), 8, 2)
-        ops[0xCF] = (.rst, (.vec08h, .noReg), 16, 1)
+        ops[0xC0] = (.ret, (.NotZero, .noReg), 20)
+        ops[0xC1] = (.pop, (.BC, .noReg), 12)
+        ops[0xC2] = (.jp, (.NotZero, .i16), 16)
+        ops[0xC3] = (.jp, (.noReg, .i16), 16)
+        ops[0xC4] = (.call, (.NotZero, .i16), 24)
+        ops[0xC5] = (.push, (.noReg, .BC), 16)
+        ops[0xC6] = (.add8_8, (.A, .i8), 8)
+        ops[0xC7] = (.rst, (.vec00h, .noReg), 16)
+        ops[0xC8] = (.ret, (.Zero, .noReg), 20)
+        ops[0xC9] = (.ret, (.noReg, .noReg), 16)
+        ops[0xCA] = (.jp, (.Zero, .i16), 16)
+        ops[0xCB] = (.cb, (.noReg, .noReg), 4)
+        ops[0xCC] = (.call, (.Zero, .i16), 24)
+        ops[0xCD] = (.call, (.noReg, .i16), 24)
+        ops[0xCE] = (.adc8_8, (.A, .i8), 8)
+        ops[0xCF] = (.rst, (.vec08h, .noReg), 16)
         
-        ops[0xD0] = (.ret, (.NoCarry, .noReg), 20, 1)
-        ops[0xD1] = (.pop, (.DE, .noReg), 12, 1)
-        ops[0xD2] = (.jp, (.NoCarry, .i16), 16, 3)
-        ops[0xD4] = (.call, (.NoCarry, .i16), 24, 3)
-        ops[0xD5] = (.push, (.noReg, .DE), 16, 1)
-        ops[0xD6] = (.sub, (.A, .i8), 8, 2)
-        ops[0xD7] = (.rst, (.vec10h, .noReg), 16, 1)
-        ops[0xD8] = (.ret, (.Carry, .noReg), 20, 1)
-        ops[0xD9] = (.reti, (.noReg, .noReg), 16, 1)
-        ops[0xDA] = (.jp, (.Carry, .i16), 16, 3)
-        ops[0xDC] = (.call, (.Carry, .i16), 24, 3)
-        ops[0xDE] = (.sbc, (.A, .i8), 8, 2)
-        ops[0xDF] = (.rst, (.vec18h, .noReg), 16, 1)
+        ops[0xD0] = (.ret, (.NoCarry, .noReg), 20)
+        ops[0xD1] = (.pop, (.DE, .noReg), 12)
+        ops[0xD2] = (.jp, (.NoCarry, .i16), 16)
+        ops[0xD4] = (.call, (.NoCarry, .i16), 24)
+        ops[0xD5] = (.push, (.noReg, .DE), 16)
+        ops[0xD6] = (.sub, (.A, .i8), 8)
+        ops[0xD7] = (.rst, (.vec10h, .noReg), 16)
+        ops[0xD8] = (.ret, (.Carry, .noReg), 20)
+        ops[0xD9] = (.reti, (.noReg, .noReg), 16)
+        ops[0xDA] = (.jp, (.Carry, .i16), 16)
+        ops[0xDC] = (.call, (.Carry, .i16), 24)
+        ops[0xDE] = (.sbc, (.A, .i8), 8)
+        ops[0xDF] = (.rst, (.vec18h, .noReg), 16)
 
-        ops[0xE0] = (.ld8_8, (.HiRamI8, .A), 12, 2)
-        ops[0xE1] = (.pop, (.HL, .noReg), 12, 1)
-        ops[0xE2] = (.ld8_8, (.HiRamC, .A), 8, 2)
-        ops[0xE5] = (.push, (.noReg, .HL), 16, 1)
-        ops[0xE6] = (.and, (.A, .i8), 8, 2)
-        ops[0xE7] = (.rst, (.vec20h, .noReg), 16, 1)
-        ops[0xE8] = (.add16_16, (.SP, .i8), 16, 2)
-        ops[0xE9] = (.jp, (.noReg, .HL), 4, 1)
-        ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16, 3)
-        ops[0xEE] = (.xor, (.A, .i8), 8, 2)
-        ops[0xEF] = (.rst, (.vec28h, .noReg), 16, 1)
+        ops[0xE0] = (.ld8_8, (.HiRamI8, .A), 12)
+        ops[0xE1] = (.pop, (.HL, .noReg), 12)
+        ops[0xE2] = (.ld8_8, (.HiRamC, .A), 8)
+        ops[0xE5] = (.push, (.noReg, .HL), 16)
+        ops[0xE6] = (.and, (.A, .i8), 8)
+        ops[0xE7] = (.rst, (.vec20h, .noReg), 16)
+        ops[0xE8] = (.add16_16, (.SP, .i8), 16)
+        ops[0xE9] = (.jp, (.noReg, .HL), 4)
+        ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16)
+        ops[0xEE] = (.xor, (.A, .i8), 8)
+        ops[0xEF] = (.rst, (.vec28h, .noReg), 16)
         
-        ops[0xF0] = (.ld8_8, (.A, .HiRamI8), 12, 2)
-        ops[0xF1] = (.pop, (.AF, .noReg), 12, 1)
-        ops[0xF2] = (.ld8_8, (.A, .HiRamC), 8, 2)
-        ops[0xF3] = (.di, (.noReg, .noReg), 4, 1)
-        ops[0xF5] = (.push, (.noReg, .AF), 16, 1)
-        ops[0xF6] = (.or, (.A, .i8), 8, 2)
-        ops[0xF7] = (.rst, (.vec30h, .noReg), 16, 1)
-        ops[0xF8] = (.ldhl, (.noReg, .noReg), 12, 2)
-        ops[0xF9] = (.ld16_16, (.SP, .HL), 8, 1)
-        ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16, 3)
-        ops[0xFB] = (.ei, (.noReg, .noReg), 4, 1)
-        ops[0xFE] = (.cp, (.A, .i8), 8, 1)
-        ops[0xFF] = (.rst, (.vec38h, .noReg), 16, 1)
-
-        // -------------------------- change to array when complete
+        ops[0xF0] = (.ld8_8, (.A, .HiRamI8), 12)
+        ops[0xF1] = (.pop, (.AF, .noReg), 12)
+        ops[0xF2] = (.ld8_8, (.A, .HiRamC), 8)
+        ops[0xF3] = (.di, (.noReg, .noReg), 4)
+        ops[0xF5] = (.push, (.noReg, .AF), 16)
+        ops[0xF6] = (.or, (.A, .i8), 8)
+        ops[0xF7] = (.rst, (.vec30h, .noReg), 16)
+        ops[0xF8] = (.ldhl, (.noReg, .noReg), 12)
+        ops[0xF9] = (.ld16_16, (.SP, .HL), 8)
+        ops[0xFA] = (.ld8_8, (.A, .i16ptr), 16)
+        ops[0xFB] = (.ei, (.noReg, .noReg), 4)
+        ops[0xFE] = (.cp, (.A, .i8), 8)
+        ops[0xFF] = (.rst, (.vec38h, .noReg), 16)
         
+        cbOps = Array<Operation?>(repeating: nil, count: 512)
         // CB prefix operations
         cbOps[0x00] = (.rlc, (.B, .noReg), 8)
         cbOps[0x01] = (.rlc, (.C, .noReg), 8)
@@ -848,6 +851,7 @@ class CPU {
 
     
     enum CPUError : Error {
+        case UnsupportedOperation
         case UnknownRegister
         case RegisterReadFailure
         case RegisterWriteFailure
@@ -886,10 +890,25 @@ class CPU {
             print("HL: \(HL)")
         }
 
+        
+        
         if cbMode == true {
-            handleCbOps(opcode: opcode) }
+        
+            guard let (op, args, cycles) = cbOps[Int(opcode)] else {
+                print("ERROR reading from CB ops table")
+                return
+            }
+            
+            handleCbOps(opcode: op, args: args, cycles: cycles) }
+            
         else {
-            handleOps(opcode: opcode)
+            
+            guard let (op, args, cycles) = ops[Int(opcode)] else {
+                print("ERROR reading from ops table for opcode \(opcode)")
+                return
+            }
+            
+            handleOps(opcode: op, args: args, cycles: cycles)
         }
         
         interruptHandler()
@@ -942,13 +961,9 @@ class CPU {
         }
     }
     
-    func handleOps(opcode: UInt8) {
+    func handleOps(opcode: CPU.OpType, args: (CPU.ArgType, CPU.ArgType), cycles: UInt8) {
         
-        guard let (op, args, cycles, bytes) = ops[opcode] else {
-            print("ERROR reading from ops table for opcode \(opcode)")
-            return
-        }
-                
+        
         // FIXME: Bodge until I get each instruction to return the cycles it uses.
         // In the meantime this ensures that the cycles, currently defined at 4MHz,
         // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
@@ -958,7 +973,7 @@ class CPU {
         // TODO: Consider using the functions directly in the op-table instead since they
         // all take args anyway
         do {
-            switch op {
+            switch opcode {
             case .adc8_8:
                 try adc(argTypes: args)
             case .add8_8:
@@ -1030,20 +1045,18 @@ class CPU {
             case .sub: try sub8_8(argTypes: args)
             case .xor: try xor(argTypes: args)
             case .rr: try rr(argTypes: args)
+                
+            default: throw CPUError.UnsupportedOperation
             }
             
         } catch {
-            print("Error executing opcodes \(error) \(op) with args \(args)")
+            print("Error executing opcodes \(error) \(opcode) with args \(args)")
         }
 
     }
     
-    func handleCbOps(opcode: UInt8) {
+    func handleCbOps(opcode: CPU.OpType, args: (CPU.ArgType, CPU.ArgType), cycles: UInt8) {
         // CB prefix
-        guard let (op, args, cycles) = cbOps[opcode] else {
-            print("ERROR reading from CB ops table")
-            return
-        }
         
         // Always reset cbMode.
         cbMode = false
@@ -1052,7 +1065,7 @@ class CPU {
         // all take args anyway
         subOpCycles = cycles
         do {
-            switch op {
+            switch opcode {
             case .bit:
                 try bit(argTypes: args)
 //                print("operation \(op) not yet implemented")
@@ -1078,9 +1091,11 @@ class CPU {
                 try sra(argTypes: args)
             case .swap:
                 try swap(argTypes: args)
+            default:
+                throw CPUError.UnsupportedOperation
             }
         } catch {
-            print("Error executing opcodes \(error) \(op)")
+            print("Error executing opcodes \(error) \(opcode)")
         }
     }
 }

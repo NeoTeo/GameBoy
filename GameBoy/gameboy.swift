@@ -76,6 +76,8 @@ class Gameboy : SYSTEM {
     var cnt: UInt32 = 0
     var gtot = [UInt32]()
     
+    let cycleQ = DispatchQueue.global(qos: .userInitiated)
+    
     func runCycle() {
         let startTime = DispatchTime.now()
 //
@@ -116,7 +118,8 @@ class Gameboy : SYSTEM {
         
         let teo = DispatchTime.now() + .nanoseconds(interval)
         
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
+//        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
+        cycleQ.asyncAfter(deadline: teo, execute: runCycle)
 //        testTimer = DispatchSource.makeTimerSource()
 //        testTimer?.setEventHandler(handler: runCycle)
 //        testTimer?.schedule(deadline: teo)
