@@ -70,30 +70,58 @@ class Timer {
         ticks = tickModulo
     }
 
-    func tick() {
-    
-        // Always increment the div timer. It has a fixed rate of 16384 Hz
-        divTicks -= 1
-        if divTicks == 0 {
-            divTicks = divTickModulo
-            DIV = DIV &+ 1
-        }
-
-        ticks = (ticks - 1)
-        guard ticks == 0 else { return }
+    func tick(count: Int) {
         
-        ticks = tickModulo
-        // increment the TIMA register
-        TIMA = TIMA &+ 1
-        if TIMA == 0 {
-            // fire interrupt by setting bit 2 in IF register (0xFF0F)
-            TIMA = TMA
-            var irReg = delegateMmu.getValue(for: .ir)
-            irReg = GameBoy.set(bit: 2, in: irReg)
-            delegateMmu?.set(value: irReg, on: .ir)
+        // The CPU has ticked count times. Catch up.
+        for _ in 0 ..< count {
+            // Always increment the div timer. It has a fixed rate of 16384 Hz
+            divTicks -= 1
+            if divTicks == 0 {
+                divTicks = divTickModulo
+                DIV = DIV &+ 1
+            }
+            
+            ticks = (ticks - 1)
+            guard ticks == 0 else { return }
+            
+            ticks = tickModulo
+            // increment the TIMA register
+            TIMA = TIMA &+ 1
+            if TIMA == 0 {
+                // fire interrupt by setting bit 2 in IF register (0xFF0F)
+                TIMA = TMA
+                var irReg = delegateMmu.getValue(for: .ir)
+                irReg = GameBoy.set(bit: 2, in: irReg)
+                delegateMmu?.set(value: irReg, on: .ir)
+            }
         }
         
     }
+
+//    func tick() {
+//
+//        // Always increment the div timer. It has a fixed rate of 16384 Hz
+//        divTicks -= 1
+//        if divTicks == 0 {
+//            divTicks = divTickModulo
+//            DIV = DIV &+ 1
+//        }
+//
+//        ticks = (ticks - 1)
+//        guard ticks == 0 else { return }
+//
+//        ticks = tickModulo
+//        // increment the TIMA register
+//        TIMA = TIMA &+ 1
+//        if TIMA == 0 {
+//            // fire interrupt by setting bit 2 in IF register (0xFF0F)
+//            TIMA = TMA
+//            var irReg = delegateMmu.getValue(for: .ir)
+//            irReg = GameBoy.set(bit: 2, in: irReg)
+//            delegateMmu?.set(value: irReg, on: .ir)
+//        }
+//
+//    }
 }
 
 // Called by the MMU

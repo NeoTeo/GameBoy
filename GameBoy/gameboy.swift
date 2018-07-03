@@ -21,6 +21,9 @@ class Gameboy : SYSTEM {
     init(clock: Double) throws {
         clockRate = 0
         systemClock = clock
+        
+        hardwareClockMillis = 1000 / systemClock
+        
         cpu = CPU(sysClock: systemClock)
         
         mmu = try DmgMmu(size: 0x10000)
@@ -54,11 +57,12 @@ class Gameboy : SYSTEM {
         // bodge some code into ram
         bodgeBootLoader()
         
+        allowance = cpuCycleAllowance
         //runCycle(timer: Timer.init())
         runCycle()
         
 //        dbgPrintAvgs()
-        //dbgPrintRegisters()
+//        dbgPrintRegisters()
 //        RunLoop.current.add(clockTimer, forMode: .defaultRunLoopMode)
     }
     
@@ -72,58 +76,69 @@ class Gameboy : SYSTEM {
     var cycleLast: DispatchTime = DispatchTime(uptimeNanoseconds: 0)
     var testTimer: DispatchSourceTimer?
     
-    var accu: UInt32 = 0
-    var cnt: UInt32 = 0
-    var gtot = [UInt32]()
+    var accu: UInt64 = 0
+    var cnt: UInt64 = 0
+    var gtot = [UInt64]()
     
     let cycleQ = DispatchQueue.global(qos: .userInitiated)
+    // We want our cycle allowance (time given to each cycle of the emulator) to be calculated from 60 hz
+    let emuAllowanceNanos: Double = 1_000_000_000 / 60
+    
+    // The cycle allowance is the number of cycles we allow the cpu to run for each emulator cycle.
+    // A DMG hardware cycle takes 1000 / 1048576 = 0.0009536743164 milliseconds
+    // To calculate the time allowance (in milliseconds) for the cpu we divide a by the
+    // desired frequency, in this case 240 hertz:
+    // 1000 ms / 240 hz = 4.1666666667 milliseconds per emulator cycle.
+    // This corresponds to 4.1666666667 / 0.0009536743164 = 4369.0666667303 cycles
+    let cpuCycleAllowance: Double = 1000 / 240
+    let hardwareClockMillis: Double
+    var allowance: Double = 0
+    var totCycles: UInt64 = 0
     
     func runCycle() {
-        let startTime = DispatchTime.now()
-//
-//        cycleAvg = dbgCalcAvgTime(timeDiff: Double(startTime.uptimeNanoseconds - cycleLast.uptimeNanoseconds), for: cycleAvg)
-////        print("delta: \(1_000_000_000 / Double(startTime.uptimeNanoseconds - cycleLast.uptimeNanoseconds))")
-//        cycleLast = startTime
         
-        cpu.clockTick()
-//        let cpuTime = DispatchTime.now()
-//        cpuAvg = dbgCalcAvgTime(timeDiff: Double(cpuTime.uptimeNanoseconds - startTime.uptimeNanoseconds), for: cpuAvg)
-        // Tick the timer
-        timer.tick()
-//        let timerTime = DispatchTime.now()
-//        timerAvg = dbgCalcAvgTime(timeDiff: Double(timerTime.uptimeNanoseconds - cpuTime.uptimeNanoseconds), for: timerAvg)
-//
-        lcd.refresh()
-//        let lcdTime = DispatchTime.now()
-//        lcdAvg = dbgCalcAvgTime(timeDiff: Double(lcdTime.uptimeNanoseconds - timerTime.uptimeNanoseconds), for: lcdAvg)
-//
-        let endTime = DispatchTime.now()
+        let startTime = DispatchTime.now()
+        var usedCycles: Int = 0
+        
+        repeat {
+            usedCycles = Int(cpu.clockTick())
+            
+            // Tick the timer by the number of cycles we used
+            timer.tick(count: Int(usedCycles))
+            
+            // Tick the lcd by the number of cycles we used
+            lcd.refresh(count: Int(usedCycles))
 
-        let elapsed = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
-        accu = accu &+ UInt32(elapsed)
+            // subtract the time used on the cycles from the cycleAllowance.
+            // The DMG hardware has a cycle of systemClock (usually 1_048_576 hertz) so
+            // A cycle takes 1000 / 1_048_576 = 0.0009536743164 milliseconds
+            allowance -= Double(usedCycles) * hardwareClockMillis
+            
+            totCycles += UInt64(usedCycles)
+        } while allowance > 0
+
+        // reset allowance (adjusting for the now negative allowance)
+        allowance = cpuCycleAllowance + allowance
+
+        let elapsed = Double(DispatchTime.now().uptimeNanoseconds - startTime.uptimeNanoseconds)
+
+        accu = accu &+ UInt64(elapsed)
         cnt += 1
-        if (accu & 0xFFFF) == 0 {
+        if (accu & 0xFF) == 0 {
             
             gtot.append(accu/cnt)
             let avg = Int(gtot.reduce(0, +)) / gtot.count
-            print("Avg: \(avg)")
+            print("Avg: \(avg) nanoseconds")
             accu = 0
             cnt = 0
         }
-//        let clockInNs = clockRate * 1_000_000_000
-        let clockInNs = 1_000_000_000 / clockRate
- 
-        // Set a timer to fire in (clockRate - elapsed) seconds
-        let interval = Int(max(clockInNs - Double(elapsed), 0))
+
+        //  Subtract the actual time spent from the emulator f. If negative use 0.
+        let interval = max(Int(emuAllowanceNanos - elapsed), 0)
+    
+        let nextCycle = DispatchTime.now() + .nanoseconds(interval)
         
-        let teo = DispatchTime.now() + .nanoseconds(interval)
-        
-//        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: teo, execute: runCycle)
-        cycleQ.asyncAfter(deadline: teo, execute: runCycle)
-//        testTimer = DispatchSource.makeTimerSource()
-//        testTimer?.setEventHandler(handler: runCycle)
-//        testTimer?.schedule(deadline: teo)
-//        testTimer?.activate()
+        cycleQ.asyncAfter(deadline: nextCycle, execute: runCycle)
     }
     
     
@@ -144,6 +159,7 @@ class Gameboy : SYSTEM {
 //        let binaryName = "pkb.gb"
 //        let binaryName = "cpu_instrs.gb"
         let binaryName = "02interrupts.gb"
+//        let binaryName = "Tetris.gb"
 //        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),

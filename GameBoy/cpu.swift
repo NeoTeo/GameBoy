@@ -862,15 +862,15 @@ class CPU {
 
 //    var prevTime: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()
     
-    func clockTick() {
+    func clockTick() -> UInt8 {
         
-        subOpCycles -= 1
-        if subOpCycles > 0 {  return }
+//        subOpCycles -= 1
+//        if subOpCycles > 0 {  return 0 }
 
         var dbgPr = false
         
 //        if PC == 0xC7D8 {
-        if PC == 0xC2B5 {
+        if PC == 0x5D {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -878,7 +878,7 @@ class CPU {
         /// Read from ram.
         guard let opcode = try? read8(at: PC, incPC: true) else {
             print("clockTick failed to read opcode.")
-            return
+            return 0
         }
         
         // We may have to do some checking on the PC
@@ -896,22 +896,24 @@ class CPU {
         
             guard let (op, args, cycles) = cbOps[Int(opcode)] else {
                 print("ERROR reading from CB ops table")
-                return
+                return 0
             }
-            
+            subOpCycles = cycles
             handleCbOps(opcode: op, args: args, cycles: cycles) }
             
         else {
             
             guard let (op, args, cycles) = ops[Int(opcode)] else {
                 print("ERROR reading from ops table for opcode \(opcode)")
-                return
+                return 0
             }
-            
+            subOpCycles = cycles
             handleOps(opcode: op, args: args, cycles: cycles)
         }
         
         interruptHandler()
+        
+        return subOpCycles
     }
 
     func interruptHandler() {

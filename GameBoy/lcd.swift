@@ -82,26 +82,43 @@ class LCD {
         pixelCount = hResolution * vResolution
         
         // A bodge to simulate a 60 Hz v-blank signal
-        tickModulo = Int((sysClock / rate).rounded())
+//        tickModulo = Int((sysClock / rate).rounded())
+        let tickTimeMillis: Double = 1000 / 1_048_576
+        let refreshInMillis: Double = 1000 / 60
+        let ticksPerRefresh = Int(refreshInMillis / tickTimeMillis)
+        tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
         ticks = tickModulo
+        lineClock = lineClockModulo
         
-         vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
+        vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
     }
     
+    let lineClockModulo = 114
+    var lineClock: Int
     
-    func refresh() {
+    func refresh(count: Int) {
         
-        ticks -= 1
-        if ticks == 0 {
-            ticks = tickModulo
+        // The PPU takes 114 clocks per line
+        lineClock -= count
+        if lineClock <= 0 {
+            lineClock += lineClockModulo
+            // Increment ly
+            var ly = delegateMmu.getValue(for: .ly)
+            ly = (ly + 1) % 154
+            delegateMmu?.set(value: ly, on: .ly)
+        }
+        
+        ticks -= count
+        if ticks <= 0 {
+            ticks += tickModulo
 
             // Early out if lcd is off
             guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { return }
             let scx = delegateMmu.getValue(for: .scx)
             let scy = delegateMmu.getValue(for: .scy)
             
-            // do stuff
-            delegateMmu?.set(value: 0x90, on: .ly)
+//            // do stuff
+//            delegateMmu?.set(value: 0x90, on: .ly)
             
             do {
                 // Bodge to update display
