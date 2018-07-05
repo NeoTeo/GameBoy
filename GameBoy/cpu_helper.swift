@@ -226,6 +226,12 @@ extension CPU {
         print("-----------------")
         print("F: \(F)")
         print("IME: \(IME)")
+        print(String(format: "IF: %2X – IE: %2X", mmu.IF, mmu.IE))
+        let lcdc = mmu.getValue(for: .lcdc)
+        let stat = mmu.getValue(for: .stat)
+        print(String(format: "lcdc: %2X – stat: %2X", lcdc, stat))
+        let ly = mmu.getValue(for: .ly)
+        print(String(format: "ly: %2X", ly))
     }
 }
 

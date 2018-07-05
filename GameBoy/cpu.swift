@@ -278,7 +278,9 @@ class CPU {
         SP = 0x0000 //0xFFFE
         PC = 0x0000
         
+        mmu.IE = 0x00
         mmu.IF = 0xE1
+        mmu.set(value: 0x84, on: .stat)
         
 //        timer.setClock(hertz: 60)
 //        timer.start {
@@ -868,9 +870,10 @@ class CPU {
 //        if subOpCycles > 0 {  return 0 }
 
         var dbgPr = false
-        
-//        if PC == 0xC7D8 {
-        if PC == 0x5D {
+
+        if PC == 0xC7D8 {
+//        if PC == 0x008C {
+//        if PC == 0xC2B5 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -913,7 +916,12 @@ class CPU {
         
         interruptHandler()
         
-        return subOpCycles
+        // FIXME: Bodge until I get each instruction to return the cycles it uses.
+        // In the meantime this ensures that the cycles, currently defined at 4MHz,
+        // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
+        // will count as 12 * (1_048_576 / 4_194_304) = 3 cycles
+        
+        return UInt8(Double(subOpCycles) * (systemClock / maxClock))
     }
 
     func interruptHandler() {
@@ -964,13 +972,6 @@ class CPU {
     }
     
     func handleOps(opcode: CPU.OpType, args: (CPU.ArgType, CPU.ArgType), cycles: UInt8) {
-        
-        
-        // FIXME: Bodge until I get each instruction to return the cycles it uses.
-        // In the meantime this ensures that the cycles, currently defined at 4MHz,
-        // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
-        // will count as 12 * (1_048_576 / 4_194_304) = 3 cycles
-        subOpCycles = UInt8(Double(cycles) * (systemClock / maxClock))
         
         // TODO: Consider using the functions directly in the op-table instead since they
         // all take args anyway

@@ -72,6 +72,9 @@ class Timer {
 
     func tick(count: Int) {
         
+        // check that the timer is on
+        guard let tac = delegateMmu?.getValue(for: .tac), isSet(bit: 2, in: tac) else { return }
+        
         // The CPU has ticked count times. Catch up.
         for _ in 0 ..< count {
             // Always increment the div timer. It has a fixed rate of 16384 Hz

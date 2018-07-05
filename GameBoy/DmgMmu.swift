@@ -48,7 +48,7 @@ class DmgMmu : MMU {
     // Interrupt Flags. Set by hardware (eg. timer) when the relevant interrupts trigger.
     var IF: UInt8 {
         get { return ram[IFAddress] }
-        set { ram[IFAddress] = newValue }
+        set {  ram[IFAddress] = 0xE0 | newValue } // The top 3 bits of IF are always set.
     }
 
     public enum RamError : Error {
@@ -81,7 +81,8 @@ class DmgMmu : MMU {
 
         case 0x8000 ... 0x9FFF: // VRAM
             // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot read from VRAM
-            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else { return 0xFF }
+            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else {
+                return 0xFF }
             return ram[Int(location)]
             
         case 0xFE00 ... 0xFE9F: // OAM RAM
@@ -95,9 +96,13 @@ class DmgMmu : MMU {
                 // FIXME: Do we even need to do this?
                 // Only to deal with special cases that don't just return the byte at the location.
                 switch mmuReg {
-                case .ly: // Read only
+                case .ly, .lyc:
                     return ram[Int(location)]
-                case .scy, .scx:
+                    
+                case .scy, .scx: // scroll x and y
+                    return ram[Int(location)]
+                    
+                case .wx, .wy: // window x and y position
                     return ram[Int(location)]
                     
                 default:
@@ -126,7 +131,7 @@ class DmgMmu : MMU {
     }
     
     func write(at location: UInt16, with value: UInt8) {
-        
+
         switch location {
         case 0xFF30 ... 0xFF3F: // Wave pattern ram
             // Just store
@@ -134,7 +139,8 @@ class DmgMmu : MMU {
             
         case 0x8000 ... 0x9FFF: // VRAM
             // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot write to VRAM
-            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else { return }
+            guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else {
+                return }
             ram[Int(location)] = value
             
         case 0xFE00 ... 0xFE9F: // OAM RAM
@@ -184,7 +190,8 @@ class DmgMmu : MMU {
                 ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)
                 
-            case .ly: break // Read only, ignore
+            case .ly:
+                break // Read only, ignore
             case .lyc:
                 delegateLcd?.set(value: value, on: mmuReg)
                 
@@ -193,6 +200,15 @@ class DmgMmu : MMU {
                 
                 // let the LCD know we've updated the value
                 delegateLcd?.set(value: value, on: mmuReg)
+
+            case .wy, .wx: // horizontal/vertical window position
+                ram[Int(location)] = value
+
+            case .ir: // Interrupt request (IF)
+                // The top three bits of IF are unused and always set.
+                IF = value
+            case .ie: // Interrupt enable (IE)
+                IE = value
                 
             case .romoff: // switch out rom
                 print("switch out ROM")
@@ -215,6 +231,22 @@ class DmgMmu : MMU {
 
 // Called by the LCD.
 extension DmgMmu : LcdDelegate, TimerDelegate {
+    
+    func unsafeRead8(at location: UInt16) throws -> UInt8 {
+        return ram[Int(location)]
+    }
+    
+    func unsafeRead16(at location: UInt16) throws -> UInt16 {
+        let loc = Int(location)
+        let twobytes = Array(ram[loc ... loc+1])
+        return UnsafePointer(twobytes).withMemoryRebound(to: UInt16.self, capacity: 1) { $0.pointee }
+    }
+    
+    func set(bit: UInt8, on register: MmuRegister) {
+        var regVal = ram[register.rawValue]
+        regVal |= 1 << bit
+        ram[register.rawValue] = regVal
+    }
     
     func set(value: UInt8, on register: MmuRegister) {
         ram[register.rawValue] = value

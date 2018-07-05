@@ -12,6 +12,10 @@ protocol LcdDelegate {
     func set(value: UInt8, on register: MmuRegister)
     func getValue(for register: MmuRegister) -> UInt8
     func read8(at location: UInt16) throws -> UInt8
+    
+    func set(bit: UInt8, on register: MmuRegister)
+    
+    func unsafeRead8(at location: UInt16) throws -> UInt8
 }
 
 protocol LcdDisplayDelegate {
@@ -55,7 +59,6 @@ class LCD {
     var delegateMmu: LcdDelegate!
     var delegateDisplay: LcdDisplayDelegate?
     
-//    var dbgTimer: Timer?
     var tickModulo: Int
     var ticks: Int
     
@@ -69,6 +72,15 @@ class LCD {
     
     // Our video buffer uses a byte per pixel
     var vbuf: [UInt8]
+
+    let oamTicks = 20
+    let pixelTransferTicks = 43
+    let hBlankTicks = 51
+    lazy var horizontalTicks = oamTicks + pixelTransferTicks + hBlankTicks
+    let verticalLines = 144
+    let vBlankLines = 10
+    lazy var verticalTicks = verticalLines + vBlankLines
+    lazy var lcdModulo = horizontalTicks * verticalTicks
 
     
     init(sysClock: Double) {
@@ -88,71 +100,164 @@ class LCD {
         let ticksPerRefresh = Int(refreshInMillis / tickTimeMillis)
         tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
         ticks = tickModulo
-        lineClock = lineClockModulo
+        lcdMode = .hBlank
         
         vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
     }
     
-    let lineClockModulo = 114
-    var lineClock: Int
+    // TODO: clean up
+    lazy var lineClockModulo = horizontalTicks
+    lazy var lineClock: Int = lineClockModulo
+    
+    lazy var oamClock = oamTicks
+    lazy var pxfer = oamTicks + pixelTransferTicks
+    lazy var hBlank = oamTicks + pixelTransferTicks + hBlankTicks
+    lazy var vBlank = verticalTicks
+    lazy var drawingModulo = verticalLines * horizontalTicks
+    lazy var lcdTicks = lcdModulo
+    
+    var lastVsyncNanos: UInt64 = 0
+    var counter = 0
+    
+    enum LcdMode : UInt8 {
+        typealias RawValue = UInt8
+        
+        case hBlank = 0x00
+        case vBlank = 0x01
+        case oam =    0x02
+        case pxxfer = 0x03
+    }
+    
+    // FIXME: Needs to get the value from ram not just locally because other parts of
+    // the system can set the bits 3 to 6
+    var lcdMode: LcdMode {
+        didSet {
+            var stat = delegateMmu.getValue(for: .stat)
+            stat = (stat & 0xFC) | lcdMode.rawValue
+            delegateMmu.set(value: stat, on: .stat)
+        }
+    }
     
     func refresh(count: Int) {
         
-        // The PPU takes 114 clocks per line
-        lineClock -= count
-        if lineClock <= 0 {
-            lineClock += lineClockModulo
-            // Increment ly
-            var ly = delegateMmu.getValue(for: .ly)
-            ly = (ly + 1) % 154
-            delegateMmu?.set(value: ly, on: .ly)
+        // Early out if lcd is off
+        guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { return }
+
+        // The lcd operation can be split into two main states; the drawing and the vblank
+        // Those two states occur within the number of clocks it takes per screen refresh.
+        // When in the drawing state the lcd can be in either oam, pxxfer or hBlank mode
+        // When in the vblank state it is in vBlank mode.
+        
+        var refresh = false
+        lcdTicks -= count
+        if lcdTicks <= 0 {
+            lcdTicks += lcdModulo
+            refresh = true
         }
         
-        ticks -= count
-        if ticks <= 0 {
-            ticks += tickModulo
-
-            // Early out if lcd is off
-            guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { return }
-            let scx = delegateMmu.getValue(for: .scx)
-            let scy = delegateMmu.getValue(for: .scy)
+        // Drawing state
+        // The drawing state goes through 144 lines each of which is 114 clocks
+        // and is subdivided into three modes.
+        // The OAM mode in the first 20 clocks, the pixel transfer mode
+        // in the subsequent 43 clocks and finally the horizontal blank for the
+        // last 51 clocks.
+        // Determine which mode we're in.
+        lineClock -= count
+        if lineClock <= 0 {
             
-//            // do stuff
-//            delegateMmu?.set(value: 0x90, on: .ly)
+            /* Debug output
+            let nowNanos = DispatchTime.now().uptimeNanoseconds
+            let deltaMillis = Double(nowNanos - lastVsyncNanos) / 1000000.0
+            lastVsyncNanos = nowNanos
+            counter = counter &+ 1
+            if (counter & 0xFFF) == 0 { print("lineclock: \(deltaMillis) ms") }
+            */
+            lineClock += lineClockModulo
             
-            do {
-                // Bodge to update display
-                // Eg. we build a new display buffer here and pass it on. Gotta be a better way.
-                
-                // Check which area of tile map ram is selected
-                let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
-
-                // Each byte in the background tile ram contains a character code
-                // What gets displayed is determined by the scx and scy which define the position of the view.
-                // The background consists of an area of 32*32 tiles each of which is 8*8 pixels so
-                // the whole background is 256*256 pixels.
-                // Calculate which area of the bg we are displaying
-                // The tile row and column are scy / 8 and scx / 8
- 
-                for pixRow in 0 ..< vResolution {
-                    for pixCol in 0 ..< hResolution {
-
-                        // wrap left/top when overflowing past right/bottom
-                        let x = UInt8((pixCol + Int(scx)) & 0xFF)
-                        let y = UInt8((pixRow + Int(scy)) & 0xFF)
-                        
-                        let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: bgTileRamStart)
-                        
-                        vbuf[pixRow * hResolution + pixCol] = pixelValue
-                    }
-                }
-                delegateDisplay?.didUpdate(buffer: vbuf)
-                
-            } catch {
-                print("Lcd refresh error \(error)")
+            // Increment ly
+            var ly = delegateMmu.getValue(for: .ly)
+            ly = (ly + 1) % UInt8(verticalTicks)
+            delegateMmu?.set(value: ly, on: .ly)
+            
+            let lyc = delegateMmu.getValue(for: .lyc)
+            if ly == lyc {
+                var stat = delegateMmu.getValue(for: .stat)
+                stat = GameBoy.set(bit: 2 , in: stat)
+                delegateMmu.set(value: stat, on: .stat)
             }
         }
+        
+        if lcdTicks < lcdModulo - drawingModulo {
+            // V-blank state
+            if lcdMode != .vBlank { lcdMode = .vBlank }
+            
+        } else {
+            
+            // check if we've gone into oam mode
+            let modeCount = lineClockModulo - lineClock
+            
+            if lcdMode != .oam && 0 ..< oamTicks ~= modeCount { lcdMode = .oam }
+            if lcdMode != .pxxfer && oamTicks ..< pxfer ~= modeCount { lcdMode = .pxxfer }
+            if lcdMode != .hBlank && pxfer ..< hBlank ~= modeCount { lcdMode = .hBlank }
+        }
+
+        if refresh == true {
+            // Check which area of tile map ram is selected
+            let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
+
+            generateDisplay(from: bgTileRamStart)
+        }
     }
+    
+    func generateDisplay(from vRamLocation: UInt16) {
+
+        let scx = delegateMmu.getValue(for: .scx)
+        let scy = delegateMmu.getValue(for: .scy)
+        
+        do {
+//            let preDisplayNanos = DispatchTime.now().uptimeNanoseconds
+            
+            // Each byte in the background tile ram contains a character code
+            // What gets displayed is determined by the scx and scy which define the position of the view.
+            // The background consists of an area of 32*32 tiles each of which is 8*8 pixels so
+            // the whole background is 256*256 pixels.
+            // Calculate which area of the bg we are displaying
+            // The tile row and column are scy / 8 and scx / 8
+            
+            for pixRow in 0 ..< vResolution {
+                for pixCol in 0 ..< hResolution {
+                    
+                    // wrap left/top when overflowing past right/bottom
+                    let x = UInt8((pixCol + Int(scx)) & 0xFF)
+                    let y = UInt8((pixRow + Int(scy)) & 0xFF)
+                    
+                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: vRamLocation)
+                    
+                    vbuf[pixRow * hResolution + pixCol] = pixelValue
+                }
+            }
+            delegateDisplay?.didUpdate(buffer: vbuf)
+            
+            /*
+             // Debug timing output
+             let displayDeltaMillis = Double(DispatchTime.now().uptimeNanoseconds - preDisplayNanos) / 1000000
+             counter = counter &+ 1
+             if (counter & 0xF) == 0 { print("display time: \(displayDeltaMillis) ms") }
+             */
+
+        } catch {
+            print("Lcd refresh error \(error)")
+        }
+    }
+    
+    // TODO: clean up
+    var charData: UInt8 = 0
+    var tileRowHi: UInt8 = 0
+    var tileRowLo: UInt8 = 0
+    
+    var prevC: UInt8 = 255
+    var prevR: UInt8 = 255
+    var prevY: UInt8 = 255
     
     // Returns a pixel value for any coordinate in the bg map as mapped through tile map
     func pixelForCoord(x: UInt8, y: UInt8, at tileBase: UInt16) throws -> UInt8 {
@@ -161,10 +266,15 @@ class LCD {
         // Convert coords to col and rows in tile map
         let col = (x >> 3)
         let row = (y >> 3)
+        var update = false
         
         // read the byte at the location
-        let charData = try delegateMmu.read8(at: bgTileRamStart + (UInt16(row) << 5) + UInt16(col))
-        
+        if col != prevC || row != prevR {
+            charData = try delegateMmu.unsafeRead8(at: bgTileRamStart + (UInt16(row) << 5) + UInt16(col))
+            prevC = col
+            prevR = row
+            update = true
+        }
         // go through the tile data at the given index in tile memory
         // Each 2 bytes in tile memory correspond to a row of 8 pixels
         // So each tile is 16 bytes
@@ -173,13 +283,18 @@ class LCD {
         
         // To calculate which row within the tile to start from we calc the remainder
         // from dividing by 8 and then multiply by two because each tile row is two bytes.
+        if prevY != y || update == true {
         let subY = (y & 7) << 1
         
         let tileOffset = tileRamStart + (UInt16(charData) << 4)
         
-        let tileRowHi = try delegateMmu.read8(at: tileOffset + UInt16(subY))
-        let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(subY+1))
+//        let tileRowHi = try delegateMmu.read8(at: tileOffset + UInt16(subY))
+//        let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(subY+1))
+        tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(subY))
+        tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(subY+1))
             
+            prevY = y
+        }
         // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
 //        let subX = col > 0 ? 7 - (x & 7) : 7
         let subX = 7 - (x & 7)
@@ -210,7 +325,6 @@ class LCD {
     
     func stop() {
     }
-    
 }
 
 // Called by the MMU
