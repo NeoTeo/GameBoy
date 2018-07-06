@@ -64,61 +64,42 @@ class LCD {
     
     let tileRamStart: UInt16 = 0x8000
     
-    let hResolution = 160
-    let vResolution = 144
 
     // Each byte contains the data of two pixels
     var pixelCount: Int
     
     // Our video buffer uses a byte per pixel
     var vbuf: [UInt8]
-
+    
+    let hResolution = 160
+    let vResolution = 144
+    let verticalLines = 144
+    let vBlankLines = 10
     let oamTicks = 20
     let pixelTransferTicks = 43
     let hBlankTicks = 51
+    
     lazy var horizontalTicks = oamTicks + pixelTransferTicks + hBlankTicks
-    let verticalLines = 144
-    let vBlankLines = 10
     lazy var verticalTicks = verticalLines + vBlankLines
     lazy var lcdModulo = horizontalTicks * verticalTicks
-
-    
-    init(sysClock: Double) {
-        // Given a system clock of 4194304 and
-        // 4194304 / 70224 = 59,7 (~60 hz)
-        // calculate divisor
-        let ramClock: Double = 1048576
-        let screenClocks: Double = 17556
-        let rate = screenClocks * (sysClock / ramClock)
-        
-        pixelCount = hResolution * vResolution
-        
-        // A bodge to simulate a 60 Hz v-blank signal
-//        tickModulo = Int((sysClock / rate).rounded())
-        let tickTimeMillis: Double = 1000 / 1_048_576
-        let refreshInMillis: Double = 1000 / 60
-        let ticksPerRefresh = Int(refreshInMillis / tickTimeMillis)
-        tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
-        ticks = tickModulo
-        lcdMode = .hBlank
-        
-        vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
-    }
-    
-    // TODO: clean up
     lazy var lineClockModulo = horizontalTicks
     lazy var lineClock: Int = lineClockModulo
     
-    lazy var oamClock = oamTicks
     lazy var pxfer = oamTicks + pixelTransferTicks
     lazy var hBlank = oamTicks + pixelTransferTicks + hBlankTicks
-    lazy var vBlank = verticalTicks
     lazy var drawingModulo = verticalLines * horizontalTicks
     lazy var lcdTicks = lcdModulo
     
     var lastVsyncNanos: UInt64 = 0
     var counter = 0
     
+    enum LcdStatusBit : UInt8 {
+        case lyclySame = 2
+        case hblankIrq = 3
+        case vblankIrq = 4
+        case oamIrq = 5
+        case lyclyIrq = 6
+    }
     enum LcdMode : UInt8 {
         typealias RawValue = UInt8
         
@@ -127,7 +108,7 @@ class LCD {
         case oam =    0x02
         case pxxfer = 0x03
     }
-    
+
     // FIXME: Needs to get the value from ram not just locally because other parts of
     // the system can set the bits 3 to 6
     var lcdMode: LcdMode {
@@ -136,6 +117,28 @@ class LCD {
             stat = (stat & 0xFC) | lcdMode.rawValue
             delegateMmu.set(value: stat, on: .stat)
         }
+    }
+
+    init(sysClock: Double) {
+        // Given a system clock of 4194304 and
+        // 4194304 / 70224 = 59,7 (~60 hz)
+        // calculate divisor
+//        let ramClock: Double = 1048576
+        let screenClocks: Double = 17556
+//        let rate = screenClocks * (sysClock / ramClock)
+        
+        pixelCount = hResolution * vResolution
+        
+        // A bodge to simulate a 60 Hz v-blank signal
+//        tickModulo = Int((sysClock / rate).rounded())
+//        let tickTimeMillis: Double = 1000 / 1_048_576
+//        let refreshInMillis: Double = 1000 / 60
+//        let ticksPerRefresh = Int(refreshInMillis / tickTimeMillis)
+        tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
+        ticks = tickModulo
+        lcdMode = .hBlank
+        
+        vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
     }
     
     func refresh(count: Int) {
@@ -148,7 +151,9 @@ class LCD {
         // When in the drawing state the lcd can be in either oam, pxxfer or hBlank mode
         // When in the vblank state it is in vBlank mode.
         
+        let stat = delegateMmu.getValue(for: .stat)
         var refresh = false
+        
         lcdTicks -= count
         if lcdTicks <= 0 {
             lcdTicks += lcdModulo
@@ -181,9 +186,14 @@ class LCD {
             
             let lyc = delegateMmu.getValue(for: .lyc)
             if ly == lyc {
-                var stat = delegateMmu.getValue(for: .stat)
-                stat = GameBoy.set(bit: 2 , in: stat)
-                delegateMmu.set(value: stat, on: .stat)
+                // Check if we need to trigger an interrupt
+                if isSet(bit: LcdStatusBit.lyclyIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                }
+                
+                // Set the coincidence bit on
+                let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
+                delegateMmu.set(value: newStat, on: .stat)
             }
         }
         
@@ -191,14 +201,32 @@ class LCD {
             // V-blank state
             if lcdMode != .vBlank { lcdMode = .vBlank }
             
+            // Set the v-blank interrupt request (regardless of the stat version)
+            // They trigger different vblank vectors.
+            delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
+            
+            if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
+                delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+            }
+
         } else {
             
             // check if we've gone into oam mode
             let modeCount = lineClockModulo - lineClock
             
-            if lcdMode != .oam && 0 ..< oamTicks ~= modeCount { lcdMode = .oam }
+            if lcdMode != .oam && 0 ..< oamTicks ~= modeCount {
+                lcdMode = .oam
+                if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                }
+            }
             if lcdMode != .pxxfer && oamTicks ..< pxfer ~= modeCount { lcdMode = .pxxfer }
-            if lcdMode != .hBlank && pxfer ..< hBlank ~= modeCount { lcdMode = .hBlank }
+            if lcdMode != .hBlank && pxfer ..< hBlank ~= modeCount {
+                lcdMode = .hBlank
+                if isSet(bit: LcdStatusBit.hblankIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                }
+            }
         }
 
         if refresh == true {

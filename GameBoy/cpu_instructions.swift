@@ -313,7 +313,7 @@ extension CPU {
         let tval = Int(offset & 0x7f)
         
         let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
-        
+     
         guard newPc < mmu.size, newPc >= 0 else {
             throw CPUError.RamError
         }
@@ -346,14 +346,32 @@ extension CPU {
 
     // Special case LD for LDHL (aka. LD HL, SP+r8)
     func ldhl() throws {
+        var result: UInt16
+        var overflow: Bool = false
+        var halfCarry: Bool = false
+        // Treat value as signed ranging from -128 to 127
+        let offset = signedVal(from: try getVal8(for: .i8))
+        var sSP = Int(SP) + offset
         
-        let r8 = UInt16(try getVal8(for: .i8))
-        let (result, overflow) = SP.addingReportingOverflow(r8)
-        
+        if offset < 0 {
+            
+            overflow = (sSP & 0xFF) <= (SP & 0xFF)
+            halfCarry = (sSP & 0xF) <= (SP & 0xF)
+//            let r8 = UInt16(abs(Int32(offset)))
+//            (result, overflow) = SP.subtractingReportingOverflow(r8)
+//            halfCarry = halfCarryUnderflow(term1: SP, term2: r8)
+        } else {
+            overflow = (Int(SP & 0xFF) + offset) > 0xFF
+            halfCarry = (Int(SP & 0xF) + (offset & 0xF)) > 0xF
+//            let r8 = UInt16(offset)
+//            (result, overflow) = SP.addingReportingOverflow(r8)
+//            halfCarry = halfCarryOverflow(term1: SP, term2: r8)
+        }
+        result = UInt16(sSP)
         
         F.Z = false
         F.N = false
-        F.H = halfCarryOverflow(term1: SP, term2: r8)
+        F.H = halfCarry
         F.C = overflow
 
         HL = result

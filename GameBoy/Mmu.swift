@@ -24,8 +24,8 @@ protocol MMU : LcdDelegate, TimerDelegate {
     func write(at location: UInt16, with value: UInt8)
     
     // Helper function - might be useful for DMA
-    func setIE(flag: mmuInterruptFlag)
-    func setIF(flag: mmuInterruptFlag)
+//    func setIE(flag: mmuInterruptFlag)
+//    func setIF(flag: mmuInterruptFlag)
     //func insert(data: [UInt8], at address: UInt16)
     func replace(data: [UInt8], from address: UInt16) throws
 //    func debugPrint(from: UInt16, bytes: UInt16)
@@ -39,12 +39,19 @@ enum MemoryType {
 }
 
 // Interrupt MMU functions in order of priority
-enum mmuInterruptFlag : UInt8 {
+//enum mmuInterruptFlag : UInt8 {
+//    case vblank  = 0
+//    case lcdStat = 2
+//    case timer   = 4
+//    case serial  = 8
+//    case joypad  = 16
+//}
+enum mmuInterruptBit : UInt8 {
     case vblank  = 0
-    case lcdStat = 2
-    case timer   = 4
-    case serial  = 8
-    case joypad  = 16
+    case lcdStat = 1
+    case timer   = 2
+    case serial  = 3
+    case joypad  = 4
 }
 
 // The MMU maps some memory locations to other hardware registers.

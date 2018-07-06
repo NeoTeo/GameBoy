@@ -48,7 +48,7 @@ class DmgMmu : MMU {
     // Interrupt Flags. Set by hardware (eg. timer) when the relevant interrupts trigger.
     var IF: UInt8 {
         get { return ram[IFAddress] }
-        set {  ram[IFAddress] = 0xE0 | newValue } // The top 3 bits of IF are always set.
+        set { ram[IFAddress] = 0xE0 | newValue } // The top 3 bits of IF are always set.
     }
 
     public enum RamError : Error {
@@ -166,7 +166,8 @@ class DmgMmu : MMU {
             case .sc: // Serial control
                 // currently there's no serial comms implemented but we do set the required interrupt
                 ram[Int(location)] = value
-                if isSet(bit: 7, in: value) { setIF(flag: .serial) }
+//                if isSet(bit: 7, in: value) { setIF(flag: .serial) }
+                if isSet(bit: 7, in: value) { set(bit: mmuInterruptBit.serial.rawValue, on: .ir) }
                 
             // Timer registers
             case .div:
@@ -261,15 +262,13 @@ extension DmgMmu : LcdDelegate, TimerDelegate {
 extension DmgMmu {
     
     
-    func setIE(flag: mmuInterruptFlag) {
-//        IE = IE | UInt8(1 << flag.rawValue)
-        IE = IE | UInt8(flag.rawValue)
-    }
-    
-    func setIF(flag: mmuInterruptFlag) {
-//        IF = IF | UInt8(1 << flag.rawValue)
-        IF = IF | UInt8(flag.rawValue)
-    }
+//    func setIE(flag: mmuInterruptFlag) {
+//        IE = IE | UInt8(flag.rawValue)
+//    }
+//    
+//    func setIF(flag: mmuInterruptFlag) {
+//        IF = IF | UInt8(flag.rawValue)
+//    }
     
     func replace(data: [UInt8], from address: UInt16) throws {
         //ram.insert(contentsOf: data, at: Int(address))

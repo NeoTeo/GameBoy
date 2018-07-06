@@ -192,7 +192,20 @@ extension CPU {
     func halfCarryOverflow(term1: UInt16, term2: UInt16) -> Bool {
         return (((term1 & 0xFFF) + (term2 & 0xFFF)) & 0x1000) == 0x1000
     }
-    
+
+    func halfCarryUnderflow(term1: UInt16, term2: UInt16) -> Bool {
+        // If the lower nibble of term1 is less than the lower nibble of term2 it will half carry
+        return (term1 & 0xFFF) < (term2 & 0xFFF)
+    }
+
+    func signedVal(from value: UInt8) -> Int {
+        // The value is a (-128 to 127) value. Treat as 2's complement.
+//        let isNegative = (value & 0x80) == 0x80
+//        let tval = Int(value & 0x7f)
+//
+//        return isNegative ? -(128 - tval) : tval
+        return Int(value & 0x7f) - Int(value & 0x80)
+    }
     /// Check for the given conditions, if any.
     ///
     /// - Parameter arg: the condition (or a non conditional argument type)

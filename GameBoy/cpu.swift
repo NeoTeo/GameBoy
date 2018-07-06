@@ -871,9 +871,10 @@ class CPU {
 
         var dbgPr = false
 
-        if PC == 0xC7D8 {
-//        if PC == 0x008C {
-//        if PC == 0xC2B5 {
+//        if PC == 0xC7D8 {
+//        if PC == 0xC22D {
+//        if PC == 0x005D {
+        if PC == 0xC2C4 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -928,9 +929,6 @@ class CPU {
         // Check for interrupts
         if (IME == true) && (mmu.IE != 0) && (mmu.IF != 0) {
             
-            // Immediately disable interrupts
-            IME = false
-            
             //            let interrupt = DmgMmu.InterruptFlag(rawValue: mmu.IE & mmu.IF)!
             let interrupts = mmu.IE & mmu.IF
             var vector: ArgType = .noReg
@@ -939,15 +937,18 @@ class CPU {
             for i in 0 ..< 5 {
                 if ((interrupts >> i) & 0x1) == 0x1 {
                     // Mask out the triggered interrupt
-                    let interrupt = interrupts & (1 << i)
+                    //let interrupt = interrupts & (1 << i)
                     
+                    // Immediately disable interrupts
+                    IME = false
+
                     // Clear the flag
                     let ifVal = mmu.IF
                     mmu.IF = clear(bit: UInt8(i), in: ifVal)
                     
                     // TODO: do I really need this flag business to get the vectors?
-                    guard let int = mmuInterruptFlag(rawValue: interrupt) else {
-                        print("ERROR: Unsupported interrupt \(interrupt)")
+                    guard let int = mmuInterruptBit(rawValue: UInt8(i)) else {
+                        print("ERROR: Unsupported interrupt \(i)")
                         continue
                     }
                     switch int {
