@@ -346,35 +346,55 @@ extension CPU {
 
     // Special case LD for LDHL (aka. LD HL, SP+r8)
     func ldhl() throws {
+        
+        // Treat value as signed ranging from -128 to 127
+        let offset = signedVal(from: try getVal8(for: .i8))
+
+        /*
+        // This carry and half carry implementation from SO post:
+        // ipfs: QmZqMYU4xi3rpNDmHcBw6CNum4JMgcdGQdT6mGvEX2w3nE
+        // https://stackoverflow.com/questions/5159603/gbz80-how-does-ld-hl-spe-affect-h-and-c-flags
+
         var result: UInt16
         var overflow: Bool = false
         var halfCarry: Bool = false
-        // Treat value as signed ranging from -128 to 127
-        let offset = signedVal(from: try getVal8(for: .i8))
+
         var sSP = Int(SP) + offset
         
         if offset < 0 {
-            
+            // Not sure what is going on with overflow/half carry on subtraction
             overflow = (sSP & 0xFF) <= (SP & 0xFF)
+            
             halfCarry = (sSP & 0xF) <= (SP & 0xF)
-//            let r8 = UInt16(abs(Int32(offset)))
-//            (result, overflow) = SP.subtractingReportingOverflow(r8)
-//            halfCarry = halfCarryUnderflow(term1: SP, term2: r8)
         } else {
-            overflow = (Int(SP & 0xFF) + offset) > 0xFF
-            halfCarry = (Int(SP & 0xF) + (offset & 0xF)) > 0xF
-//            let r8 = UInt16(offset)
-//            (result, overflow) = SP.addingReportingOverflow(r8)
-//            halfCarry = halfCarryOverflow(term1: SP, term2: r8)
+            // Carry if there's an overflow from bit 7 to bit 8.
+            overflow = ((SP & 0xFF) + UInt16(offset)) > 0xFF
+            
+            // Half carry if overflow from bit 3 to bit 4.
+            halfCarry = ((SP & 0xF) + (UInt16(offset) & 0xF)) > 0xF
         }
         result = UInt16(sSP)
+         
+        F.H = halfCarry
+        F.C = overflow
+        */
+        
+        // This carry and half-carry implementation is from
+        // https://www.reddit.com/r/EmuDev/comments/692n59/gb_questions_about_halfcarry_and_best/
+        // If no carry between bit 3 and 4 then bit 4 of (a ^ offset) will be the same as (a + offset).
+        // The xor with the result is to check if they are indeed different (will be set if so).
+        // We leave offset as signed because a - b is the same as a + (-b) so it follows that
+        // a ^ b is the same as a ^ (-b)
+        // The same for carry but comparing against 0x100
+        let a = Int(SP)
+        let result = a + offset
+        F.H = ((a ^ offset ^ result) & 0x10) == 0x10
+        F.C = ((a ^ offset ^ result) & 0x100) == 0x100
         
         F.Z = false
         F.N = false
-        F.H = halfCarry
-        F.C = overflow
 
-        HL = result
+        HL = UInt16(result)
     }
     
     func or(argTypes: (ArgType, ArgType)) throws {

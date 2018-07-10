@@ -105,6 +105,8 @@ class DmgMmu : MMU {
                 case .wx, .wy: // window x and y position
                     return ram[Int(location)]
                     
+                case .ir, .ie: // Interrupt request and interrupt enable
+                    return ram[Int(location)]
                 default:
                     throw MmuError.invalidAddress
                 }
