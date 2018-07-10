@@ -233,6 +233,7 @@ extension CPU {
 
     func halt() {
         print("CPU in low power mode.")
+        powerMode = .halt
     }
     
     // INC A, B, C, D, E, H, L, (HL)
@@ -683,6 +684,7 @@ extension CPU {
 
     func stop() {
         print("CPU in very low power mode.")
+        powerMode = .stop
     }
     
     /*

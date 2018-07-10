@@ -44,6 +44,14 @@ class CPU {
     
     var IME: Bool = false   // Interrupt Master Enable
     
+    enum StandbyMode {
+        case normal
+        case halt
+        case stop
+    }
+    
+    var powerMode: StandbyMode = .normal
+    
     struct FlagRegister {
         init(rawValue: UInt8, Z: Bool = false, N: Bool = false, H: Bool = false, C: Bool = false) {
             self.rawValue = rawValue

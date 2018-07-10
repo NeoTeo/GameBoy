@@ -102,7 +102,23 @@ class Gameboy : SYSTEM {
         var usedCycles: Int = 0
         
         repeat {
-            usedCycles = Int(cpu.clockTick())
+            // Check the cpu mode and act accordingly
+            let mode = cpu.powerMode
+            if mode == .normal {
+                usedCycles = Int(cpu.clockTick())
+            } else {
+                usedCycles = 1
+                // check if interrupts have occurred to change mode
+                if (cpu.mmu.IE & cpu.mmu.IF) != 0 {
+                    cpu.powerMode = .normal
+                    if cpu.IME == false {
+                        print("PC should be the one following HALT.")
+                    } else {
+                        print("PC should be the one of each interrupt starting address...")
+                        // Find out which interrupts have been triggered and jump to them.
+                    }
+                }
+            }
             
             // Tick the timer by the number of cycles we used
             timer.tick(count: Int(usedCycles))
