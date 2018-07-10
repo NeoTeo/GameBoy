@@ -76,18 +76,21 @@ class Timer {
         guard let tac = delegateMmu?.getValue(for: .tac), isSet(bit: 2, in: tac) else { return }
         
         // The CPU has ticked count times. Catch up.
-        for _ in 0 ..< count {
-            // Always increment the div timer. It has a fixed rate of 16384 Hz
-            divTicks -= 1
-            if divTicks == 0 {
-                divTicks = divTickModulo
-                DIV = DIV &+ 1
-            }
+        
+        // Always increment the div timer. It has a fixed rate of 16384 Hz
+        // 1000 / 1_048_576 = 0.0009536743164 milliseconds per clock tick
+        // 1000 / 16384 hz = 0,06103515625 milliseconds per timer tick
+        // 1_048_576 / 16384 = 64 clock ticks per timer tick
+        divTicks -= count
+        if divTicks <= 0 {
+            divTicks += divTickModulo
+            DIV = DIV &+ 1
+        }
+        
+        ticks -= count
+        if ticks <= 0 {
+            ticks += tickModulo
             
-            ticks = (ticks - 1)
-            guard ticks == 0 else { return }
-            
-            ticks = tickModulo
             // increment the TIMA register
             TIMA = TIMA &+ 1
             if TIMA == 0 {
@@ -98,7 +101,6 @@ class Timer {
                 delegateMmu?.set(value: irReg, on: .ir)
             }
         }
-        
     }
 
 //    func tick() {

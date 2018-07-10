@@ -39,6 +39,7 @@ class Gameboy : SYSTEM {
         timer = Timer(sysClock: systemClock)
         timer.delegateMmu = mmu
         cpu.timer = timer
+        mmu.delegateTimer = timer
         cpu.reset()
     }
     

@@ -17,6 +17,7 @@ protocol MMU : LcdDelegate, TimerDelegate {
     var cartridgeRom: [UInt8]? { get set }
     
     var delegateLcd: MmuDelegate? { get set }
+    var delegateTimer: MmuDelegate? { get set }
     
     init(size: Int) throws
     func read8(at location: UInt16) throws -> UInt8

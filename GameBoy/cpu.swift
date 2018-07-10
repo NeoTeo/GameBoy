@@ -871,10 +871,8 @@ class CPU {
 
         var dbgPr = false
 
-//        if PC == 0xC7D8 {
-//        if PC == 0xC22D {
-//        if PC == 0x005D {
-        if PC == 0xC2C4 {
+//        if PC == 0xC33D {
+        if PC == 0xC355 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }

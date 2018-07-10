@@ -350,7 +350,7 @@ extension CPU {
         // Treat value as signed ranging from -128 to 127
         let offset = signedVal(from: try getVal8(for: .i8))
 
-        /*
+        ///*
         // This carry and half carry implementation from SO post:
         // ipfs: QmZqMYU4xi3rpNDmHcBw6CNum4JMgcdGQdT6mGvEX2w3nE
         // https://stackoverflow.com/questions/5159603/gbz80-how-does-ld-hl-spe-affect-h-and-c-flags
@@ -377,8 +377,9 @@ extension CPU {
          
         F.H = halfCarry
         F.C = overflow
-        */
-        
+        //*/
+
+        /*
         // This carry and half-carry implementation is from
         // https://www.reddit.com/r/EmuDev/comments/692n59/gb_questions_about_halfcarry_and_best/
         // If no carry between bit 3 and 4 then bit 4 of (a ^ offset) will be the same as (a + offset).
@@ -390,6 +391,7 @@ extension CPU {
         let result = a + offset
         F.H = ((a ^ offset ^ result) & 0x10) == 0x10
         F.C = ((a ^ offset ^ result) & 0x100) == 0x100
+        */
         
         F.Z = false
         F.N = false
