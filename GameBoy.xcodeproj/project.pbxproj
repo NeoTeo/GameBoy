@@ -27,6 +27,7 @@
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
 		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
 		AB97CA0920EA75B10013E281 /* Tetris.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB97CA0820EA75A20013E281 /* Tetris.gb */; };
+		ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8A75720F4EB7400145773 /* 03opsphl.gb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
 		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
 		AB97CA0820EA75A20013E281 /* Tetris.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = Tetris.gb; sourceTree = "<group>"; };
+		ABF8A75720F4EB7400145773 /* 03opsphl.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 03opsphl.gb; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +141,7 @@
 				AB4665E420E285D200E26B23 /* cpu_instrs.gb */,
 				AB09912920E4E46D003524CE /* 01special.gb */,
 				AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */,
+				ABF8A75720F4EB7400145773 /* 03opsphl.gb */,
 				AB958DF720D0072400A186EA /* bgbtest.gb */,
 				AB97CA0820EA75A20013E281 /* Tetris.gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
@@ -246,6 +249,7 @@
 				AB97CA0920EA75B10013E281 /* Tetris.gb in Resources */,
 				AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */,
 				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,
+				ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
 				AB09912A20E4E472003524CE /* 01special.gb in Resources */,
 			);

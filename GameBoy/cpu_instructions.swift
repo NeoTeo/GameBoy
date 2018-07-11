@@ -37,18 +37,66 @@ extension CPU {
         F.C = overflow1 || overflow2
     }
     
-    func add16_16(argTypes: (ArgType, ArgType)) throws {
-        let t1 = try getVal16(for: argTypes.0)
-        let t2 = try getVal16(for: argTypes.1)
-        let (result, overflow) = t1.addingReportingOverflow(t2)
-        try set(val: result, for: argTypes.0)
+    func signedOffset(t1: UInt16, t2: Int) -> (UInt16, Bool, Bool) {
+        let result = UInt16((Int(t1) + t2) & 0xFFFF)
+        var overflow: Bool
+        var halfCarry: Bool
         
-        // Special case for ADD SP, i8
-        if argTypes.0 == .SP { F.Z = false }
+        if t2 < 0 {
+            // Not sure what is going on with overflow/half carry on subtraction
+            overflow = (result & 0xFF) <= (t1 & 0xFF)
+            halfCarry = (result & 0xF) <= (t1 & 0xF)
+        } else {
+            // Carry if there's an overflow from bit 7 to bit 8.
+            overflow = ((t1 & 0xFF) + UInt16(t2)) > 0xFF
+            // Half carry if overflow from bit 3 to bit 4.
+            halfCarry = ((t1 & 0xF) + (UInt16(t2) & 0xF)) > 0xF
+        }
+        return (result, overflow, halfCarry)
+    }
+    
+    func add16_16(argTypes: (ArgType, ArgType)) throws {
+        
+        var carry: Bool
+        var halfCarry: Bool
+        let t1 = try getVal16(for: argTypes.0)
+        
+        // Special case for ADD SP, s8
+        if argTypes.0 == .SP && argTypes.1 == .s8 {
+            let t2 = signedVal(from: try read8(at: PC, incPC: true))
+            /*
+            let result = (Int(t1) + t2) & 0xFFFF
+            if t2 < 0 {
+                // Not sure what is going on with overflow/half carry on subtraction
+                carry = (result & 0xFF) <= (t1 & 0xFF)
+                
+                halfCarry = (result & 0xF) <= (t1 & 0xF)
+            } else {
+                // Carry if there's an overflow from bit 7 to bit 8.
+                carry = ((t1 & 0xFF) + UInt16(t2)) > 0xFF
+                
+                // Half carry if overflow from bit 3 to bit 4.
+                halfCarry = ((t1 & 0xF) + (UInt16(t2) & 0xF)) > 0xF
+                try set(val: UInt16(result), for: argTypes.0)
+            }
+            */
+            let(result, c, hc) = signedOffset(t1: t1, t2: t2)
+            try set(val: result, for: argTypes.0)
+            carry = c
+            halfCarry = hc
+            
+            F.Z = false
+        } else {
+            let t2 = try getVal16(for: argTypes.1)
+            let (result, overflow) = t1.addingReportingOverflow(t2)
+            try set(val: result, for: argTypes.0)
+            carry = overflow
+            halfCarry = halfCarryOverflow(term1: t1, term2: t2)
+        }
         
         F.N = false
-        F.H = halfCarryOverflow(term1: t1, term2: t2)
-        F.C = overflow
+        F.H = halfCarry
+        F.C = carry
     }
     
     func add8_8(argTypes: (ArgType, ArgType)) throws {
@@ -299,7 +347,8 @@ extension CPU {
         let conditionArg = argTypes.0
         let offsetArg = argTypes.1
         
-        let offset = try getVal8(for: offsetArg)
+//        let offset = try getVal8(for: offsetArg)
+        let offset = signedVal(from: try getVal8(for: offsetArg))
         
         // Check if we have a conditional jump and the condition is satisfied.
         if let passCondition = checkCondition(for: conditionArg) {
@@ -309,11 +358,14 @@ extension CPU {
         }
         
         
-        // The offset is a (-128 to 127) value. Treat as 2's complement.
-        let isNegative = (offset & 0x80) == 0x80
-        let tval = Int(offset & 0x7f)
+//        // The offset is a (-128 to 127) value. Treat as 2's complement.
+//        let isNegative = (offset & 0x80) == 0x80
+//        let tval = Int(offset & 0x7f)
         
-        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
+//        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
+        
+        // TODO: Check if we need to wrap rather than mask here.
+        let newPc = UInt16((Int(PC) + offset) & 0xFFFF)
      
         guard newPc < mmu.size, newPc >= 0 else {
             throw CPUError.RamError
@@ -357,10 +409,11 @@ extension CPU {
         // https://stackoverflow.com/questions/5159603/gbz80-how-does-ld-hl-spe-affect-h-and-c-flags
 
         var result: UInt16
+        /*
         var overflow: Bool = false
         var halfCarry: Bool = false
 
-        var sSP = Int(SP) + offset
+        var sSP = ((Int(SP) + offset) & 0xFFFF)
         
         if offset < 0 {
             // Not sure what is going on with overflow/half carry on subtraction
@@ -375,9 +428,13 @@ extension CPU {
             halfCarry = ((SP & 0xF) + (UInt16(offset) & 0xF)) > 0xF
         }
         result = UInt16(sSP)
-         
-        F.H = halfCarry
-        F.C = overflow
+         F.H = halfCarry
+         F.C = overflow
+  */
+        let (res, c, hc) = signedOffset(t1: SP, t2: offset)
+        result = res
+        F.C = c
+        F.H = hc
         //*/
 
         /*

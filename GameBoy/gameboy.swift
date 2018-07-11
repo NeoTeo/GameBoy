@@ -175,10 +175,11 @@ class Gameboy : SYSTEM {
     func bodgeRomLoader() {
 //        let binaryName = "pkb.gb"
 //        let binaryName = "cpu_instrs.gb"
-        let binaryName = "02interrupts.gb"
-//        let binaryName = "Tetris.gb"
-//        let binaryName = "01special.gb" // passes
+//        let binaryName = "03opsphl.gb"
+//        let binaryName = "02interrupts.gb"
+        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
+//        let binaryName = "Tetris.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {

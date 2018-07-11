@@ -39,7 +39,7 @@ extension CPU {
             let val = try getVal8(for: .i8)
             return try read8(at: 0xFF00 + UInt16(val))
             
-        case .i8: return try read8(at: PC, incPC: true)
+        case .i8, .s8: return try read8(at: PC, incPC: true)
         case .i16ptr:
             let dest = try getVal16(for: .i16)
             return try read8(at: dest)
@@ -122,8 +122,8 @@ extension CPU {
         case .i16:
             return try read16(at: PC, incPC: true)
             
-        case .i8:   // Special case for ADD SP, i8
-            return UInt16(try read8(at: PC, incPC: true))
+//        case .s8:   // Special case for ADD SP, i8
+//            return UInt16(try read8(at: PC, incPC: true))
             
         default: throw CPUError.UnknownRegister
         }

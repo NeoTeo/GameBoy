@@ -206,7 +206,7 @@ class CPU {
         case i8ptr
         case i16
         case i16ptr
-        
+        case s8
 //        case SPi8
         
         case noReg
@@ -323,7 +323,7 @@ class CPU {
         ops[0x15] = (.dec8, (.D, .noReg), 4)
         ops[0x16] = (.ld8_8, (.D, .i8), 8)
         ops[0x17] = (.rla, (.noReg, .noReg), 4)
-        ops[0x18] = (.jr, (.noReg, .i8), 12)
+        ops[0x18] = (.jr, (.noReg, .s8), 12)
         ops[0x19] = (.add16_16, (.HL, .DE), 8)
         ops[0x1A] = (.ld8_8, (.A, .DEptr), 8)
         ops[0x1B] = (.dec16, (.DE, .noReg), 8)
@@ -332,7 +332,7 @@ class CPU {
         ops[0x1E] = (.ld8_8, (.E, .i8), 8)
         ops[0x1F] = (.rra, (.noReg, .noReg), 4)
         
-        ops[0x20] = (.jr, (.NotZero, .i8), 12)
+        ops[0x20] = (.jr, (.NotZero, .s8), 12)
         ops[0x21] = (.ld16_16, (.HL, .i16), 12)
         ops[0x22] = (.ld8_8, (.HLptrInc, .A), 8)
         ops[0x23] = (.inc16, (.HL, .noReg), 8)
@@ -340,7 +340,7 @@ class CPU {
         ops[0x25] = (.dec8, (.H, .noReg), 4)
         ops[0x26] = (.ld8_8, (.H, .i8), 8)
         ops[0x27] = (.daa, (.noReg, .noReg), 4)
-        ops[0x28] = (.jr, (.Zero, .i8), 12)
+        ops[0x28] = (.jr, (.Zero, .s8), 12)
         ops[0x29] = (.add16_16, (.HL, .HL), 8)
         ops[0x2A] = (.ld8_8, (.A, .HLptrInc), 8)
         ops[0x2B] = (.dec16, (.HL, .noReg), 8)
@@ -349,7 +349,7 @@ class CPU {
         ops[0x2E] = (.ld8_8, (.L, .i8), 8)
         ops[0x2F] = (.cpl, (.noReg, .noReg), 4)
         
-        ops[0x30] = (.jr, (.NoCarry, .i8), 12)
+        ops[0x30] = (.jr, (.NoCarry, .s8), 12)
         ops[0x31] = (.ld16_16, (.SP, .i16), 12)
         ops[0x32] = (.ld8_8, (.HLptrDec, .A), 8)
         ops[0x33] = (.inc16, (.SP, .noReg), 8)
@@ -357,7 +357,7 @@ class CPU {
         ops[0x35] = (.dec8, (.HLptr, .noReg), 12)
         ops[0x36] = (.ld8_8, (.HLptr, .i8), 12)
         ops[0x37] = (.scf, (.noReg, .noReg), 4)
-        ops[0x38] = (.jr, (.Carry, .i8), 12)
+        ops[0x38] = (.jr, (.Carry, .s8), 12)
         ops[0x39] = (.add16_16, (.HL, .SP), 8)
         ops[0x3A] = (.ld8_8, (.A, .HLptrDec), 8)
         ops[0x3B] = (.dec16, (.SP, .noReg), 8)
@@ -547,7 +547,7 @@ class CPU {
         ops[0xE5] = (.push, (.noReg, .HL), 16)
         ops[0xE6] = (.and, (.A, .i8), 8)
         ops[0xE7] = (.rst, (.vec20h, .noReg), 16)
-        ops[0xE8] = (.add16_16, (.SP, .i8), 16)
+        ops[0xE8] = (.add16_16, (.SP, .s8), 16)
         ops[0xE9] = (.jp, (.noReg, .HL), 4)
         ops[0xEA] = (.ld8_8, (.i16ptr, .A), 16)
         ops[0xEE] = (.xor, (.A, .i8), 8)
@@ -880,7 +880,7 @@ class CPU {
         var dbgPr = false
 
 //        if PC == 0xC33D {
-        if PC == 0xC355 {
+        if PC == 0x0000 {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
