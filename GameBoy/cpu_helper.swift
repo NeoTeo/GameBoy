@@ -54,6 +54,7 @@ extension CPU {
         case .u3_7: return 7
             
         case .vec00h: return 0x00
+        case .vec08h: return 0x08
         case .vec10h: return 0x10
         case .vec18h: return 0x18
         case .vec20h: return 0x20

@@ -241,25 +241,17 @@ extension CPU {
     func dec8(argType: ArgType) throws {
         var n: UInt8
         
-        // FIXME: This is already part of the getVal8. Remove special case!
-        // pointer indirection special case
-//        if argType == .HLptr {
-//
-//            let addr = try getVal16(for: .HL)
-//            n = read8(at: addr)
-//            n = n &- 1
-//            write(at: addr, with: n)
-//
-//        } else {
+        n = try getVal8(for: argType)
+        let result = UInt8((Int(n) - 1) & 0xFF)
+        try set(val: result, for: argType)
         
-            n = try getVal8(for: argType)
-            n = n &- 1
-            try set(val: n, for: argType)
-//        }
-        
-        F.Z = (n == 0)
-        F.H = (n == 0xf) // H set if no borrow from bit 4 ?
+        F.Z = (result == 0)
+        F.H = (n & 0xf) < 1 // H set if no borrow from bit 4 ?
         F.N = true // N set to 1
+        // n = 0: (0 & 0xf) < 1, half-carry=true, ok
+        // n = 255: (0xff & 0xf) < 1, half-carry=false, ok
+        // n = 15: (0xf & 0xf) < 1, half-carry=false, ok
+        // n = 16: (0x10 & 0xf) < 1, half-carry=true,
     }
     
     // DEC BC, DE, HL, SP
