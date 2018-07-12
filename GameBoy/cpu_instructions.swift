@@ -595,12 +595,13 @@ extension CPU {
         
         let regVal = try getVal8(for: argTypes.0)
         let carry = (regVal & 0x01) == 0x01
-        try set(val: (regVal >> 1) | (carry ? 0x80 : 0x00), for: argTypes.0)
+        let result = (regVal >> 1) | (carry ? 0x80 : 0x00)
+        try set(val: result, for: argTypes.0)
 
         F.C = carry
         F.N = false
         F.H = false
-        F.Z = false
+        F.Z = (result == 0)
     }
     
     // Rotate register A right.
