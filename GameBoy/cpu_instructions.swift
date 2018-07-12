@@ -284,27 +284,16 @@ extension CPU {
     // C - Not affected.
     func inc8(argType: ArgType) throws {
         
-        var n: UInt8
-        // FIXME: Already handled by getVal8. Remove this
-        // pointer indirection special case
-//        if argType == .HLptr {
-//
-//            let addr = try getVal16(for: .HL)
-//            n = read8(at: addr)
-//            n = n &+ 1
-//            write(at: addr, with: n)
-//        } else {
+        let n = try getVal8(for: argType)
         
-            n = try getVal8(for: argType)
-            // increment n register and wrap to 0 if overflowed.
-            n = n &+ 1
-            try set(val: n, for: argType)
-//        }
+        // increment n register and wrap to 0 if overflowed.
+        let result = n &+ 1
+        try set(val: result, for: argType)
+        
         // Set F register correctly
-        F.Z = (n == 0)
-        F.H = (n == 0x10) // If n was 0xf then we had carry from bit 3.
+        F.Z = (result == 0)
+        F.H = (n & 0xF) == 0xF // If n was 0xf then we had carry from bit 3.
         F.N = false
-        
     }
     
     // INC BC, DE, HL, SP
