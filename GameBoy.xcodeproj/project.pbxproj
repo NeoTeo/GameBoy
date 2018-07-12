@@ -11,6 +11,8 @@
 		AB0CF2DD20F60A3E009C96D3 /* 05oprp.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB0CF2DC20F60A3E009C96D3 /* 05oprp.gb */; };
 		AB0CF2DF20F60A73009C96D3 /* 04oprimm.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB0CF2DE20F60A73009C96D3 /* 04oprimm.gb */; };
 		AB1CDD5220F640D700CF3A74 /* 09oprr.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5120F640D700CF3A74 /* 09oprr.gb */; };
+		AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */; };
+		AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */; };
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
 		AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E420E285D200E26B23 /* cpu_instrs.gb */; };
 		AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */; };
@@ -30,6 +32,9 @@
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
 		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
 		AB97CA0920EA75B10013E281 /* Tetris.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB97CA0820EA75A20013E281 /* Tetris.gb */; };
+		ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8C20F779D300BF779F /* PokemonBlue.gb */; };
+		ABB20E8F20F77C3200BF779F /* loz.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8E20F77C3200BF779F /* loz.gb */; };
+		ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E9020F77D7A00BF779F /* drMario.gb */; };
 		ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640C20F60B6A0044629D /* 06ldrr.gb */; };
 		ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */; };
 		ABF8641120F6405F0044629D /* 08miscinstrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8641020F6405F0044629D /* 08miscinstrs.gb */; };
@@ -51,6 +56,8 @@
 		AB0CF2DC20F60A3E009C96D3 /* 05oprp.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 05oprp.gb; sourceTree = "<group>"; };
 		AB0CF2DE20F60A73009C96D3 /* 04oprimm.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 04oprimm.gb; sourceTree = "<group>"; };
 		AB1CDD5120F640D700CF3A74 /* 09oprr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 09oprr.gb; sourceTree = "<group>"; };
+		AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 10bitops.gb; sourceTree = "<group>"; };
+		AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 11opahl.gb; sourceTree = "<group>"; };
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -74,6 +81,9 @@
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
 		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
 		AB97CA0820EA75A20013E281 /* Tetris.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = Tetris.gb; sourceTree = "<group>"; };
+		ABB20E8C20F779D300BF779F /* PokemonBlue.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = PokemonBlue.gb; sourceTree = "<group>"; };
+		ABB20E8E20F77C3200BF779F /* loz.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = loz.gb; sourceTree = "<group>"; };
+		ABB20E9020F77D7A00BF779F /* drMario.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = drMario.gb; sourceTree = "<group>"; };
 		ABF8640C20F60B6A0044629D /* 06ldrr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 06ldrr.gb; sourceTree = "<group>"; };
 		ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 07jrjpcallretrst.gb; sourceTree = "<group>"; };
 		ABF8641020F6405F0044629D /* 08miscinstrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 08miscinstrs.gb; sourceTree = "<group>"; };
@@ -160,8 +170,13 @@
 				ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */,
 				ABF8641020F6405F0044629D /* 08miscinstrs.gb */,
 				AB1CDD5120F640D700CF3A74 /* 09oprr.gb */,
+				AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */,
+				AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */,
 				AB958DF720D0072400A186EA /* bgbtest.gb */,
 				AB97CA0820EA75A20013E281 /* Tetris.gb */,
+				ABB20E8C20F779D300BF779F /* PokemonBlue.gb */,
+				ABB20E8E20F77C3200BF779F /* loz.gb */,
+				ABB20E9020F77D7A00BF779F /* drMario.gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 			);
 			path = roms;
@@ -261,10 +276,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */,
 				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
+				ABB20E8F20F77C3200BF779F /* loz.gb in Resources */,
+				ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */,
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
 				AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */,
+				AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */,
 				AB97CA0920EA75B10013E281 /* Tetris.gb in Resources */,
+				AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */,
 				AB0CF2DF20F60A73009C96D3 /* 04oprimm.gb in Resources */,
 				AB1CDD5220F640D700CF3A74 /* 09oprr.gb in Resources */,
 				AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */,

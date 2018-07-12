@@ -23,6 +23,8 @@ class DmgMmu : MMU {
     // Constants
     let romSize = 0x8000
     
+    var romBank: UInt8 = 0
+    
     var delegateLcd: MmuDelegate?
     var delegateTimer: MmuDelegate?
     
@@ -65,6 +67,14 @@ class DmgMmu : MMU {
         delegateLcd = nil
     }
     
+    func mbcAddress(for location: UInt16, from bank: UInt8) -> UInt16 {
+        
+        // no need to convert addresses for bank 1
+        guard bank > 1 else { return location }
+        
+        // 16K * number of banks + location offset.
+        return 0x4000 * UInt16(bank-1) + location
+    }
     // FIXME: For all r/w functions: Add some checks for writing to illegal
     // addresses and for remapping, etc.
     func read8(at location: UInt16) throws -> UInt8 {
@@ -77,7 +87,9 @@ class DmgMmu : MMU {
             
         case 0x0000 ... 0x7FFF:
             guard let cart = cartridgeRom else { throw MmuError.noCartridgeRom }
-            return cart[Int(location)]
+            // Translate location based on selected ROM bank
+            let address = (location >= 0x4000) ? mbcAddress(for: location, from: romBank) : location
+            return cart[Int(address)]
 
         case 0x8000 ... 0x9FFF: // VRAM
             // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot read from VRAM
@@ -96,7 +108,7 @@ class DmgMmu : MMU {
                 // FIXME: Do we even need to do this?
                 // Only to deal with special cases that don't just return the byte at the location.
                 switch mmuReg {
-                case .ly, .lyc:
+                case .ly, .lyc, .lcdc:
                     return ram[Int(location)]
                     
                 case .scy, .scx: // scroll x and y
@@ -107,13 +119,21 @@ class DmgMmu : MMU {
                     
                 case .ir, .ie: // Interrupt request and interrupt enable
                     return ram[Int(location)]
+                    
+                case .p1: // Controller data at 0xFF00
+                // FIXME: implement controller. For now return 0x00
+                    return 0x00
+                    
                 default:
+                    print("mmuReg is \(mmuReg)")
                     throw MmuError.invalidAddress
                 }
             }
             
             print("MMU error: Unsupported register address: \(location & 0xFF).")
-            return ram[Int(location)]
+            print("Returning 0xFF")
+            return 0xFF
+//            return ram[Int(location)]
 
         default:
             // deal with it as a direct memory access.
@@ -135,6 +155,12 @@ class DmgMmu : MMU {
     func write(at location: UInt16, with value: UInt8) {
 
         switch location {
+        case 0x2000 ... 0x3FFF: // ROM bank number (write only)
+            romBank = value & 0x1F
+            // A romBank of 0 is translated to bank 1
+            if romBank == 0 { romBank = 1 }
+            print("Switch to ROM bank \(romBank)")
+            
         case 0xFF30 ... 0xFF3F: // Wave pattern ram
             // Just store
             ram[Int(location)] = value
@@ -153,7 +179,7 @@ class DmgMmu : MMU {
         case 0xFF00 ... 0xFF7F: // We're in remapped country
             
             guard let mmuReg = MmuRegister(rawValue: Int(location)) else {
-                print("MMU write error: Unsupported register address \(location & 0xFF).")
+                //print("MMU write error: Unsupported register address \(location & 0xFF). Ignoring.")
                 return
             }
             
