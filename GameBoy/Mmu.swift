@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol MMU : LcdDelegate, TimerDelegate {
+protocol MMU : LcdDelegate, TimerDelegate, ControllerDelegate {
     var size: Int { get }
     var IE: UInt8 { get set }
     var IF: UInt8 { get set }
@@ -18,12 +18,14 @@ protocol MMU : LcdDelegate, TimerDelegate {
     
     var delegateLcd: MmuDelegate? { get set }
     var delegateTimer: MmuDelegate? { get set }
+    var delegateController: MmuDelegate? { get set }
     
     init(size: Int) throws
     func read8(at location: UInt16) throws -> UInt8
     func read16(at location: UInt16) throws -> UInt16
     func write(at location: UInt16, with value: UInt8)
     
+    func connectCartridge(rom: [UInt8])
     // Helper function - might be useful for DMA
 //    func setIE(flag: mmuInterruptFlag)
 //    func setIF(flag: mmuInterruptFlag)

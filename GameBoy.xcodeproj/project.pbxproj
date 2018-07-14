@@ -35,6 +35,7 @@
 		ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8C20F779D300BF779F /* PokemonBlue.gb */; };
 		ABB20E8F20F77C3200BF779F /* loz.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8E20F77C3200BF779F /* loz.gb */; };
 		ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E9020F77D7A00BF779F /* drMario.gb */; };
+		ABF6E2AF20FA3D0B00748689 /* controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF6E2AE20FA3D0B00748689 /* controller.swift */; };
 		ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640C20F60B6A0044629D /* 06ldrr.gb */; };
 		ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */; };
 		ABF8641120F6405F0044629D /* 08miscinstrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8641020F6405F0044629D /* 08miscinstrs.gb */; };
@@ -84,6 +85,7 @@
 		ABB20E8C20F779D300BF779F /* PokemonBlue.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = PokemonBlue.gb; sourceTree = "<group>"; };
 		ABB20E8E20F77C3200BF779F /* loz.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = loz.gb; sourceTree = "<group>"; };
 		ABB20E9020F77D7A00BF779F /* drMario.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = drMario.gb; sourceTree = "<group>"; };
+		ABF6E2AE20FA3D0B00748689 /* controller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = controller.swift; sourceTree = "<group>"; };
 		ABF8640C20F60B6A0044629D /* 06ldrr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 06ldrr.gb; sourceTree = "<group>"; };
 		ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 07jrjpcallretrst.gb; sourceTree = "<group>"; };
 		ABF8641020F6405F0044629D /* 08miscinstrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 08miscinstrs.gb; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				AB5DAA3A20D802D000BF58D3 /* lcd.swift */,
 				AB801B8C20C02CE200B0AEBF /* Mmu.swift */,
 				AB801B9020C02D8300B0AEBF /* DmgMmu.swift */,
+				ABF6E2AE20FA3D0B00748689 /* controller.swift */,
 				AB66B0C120D3FB6E000498BB /* Timer.swift */,
 				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
 				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
@@ -325,6 +328,7 @@
 				AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */,
 				AB801B8D20C02CE200B0AEBF /* Mmu.swift in Sources */,
 				AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */,
+				ABF6E2AF20FA3D0B00748689 /* controller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

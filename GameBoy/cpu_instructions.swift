@@ -165,7 +165,8 @@ extension CPU {
     func cp(argTypes: (ArgType, ArgType)) throws {
         let t1 = try getVal8(for: argTypes.0) // Always A so could be optimised away.
         let t2 = try getVal8(for: argTypes.1)
-        let (result, overflow) = t1.subtractingReportingOverflow(t2)
+        let (_, overflow) = t1.subtractingReportingOverflow(t2)
+        let result = UInt8((Int(t1) - Int(t2)) & 0xFF)
         
         F.Z = (result == 0)
         F.N = true

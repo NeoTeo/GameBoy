@@ -13,6 +13,22 @@ protocol MmuDelegate {
     
 }
 
+struct Cartridge {
+    
+    let romSize: UInt16 = 0x8000
+    
+    // 2 bit register to select a RAM bank range 0-3 OR to specify bits 5 and 6
+    // of the ROM bank number if the romRamMode is set to ROM banking mode.
+    var ramRomBank: UInt8 = 0
+    
+    // 1 bit register selects whether the ramRomBank number is used as a RAM bank number
+    // or as extra bits to select a ROM bank.
+    var romRamMode: UInt8 = 0
+    
+    // A 5 bit ROM bank number.
+    var romBank: UInt8 = 0
+}
+
 class DmgMmu : MMU {
     
     let size: Int// in bytes
@@ -23,10 +39,22 @@ class DmgMmu : MMU {
     // Constants
     let romSize = 0x8000
     
+    // 2 bit register to select a RAM bank range 0-3 OR to specify bits 5 and 6
+    // of the ROM bank number if the romRamMode is set to ROM banking mode.
+    var ramRomBank: UInt8 = 0
+    
+    // 1 bit register selects whether the ramRomBank number is used as a RAM bank number
+    // or as extra bits to select a ROM bank.
+    var romRamMode: UInt8 = 0
+    
+    // A 5 bit ROM bank number.
     var romBank: UInt8 = 0
+    
+    var cartRamEnabled: Bool = false
     
     var delegateLcd: MmuDelegate?
     var delegateTimer: MmuDelegate?
+    var delegateController: MmuDelegate?
     
     enum MmuError : Error {
         case invalidAddress
@@ -57,6 +85,7 @@ class DmgMmu : MMU {
         case Overflow
     }
     
+    
     required init(size: Int) throws {
         guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
@@ -65,6 +94,27 @@ class DmgMmu : MMU {
         bootRom = Array(repeating: 0, count: Int(romSize))
         
         delegateLcd = nil
+    }
+    
+    // Cartridge ROM data is used init a Cartridge from its header.
+    func connectCartridge(rom: [UInt8]) {
+        
+        // TODO: turn into throw
+        guard rom.count >= 0x8000 else {
+            print("ROM too small.")
+            return
+        }
+        // Read cartridge type:
+        let cartType = rom[0x147]
+        print("Cartridge type: \(cartType)")
+        // Read cartridge ROM size
+        let cartRomSize = rom[0x148]
+        print("Cartridge ROM size: \(cartRomSize)")
+        // read cartridge RAM size
+        let cartRamSize = rom[0x149]
+        print("Cartridge RAM size: \(cartRamSize)")
+        
+        cartridgeRom = rom
     }
     
     func mbcAddress(for location: UInt16, from bank: UInt8) -> UInt16 {
@@ -108,6 +158,15 @@ class DmgMmu : MMU {
                 // FIXME: Do we even need to do this?
                 // Only to deal with special cases that don't just return the byte at the location.
                 switch mmuReg {
+                    
+                case .p1: // controller
+                    // When reading, the values significance will depend on bits 4 and 5.
+                    // for bits 4 and 5, 0=select
+                    // for bits 0 to 3, 0=pressed
+                    // If bit 4 is 0 then the bits 0 to 3 will refer to the directional pad
+                    // and if bit 5 is 0 then bits 0 to 3 will refer to the A, B, Select and Start.
+                    return ram[Int(location)]
+                    
                 case .ly, .lyc, .lcdc:
                     return ram[Int(location)]
                     
@@ -119,11 +178,7 @@ class DmgMmu : MMU {
                     
                 case .ir, .ie: // Interrupt request and interrupt enable
                     return ram[Int(location)]
-                    
-                case .p1: // Controller data at 0xFF00
-                // FIXME: implement controller. For now return 0x00
-                    return 0x00
-                    
+                                        
                 default:
                     print("mmuReg is \(mmuReg)")
                     throw MmuError.invalidAddress
@@ -152,14 +207,34 @@ class DmgMmu : MMU {
         return (UInt16(msb) << 8) | UInt16(lsb)
     }
     
+    // TODO: factor cartridge specific code out into own class/struct.
     func write(at location: UInt16, with value: UInt8) {
 
         switch location {
+            
+        case 0x0000 ... 0x1FFF: // Cartridge RAM enable.
+            // Cartridge RAM enabled
+            cartRamEnabled = (value & 0xA) == 0xA
+            
         case 0x2000 ... 0x3FFF: // ROM bank number (write only)
+            
+            // Uses only lower 5 bits (0 to 4)
             romBank = value & 0x1F
+            
             // A romBank of 0 is translated to bank 1
             if romBank == 0 { romBank = 1 }
+            
+            if romRamMode == 0 {
+                romBank |= (ramRomBank << 5)
+            }
             print("Switch to ROM bank \(romBank)")
+            
+        case 0x4000 ... 0x5FFF: // RAM bank number or ROM bank number (upper bits, 5 and 6),
+            // which depends on ROMRAM mode.
+            ramRomBank = value & 0x3
+            
+        case 0x6000 ... 0x7FFF: // ROMRAM mode select.
+            romRamMode = value & 0x1
             
         case 0xFF30 ... 0xFF3F: // Wave pattern ram
             // Just store
@@ -189,6 +264,20 @@ class DmgMmu : MMU {
             // But something like
             // switch location { case range of lcd: pass on to lcd case range of timer: pass to timer...
             switch mmuReg {
+                
+            case .p1:   // Controller data
+                // We can only write to bits 4 and 5.
+                // If bit 4 is 0 the direction keys are selected
+                // If bit 5 is 0, the button keys are selected
+                // This means, when reading this register, the values in bits 0 to 3 will refer to
+                // the selected keys.
+                let ramVal = ram[Int(location)]
+                // Ensure only bits 4 and 5 are used.
+                let val = value & 0x30
+                // Mask out (&) bits 4 and 5 and | in the new value.
+                ram[Int(location)] = (ramVal & 0xCF) | val
+                
+                delegateController?.set(value: val, on: .p1)
                 
             // Serial registers
             case .sc: // Serial control
@@ -242,6 +331,7 @@ class DmgMmu : MMU {
             case .romoff: // switch out rom
                 print("switch out ROM")
                 ram[Int(location)] = value
+                
             default:
                 return
             }
@@ -259,7 +349,7 @@ class DmgMmu : MMU {
 }
 
 // Called by the LCD.
-extension DmgMmu : LcdDelegate, TimerDelegate {
+extension DmgMmu : LcdDelegate, TimerDelegate, ControllerDelegate {
     
     func unsafeRead8(at location: UInt16) throws -> UInt8 {
         return ram[Int(location)]

@@ -14,20 +14,27 @@ class Gameboy : SYSTEM {
     var mmu: MMU
     var lcd: LCD
     var timer: Timer
+    var controller: Controller
     
     var systemClock: Double
     var clockRate: Double
     
     init(clock: Double) throws {
+        
         clockRate = 0
         systemClock = clock
-        
         hardwareClockMillis = 1000 / systemClock
         
+
+
         cpu = CPU(sysClock: systemClock)
         
         mmu = try DmgMmu(size: 0x10000)
+
         lcd = LCD(sysClock: systemClock)
+        
+        controller = Controller()
+        controller.delegateMmu = mmu
         
         // Connect lcd and mmu
         lcd.delegateMmu = mmu
@@ -40,26 +47,30 @@ class Gameboy : SYSTEM {
         timer.delegateMmu = mmu
         cpu.timer = timer
         mmu.delegateTimer = timer
+        mmu.delegateController = controller
+        
         cpu.reset()
     }
     
     
     func start() {
         
+        if let rom = bodgeRomLoader() {
+            mmu.connectCartridge(rom: rom)
+        }
+        // bodge some code into ram
+        bodgeBootLoader()
+
         clockRate = systemClock //TimeInterval( 1 / systemClock )
         
         // Set the timer clock
         timer.selectClock(rate: 0x00)
-//        print("Interval is \(interval)")
-//        let clockTimer = Timer(timeInterval: interval, repeats: true, block: runCycle)
-        
-        // Load the rom first because the the boot rom will overwrite the first part
-        bodgeRomLoader()
-        // bodge some code into ram
-        bodgeBootLoader()
         
         allowance = cpuCycleAllowance
-        //runCycle(timer: Timer.init())
+        
+        // FIXME: debug: single update to refresh the register in the mmu.
+        controller.controllerUpdated()
+        
         runCycle()
         
 //        dbgPrintAvgs()
@@ -172,9 +183,40 @@ class Gameboy : SYSTEM {
         mmu.bootRom = bootBinary
     }
     
-    func bodgeRomLoader() {
+//    func bodgeRomLoader() {
+//
+////        let binaryName = "cpu_instrs.gb"
+////        let binaryName = "11opahl.gb"
+////        let binaryName = "10bitops.gb"
+////        let binaryName = "09oprr.gb"
+////        let binaryName = "08miscinstrs.gb"
+////        let binaryName = "07jrjpcallretrst.gb"
+////        let binaryName = "06ldrr.gb"
+////        let binaryName = "05oprp.gb"
+////        let binaryName = "04oprimm.gb"
+////        let binaryName = "03opsphl.gb"
+////        let binaryName = "02interrupts.gb"
+////        let binaryName = "01special.gb" // passes
+////        let binaryName = "bgbtest.gb"
+//
+//        let binaryName = "Tetris.gb"
+////        let binaryName = "loz.gb"
+////        let binaryName = "PokemonBlue.gb"
+////        let binaryName = "drMario.gb"
+//        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+//            let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
+//            else {
+//                print("Failed to load rom binary.")
+//                return
+//        }
+//
+//
+//        //try? mmu.replace(data: romBinary, from: 0x0000)
+//        mmu.cartridgeRom = romBinary
+//    }
+    func bodgeRomLoader() -> [UInt8]? {
 
-        let binaryName = "cpu_instrs.gb"
+//        let binaryName = "cpu_instrs.gb"
 //        let binaryName = "11opahl.gb"
 //        let binaryName = "10bitops.gb"
 //        let binaryName = "09oprr.gb"
@@ -188,7 +230,7 @@ class Gameboy : SYSTEM {
 //        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
         
-//        let binaryName = "Tetris.gb"
+        let binaryName = "Tetris.gb"
 //        let binaryName = "loz.gb"
 //        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
@@ -196,12 +238,10 @@ class Gameboy : SYSTEM {
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
                 print("Failed to load rom binary.")
-                return
+                return nil
         }
         
-        
-        //try? mmu.replace(data: romBinary, from: 0x0000)
-        mmu.cartridgeRom = romBinary
+        return romBinary
     }
 }
 

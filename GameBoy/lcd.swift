@@ -197,16 +197,20 @@ class LCD {
             }
         }
         
-        if lcdTicks < lcdModulo - drawingModulo {
-            // V-blank state
-            if lcdMode != .vBlank { lcdMode = .vBlank }
+        // FIXME: Need to ensure we only enable interrupt bits once per mode change.
+        if lcdTicks < (lcdModulo - drawingModulo) {
             
-            // Set the v-blank interrupt request (regardless of the stat version)
-            // They trigger different vblank vectors.
-            delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
-            
-            if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
-                delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+            if lcdMode != .vBlank {
+                // V-blank state
+                lcdMode = .vBlank
+                
+                // Set the v-blank interrupt request (regardless of the stat version)
+                // They trigger different vblank vectors.
+                delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
+                
+                if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                }
             }
 
         } else {

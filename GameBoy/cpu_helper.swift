@@ -181,6 +181,12 @@ extension CPU {
         PC = (PC &+ bytes)
     }
     
+//    func carryOverflow(t1: UInt8, t2: Int) -> (UInt8, Bool) {
+//        // perform addition (or subtraction if t2 is negative) and wrap result.
+//        let result = UInt8((Int(t1) + t2) & 0xFF)
+//        let overflow =
+//    }
+    
     func halfCarryOverflow(term1: UInt8, term2: UInt8) -> Bool {
         return (((term1 & 0xF) + (term2 & 0xF)) & 0x10) == 0x10
     }

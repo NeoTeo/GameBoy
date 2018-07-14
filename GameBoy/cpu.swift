@@ -881,7 +881,12 @@ class CPU {
 
 //        if PC == 0xC33D {
 //        if PC == 0x06A1 {
-        if PC == 0x0648 {
+//        if PC == 0x2800 {
+//        if PC == 0x0339 {
+//        if PC == 0x034C {
+//        if PC == 0x2A24 {
+        if PC == 0x01A9 {
+//        if PC == 0x01FD || PC == 0x029C || PC == 0x27A {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -922,7 +927,13 @@ class CPU {
             handleOps(opcode: op, args: args, cycles: cycles)
         }
         
-        interruptHandler()
+        // A quirk in hardware means interrupts are ignored when IE is the instruction.
+        // source: https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
+        // ipfs hash: QmWjqqnSHuAvyJ4JJG57fPdGxhFyLZLgHn3CbtWGieZMf5
+        if opcode != 0xFB {
+            // TODO: add interrupt clocks to subOpCycles
+            interruptHandler()
+        }
         
         // FIXME: Bodge until I get each instruction to return the cycles it uses.
         // In the meantime this ensures that the cycles, currently defined at 4MHz,
