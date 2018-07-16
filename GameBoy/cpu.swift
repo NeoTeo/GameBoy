@@ -273,8 +273,12 @@ class CPU {
     
     var systemClock: Double
     let maxClock: Double = 4_194_304
+    
+    // Debug PC trace the last 10 PC values
+    var pcTrace = OpenBuffer<UInt16>(capacity: 200)
+    
     init(sysClock: Double) {
-        systemClock = sysClock
+        systemClock = sysClock        
     }
     
     func reset() {
@@ -869,8 +873,6 @@ class CPU {
     }
     
     var cbMode = false
-
-//    var prevTime: CFAbsoluteTime = CFAbsoluteTimeGetCurrent()
     
     func clockTick() -> UInt8 {
         
@@ -879,6 +881,7 @@ class CPU {
 
         var dbgPr = false
 
+        pcTrace.push(element: PC)
 //        if PC == 0xC33D {
 //        if PC == 0x06A1 {
 //        if PC == 0x2800 {

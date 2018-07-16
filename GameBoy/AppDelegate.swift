@@ -58,31 +58,13 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
 
 class DmgDisplay : NSView {
     
-//    var pixelBuf: [UInt8]!
     var pixelBuf: [Int] = [Int]()
     
     
     // DMG pixel colors
-    let pixelColors = [[255, 15, 56, 15], [255, 48, 98, 49], [255, 139, 172,15], [255, 155, 188, 15]]
-    let pColors: [[UInt8]] = [[255, 15, 56, 15], [255, 48, 98, 49], [255, 139, 172,15], [255, 155, 188, 15]]
+//    let pColors: [[UInt8]] = [[155, 188, 15], [48, 98, 49], [139, 172,15], [15, 56, 15]]
+    let pColors: [[UInt8]] = [[0xE0, 0xF8, 0xD0], [0x34, 0x68, 0x56], [0x88, 0xC8, 0x70], [0x8, 0x18, 0x20]]
 
-//    let height = 144
-//    let width = 160
-//    let argb = CGColorSpaceCreateDeviceRGB()
-//    let context: CGContext?
-//
-//    init() {
-//        let bpr = width * 4
-//        let bpp = 4 * 8
-//
-//        context = CGContext(data: nil, width: width, height: height, bitsPerComponent: bpp, bytesPerRow: bpr, space: argb, bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-//
-//    }
-//    
-//    required init?(coder decoder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-    
     func updateView(buffer: [UInt8]) {
        var pBuf = [UInt8]()
         let height = 144
@@ -93,73 +75,21 @@ class DmgDisplay : NSView {
                 pBuf += pColors[Int(pixVal)]
             }
         }
-        let bpr = width * 4
-        let bpp = 4 * 8
+        let bpr = width * 3
+        let bpp = 3 * 8
 
         let provider = CGDataProvider(data: Data(pBuf) as NSData)
-        let cgImage = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: bpp, bytesPerRow: bpr, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue), provider: provider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
+        let cgImage = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: bpp, bytesPerRow: bpr, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue), provider: provider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
 
         DispatchQueue.main.async {
             self.window?.contentView?.wantsLayer = true
             self.window?.contentView?.layer?.contents = cgImage
     }
-//    }
-//    func updateView(buffer: [UInt8]) {
-//
-//        guard let context = context else { return }
-//
-//        var pBuf = context.data
-//        let pitch = context.bytesPerRow
-//        var buf = buffer
-//        for y in 0 ..< height {
-//            for x in 0 ..< width {
-//                let pixVal = buffer[y * width + x]
-//
-//                let uint8arse = UnsafeMutablePointer<UInt8>.allocate(capacity: 4)
-//                uint8arse.initialize(from: buf, count: 4)
-//                pBuf = uint8arse
-////                pBuf =
-//                    //<UInt8>(pColors[Int(pixVal)])
-//            }
-//        }
-    
-        
-//        let provider = CGDataProvider(data: Data(pBuf) as NSData)
-//        let cgImage = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: bpp, bytesPerRow: bpr, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue), provider: provider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
-//
-//        DispatchQueue.main.async {
-//            self.window?.contentView?.wantsLayer = true
-//            self.window?.contentView?.layer?.contents = cgImage
-//        }
     }
-    
-    /*
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-        
-        guard pixelBuf != nil else { return }
-        
-        let rep = NSBitmapImageRep(focusedViewRect: dirtyRect)
-        
-        guard let h = rep?.pixelsHigh, let w = rep?.pixelsWide else {
-            return
-        }
-        
-        for y in 0 ..< h {
-            for x in 0 ..< w {
-                let pixVal = pixelBuf[y * w + x]
-                var pixel = pixelColors[Int(pixVal)]
-                rep?.setPixel(UnsafeMutablePointer<Int>(&pixel) , atX: x, y: y)
-            }
-        }
-        
-        rep?.draw(in: dirtyRect)
-    }
- */
 }
 
 // global helper stuff
-func dbC(_ decimal: Int) {
+func dbC(_ decimal: UInt16) {
     print("\(decimal)d, \(String(decimal, radix: 16))h, \(String(decimal, radix:2))b")
     
 }

@@ -17,6 +17,8 @@ struct Cartridge {
     
     let romSize: UInt16 = 0x8000
     
+    var cartridgeRom: [UInt8]?
+    
     // 2 bit register to select a RAM bank range 0-3 OR to specify bits 5 and 6
     // of the ROM bank number if the romRamMode is set to ROM banking mode.
     var ramRomBank: UInt8 = 0
@@ -115,6 +117,8 @@ class DmgMmu : MMU {
         print("Cartridge RAM size: \(cartRamSize)")
         
         cartridgeRom = rom
+        
+        
     }
     
     func mbcAddress(for location: UInt16, from bank: UInt8) -> UInt16 {
@@ -159,6 +163,11 @@ class DmgMmu : MMU {
                 // Only to deal with special cases that don't just return the byte at the location.
                 switch mmuReg {
                     
+                case .sb, .sc: // Serial data transfer
+                    // Not implemented serial comms so for now just return 0xFF
+                    return 0xFF
+//                    return ram[Int(location)]
+                    
                 case .p1: // controller
                     // When reading, the values significance will depend on bits 4 and 5.
                     // for bits 4 and 5, 0=select
@@ -167,7 +176,10 @@ class DmgMmu : MMU {
                     // and if bit 5 is 0 then bits 0 to 3 will refer to the A, B, Select and Start.
                     return ram[Int(location)]
                     
-                case .ly, .lyc, .lcdc:
+                case .ly, .lyc, .lcdc, .stat:
+                    return ram[Int(location)]
+                    
+                case .bgp, .obp0, .obp1: // Palette data (BG, OBP0, OBP1)
                     return ram[Int(location)]
                     
                 case .scy, .scx: // scroll x and y
@@ -280,11 +292,20 @@ class DmgMmu : MMU {
                 delegateController?.set(value: val, on: .p1)
                 
             // Serial registers
+            case .sb: // Serial transfer data
+                // not implemented. Ignore
+                break
+                
             case .sc: // Serial control
-                // currently there's no serial comms implemented but we do set the required interrupt
-                ram[Int(location)] = value
-//                if isSet(bit: 7, in: value) { setIF(flag: .serial) }
-                if isSet(bit: 7, in: value) { set(bit: mmuInterruptBit.serial.rawValue, on: .ir) }
+                // currently there's no serial comms implemented
+//                ram[Int(location)] = value
+
+                // We would set the required interrupt once the transfer was completed.
+//                if isSet(bit: 7, in: value) { set(bit: mmuInterruptBit.serial.rawValue, on: .ir) }
+                
+                // Pretending we've initiated the transfer we now reset the SC7 bit
+//                ram[Int(location)] = clear(bit: 7, in: value)
+                break
                 
             // Timer registers
             case .div:
@@ -320,6 +341,9 @@ class DmgMmu : MMU {
                 delegateLcd?.set(value: value, on: mmuReg)
 
             case .wy, .wx: // horizontal/vertical window position
+                ram[Int(location)] = value
+
+            case .bgp, .obp0, .obp1: // Palette data (BG, OBP0, OBP1)
                 ram[Int(location)] = value
 
             case .ir: // Interrupt request (IF)

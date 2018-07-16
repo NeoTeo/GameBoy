@@ -272,3 +272,35 @@ func toggle(bit: UInt8, in byte: UInt8) -> UInt8 {
     return byte ^ (1 << bit)
 }
 
+struct OpenBuffer<T> {
+    fileprivate var array: [T?]
+    public let capacity: Int
+    var count: Int = 0
+    
+    public init(capacity: Int) {
+        array = Array<T?>(repeating: nil, count: capacity)
+        self.capacity = capacity
+    }
+    
+    public mutating func push(element: T) {
+        
+        if array.count == capacity {
+            array = Array(array.dropFirst())
+        }
+        array.append(element)
+    }
+    
+    public mutating func pop() -> T?? {
+        return array.popLast()
+    }
+    
+    public func debugPrint(handler: ((T)->Void)? ) {
+        for el in array where el != nil {
+            if handler == nil {
+                print("\(String(describing: el))")
+            } else {
+                handler?(el!)
+            }
+        }
+    }
+}

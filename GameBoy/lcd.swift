@@ -245,6 +245,7 @@ class LCD {
 
         let scx = delegateMmu.getValue(for: .scx)
         let scy = delegateMmu.getValue(for: .scy)
+        let bgp = delegateMmu.getValue(for: .bgp)
         
         do {
 //            let preDisplayNanos = DispatchTime.now().uptimeNanoseconds
@@ -265,7 +266,8 @@ class LCD {
                     
                     let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: vRamLocation)
                     
-                    vbuf[pixRow * hResolution + pixCol] = pixelValue
+                    let shadeVal = (bgp >> (pixelValue << 1)) & 0x3
+                    vbuf[pixRow * hResolution + pixCol] = shadeVal
                 }
             }
             delegateDisplay?.didUpdate(buffer: vbuf)
