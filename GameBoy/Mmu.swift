@@ -14,7 +14,8 @@ protocol MMU : LcdDelegate, TimerDelegate, ControllerDelegate {
     var IF: UInt8 { get set }
     
     var bootRom: [UInt8] { get set }
-    var cartridgeRom: [UInt8]? { get set }
+//    var cartridgeRom: [UInt8]? { get set }
+    var cartridgeRom: Cartridge? { get set }
     
     var delegateLcd: MmuDelegate? { get set }
     var delegateTimer: MmuDelegate? { get set }

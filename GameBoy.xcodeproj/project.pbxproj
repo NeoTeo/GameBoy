@@ -30,6 +30,7 @@
 		AB801B8F20C02D4500B0AEBF /* cpu_helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */; };
 		AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9020C02D8300B0AEBF /* DmgMmu.swift */; };
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
+		AB817C0820FCE67F005666C9 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB817C0720FCE67F005666C9 /* Cartridge.swift */; };
 		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
 		AB97CA0920EA75B10013E281 /* Tetris.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB97CA0820EA75A20013E281 /* Tetris.gb */; };
 		ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8C20F779D300BF779F /* PokemonBlue.gb */; };
@@ -80,6 +81,7 @@
 		AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu_helper.swift; sourceTree = "<group>"; };
 		AB801B9020C02D8300B0AEBF /* DmgMmu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmgMmu.swift; sourceTree = "<group>"; };
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
+		AB817C0720FCE67F005666C9 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
 		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
 		AB97CA0820EA75A20013E281 /* Tetris.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = Tetris.gb; sourceTree = "<group>"; };
 		ABB20E8C20F779D300BF779F /* PokemonBlue.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = PokemonBlue.gb; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 				AB801B8E20C02D4500B0AEBF /* cpu_helper.swift */,
 				AB801B8A20C02CB800B0AEBF /* system.swift */,
 				AB801B9220C02DAD00B0AEBF /* gameboy.swift */,
+				AB817C0720FCE67F005666C9 /* Cartridge.swift */,
 				AB59ADE020AEE6560055A60F /* BinaryLoader.swift */,
 				AB5DAA3A20D802D000BF58D3 /* lcd.swift */,
 				AB801B8C20C02CE200B0AEBF /* Mmu.swift */,
@@ -324,6 +327,7 @@
 				AB801B8920C02C5E00B0AEBF /* cpu_instructions.swift in Sources */,
 				AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */,
 				AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */,
+				AB817C0820FCE67F005666C9 /* Cartridge.swift in Sources */,
 				AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */,
 				AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */,
 				AB801B8D20C02CE200B0AEBF /* Mmu.swift in Sources */,

@@ -13,34 +13,17 @@ protocol MmuDelegate {
     
 }
 
-struct Cartridge {
-    
-    let romSize: UInt16 = 0x8000
-    
-    var cartridgeRom: [UInt8]?
-    
-    // 2 bit register to select a RAM bank range 0-3 OR to specify bits 5 and 6
-    // of the ROM bank number if the romRamMode is set to ROM banking mode.
-    var ramRomBank: UInt8 = 0
-    
-    // 1 bit register selects whether the ramRomBank number is used as a RAM bank number
-    // or as extra bits to select a ROM bank.
-    var romRamMode: UInt8 = 0
-    
-    // A 5 bit ROM bank number.
-    var romBank: UInt8 = 0
-}
-
 class DmgMmu : MMU {
     
     let size: Int// in bytes
     var ram: [UInt8]
     var bootRom: [UInt8]
-    var cartridgeRom: [UInt8]?
+//    var cartridgeRom: [UInt8]?
+    var cartridgeRom: Cartridge?
     
     // Constants
     let romSize = 0x8000
-    
+    /*
     // 2 bit register to select a RAM bank range 0-3 OR to specify bits 5 and 6
     // of the ROM bank number if the romRamMode is set to ROM banking mode.
     var ramRomBank: UInt8 = 0
@@ -53,7 +36,7 @@ class DmgMmu : MMU {
     var romBank: UInt8 = 0
     
     var cartRamEnabled: Bool = false
-    
+    */
     var delegateLcd: MmuDelegate?
     var delegateTimer: MmuDelegate?
     var delegateController: MmuDelegate?
@@ -110,25 +93,35 @@ class DmgMmu : MMU {
         let cartType = rom[0x147]
         print("Cartridge type: \(cartType)")
         // Read cartridge ROM size
-        let cartRomSize = rom[0x148]
+        let cartRomSize = Cartridge.CartSizes[rom[0x148]] ?? 0 //rom[0x148]
         print("Cartridge ROM size: \(cartRomSize)")
         // read cartridge RAM size
         let cartRamSize = rom[0x149]
         print("Cartridge RAM size: \(cartRamSize)")
         
-        cartridgeRom = rom
-        
+//        cartridgeRom = rom
+//        cartridgeRom = Cartridge(romSize: cartRomSize,
+//                                 cartridgeRom: rom,
+//                                 ramRomBank: 0,
+//                                 romRamMode: 0,
+//                                 romBank: 0,
+//                                 ramEnabled: false
+//        )
+        cartridgeRom = Cartridge(romSize: cartRomSize, cartridgeRom: rom, ramRomBank: 0, romRamMode: 0, _romBank: 0, ramEnabled: false)
+//        cartridgeRom?.romSize = Cartridge.CartSizes[rom[0x148]] ?? 0
+//        cartridgeRom?.ramRomBank = 0
+//        cartridgeRom?.romRamMode = 0
         
     }
     
-    func mbcAddress(for location: UInt16, from bank: UInt8) -> UInt16 {
-        
-        // no need to convert addresses for bank 1
-        guard bank > 1 else { return location }
-        
-        // 16K * number of banks + location offset.
-        return 0x4000 * UInt16(bank-1) + location
-    }
+//    func mbcAddress(for location: UInt16, from bank: UInt8) -> UInt16 {
+//        
+//        // no need to convert addresses for bank 1
+//        guard bank > 1 else { return location }
+//        
+//        // 16K * number of banks + location offset.
+//        return 0x4000 * UInt16(bank-1) + location
+//    }
     // FIXME: For all r/w functions: Add some checks for writing to illegal
     // addresses and for remapping, etc.
     func read8(at location: UInt16) throws -> UInt8 {
@@ -142,9 +135,10 @@ class DmgMmu : MMU {
         case 0x0000 ... 0x7FFF:
             guard let cart = cartridgeRom else { throw MmuError.noCartridgeRom }
             // Translate location based on selected ROM bank
-            let address = (location >= 0x4000) ? mbcAddress(for: location, from: romBank) : location
-            return cart[Int(address)]
-
+//            let address = (location >= 0x4000) ? mbcAddress(for: location, from: romBank) : location
+//            return cart[Int(address)]
+            return cart[location]
+            
         case 0x8000 ... 0x9FFF: // VRAM
             // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot read from VRAM
             guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else {
@@ -226,27 +220,31 @@ class DmgMmu : MMU {
             
         case 0x0000 ... 0x1FFF: // Cartridge RAM enable.
             // Cartridge RAM enabled
-            cartRamEnabled = (value & 0xA) == 0xA
+//            cartRamEnabled = (value & 0xA) == 0xA
+            cartridgeRom?.ramEnabled = (value & 0xA) == 0xA
             
         case 0x2000 ... 0x3FFF: // ROM bank number (write only)
             
             // Uses only lower 5 bits (0 to 4)
-            romBank = value & 0x1F
-            
-            // A romBank of 0 is translated to bank 1
-            if romBank == 0 { romBank = 1 }
-            
-            if romRamMode == 0 {
-                romBank |= (ramRomBank << 5)
-            }
-            print("Switch to ROM bank \(romBank)")
+            cartridgeRom?.romBank = value & 0x1F
+//            romBank = value & 0x1F
+//
+//            // A romBank of 0 is translated to bank 1
+//            if romBank == 0 { romBank = 1 }
+//
+//            if romRamMode == 0 {
+//                romBank |= (ramRomBank << 5)
+//            }
+            print("Switch to ROM bank \(cartridgeRom?.romBank)")
             
         case 0x4000 ... 0x5FFF: // RAM bank number or ROM bank number (upper bits, 5 and 6),
             // which depends on ROMRAM mode.
-            ramRomBank = value & 0x3
+//            ramRomBank = value & 0x3
+            cartridgeRom?.ramRomBank = value & 0x3
             
         case 0x6000 ... 0x7FFF: // ROMRAM mode select.
-            romRamMode = value & 0x1
+//            romRamMode = value & 0x1
+            cartridgeRom?.romRamMode = value & 0x1
             
         case 0xFF30 ... 0xFF3F: // Wave pattern ram
             // Just store
@@ -436,7 +434,7 @@ extension DmgMmu {
             switch type {
             case .mainRam: print(String(format: "%02X", ram[Int(index)]), terminator: " ")
             case .bootRom: print(String(format: "%02X", bootRom[Int(index)]), terminator: " ")
-            case .cartRom: print(String(format: "%02X", (cartridgeRom?[Int(index)])!), terminator: " ")
+            case .cartRom: print(String(format: "%02X", (cartridgeRom?[UInt16(index)])!), terminator: " ")
             }
             
             
