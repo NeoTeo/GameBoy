@@ -55,7 +55,13 @@ struct Cartridge {
     
     subscript(index: UInt16) -> UInt8 {
         
-        let bankedIndex = _romBank <= 1 ? Int(index) : 0x4000 * Int(_romBank - 1) + Int(index)
+//        let bankedIndex = _romBank <= 1 ? Int(index) : 0x4000 * Int(_romBank - 1) + Int(index)
+        var bankedIndex = 0
+        if index < 0x4000 || _romBank <= 1 {
+            bankedIndex = Int(index)
+        } else {
+            bankedIndex = 0x4000 * Int(_romBank - 1) + Int(index)
+        }
         
 //        guard bankedIndex < romSize else { throw CartridgeError.outOfBounds }
         // subscripts cannot throw so for now we just let it crash.

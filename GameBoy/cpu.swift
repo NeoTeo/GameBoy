@@ -888,7 +888,7 @@ class CPU {
 //        if PC == 0x0339 {
 //        if PC == 0x034C {
 //        if PC == 0x2A24 {
-        if PC == 0x01A9 {
+        if PC == 0x35e3 {
 //        if PC == 0x01FD || PC == 0x029C || PC == 0x27A {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
