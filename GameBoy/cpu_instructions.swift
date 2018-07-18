@@ -273,7 +273,7 @@ extension CPU {
     }
 
     func halt() {
-        print("CPU in low power mode.")
+//        print("CPU in low power mode.")
         powerMode = .halt
     }
     

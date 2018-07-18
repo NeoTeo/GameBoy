@@ -241,8 +241,17 @@ class LCD {
         }
     }
     
+    var lastDisplay: UInt64 = 0
+    var fpsCount = 0
     func generateDisplay(from vRamLocation: UInt16) {
 
+        let now = DispatchTime.now().uptimeNanoseconds
+        let displayDelta = (now - lastDisplay) / 1_000_000 // in ms
+        lastDisplay = now
+        fpsCount = (fpsCount + 1) % 60
+        if fpsCount == 0 {
+            print("fps: \(1000/displayDelta)")
+        }
         let scx = delegateMmu.getValue(for: .scx)
         let scy = delegateMmu.getValue(for: .scy)
         let bgp = delegateMmu.getValue(for: .bgp)

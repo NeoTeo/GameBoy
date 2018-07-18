@@ -40,9 +40,25 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
     
     var dmgDisplayView: DmgDisplay!
     
+    // To capture keyboard events
+    override var acceptsFirstResponder: Bool { return true }
+    override func becomeFirstResponder() -> Bool { return true }
+    override func resignFirstResponder() -> Bool { return true }
+    
+    
     override func loadView() {
         dmgDisplayView = DmgDisplay(frame: NSRect(x: 0, y: 0, width: 160, height: 144))
         self.view = dmgDisplayView
+        
+        NSEvent.addLocalMonitorForEvents(matching: .keyUp) { (theEvent)-> NSEvent? in
+            self.keyUp(with: theEvent)
+            return nil
+        }
+        
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { (theEvent)-> NSEvent? in
+            self.keyDown(with: theEvent)
+            return nil
+        }
     }
     
     func didUpdate(buffer: [UInt8]) {
@@ -51,7 +67,10 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
         DispatchQueue.main.async {
             self.view.needsDisplay = true
         }
-        
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        print("ongo")
     }
     
 }

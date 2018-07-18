@@ -169,6 +169,10 @@ class DmgMmu : MMU {
                     // If bit 4 is 0 then the bits 0 to 3 will refer to the directional pad
                     // and if bit 5 is 0 then bits 0 to 3 will refer to the A, B, Select and Start.
                     return ram[Int(location)]
+                 
+                case .div:
+                    // Perhaps this should go through the timerDelegate...?
+                    return ram[Int(location)]
                     
                 case .ly, .lyc, .lcdc, .stat:
                     return ram[Int(location)]
@@ -220,30 +224,19 @@ class DmgMmu : MMU {
             
         case 0x0000 ... 0x1FFF: // Cartridge RAM enable.
             // Cartridge RAM enabled
-//            cartRamEnabled = (value & 0xA) == 0xA
             cartridgeRom?.ramEnabled = (value & 0xA) == 0xA
             
         case 0x2000 ... 0x3FFF: // ROM bank number (write only)
             
             // Uses only lower 5 bits (0 to 4)
             cartridgeRom?.romBank = value & 0x1F
-//            romBank = value & 0x1F
-//
-//            // A romBank of 0 is translated to bank 1
-//            if romBank == 0 { romBank = 1 }
-//
-//            if romRamMode == 0 {
-//                romBank |= (ramRomBank << 5)
-//            }
-            print("Switch to ROM bank \(cartridgeRom?.romBank)")
+//            print("Switch to ROM bank \(cartridgeRom?.romBank)")
             
         case 0x4000 ... 0x5FFF: // RAM bank number or ROM bank number (upper bits, 5 and 6),
             // which depends on ROMRAM mode.
-//            ramRomBank = value & 0x3
             cartridgeRom?.ramRomBank = value & 0x3
             
         case 0x6000 ... 0x7FFF: // ROMRAM mode select.
-//            romRamMode = value & 0x1
             cartridgeRom?.romRamMode = value & 0x1
             
         case 0xFF30 ... 0xFF3F: // Wave pattern ram

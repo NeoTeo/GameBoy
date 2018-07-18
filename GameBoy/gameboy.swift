@@ -102,41 +102,55 @@ class Gameboy : SYSTEM {
     // desired frequency, in this case 240 hertz:
     // 1000 ms / 240 hz = 4.1666666667 milliseconds per emulator cycle.
     // This corresponds to 4.1666666667 / 0.0009536743164 = 4369.0666667303 cycles
-    let cpuCycleAllowance: Double = 1000 / 240
+    let cpuCycleAllowance: Double = 1000 / 60//240
     let hardwareClockMillis: Double
     var allowance: Double = 0
     var totCycles: UInt64 = 0
     
+    
     func runCycle() {
-        
+    
         let startTime = DispatchTime.now()
         var usedCycles: Int = 0
         
+        var cpuTimeAcc: Double = 0
+        var timerTimeAcc: Double = 0
+        var lcdTimeAcc: Double = 0
+        
         repeat {
+            let preCpuTime = DispatchTime.now().uptimeNanoseconds
             // Check the cpu mode and act accordingly
             let mode = cpu.powerMode
             if mode == .normal {
                 usedCycles = Int(cpu.clockTick())
             } else {
+                // FIXME: probably not use a single cycle here just to trigger the timer.
                 usedCycles = 1
                 // check if interrupts have occurred to change mode
-                if (cpu.mmu.IE & cpu.mmu.IF) != 0 {
+                let interrupts = (cpu.mmu.IE & cpu.mmu.IF)
+                if interrupts != 0 {
                     cpu.powerMode = .normal
                     if cpu.IME == false {
                         print("PC should be the one following HALT.")
                     } else {
                         print("PC should be the one of each interrupt starting address...")
                         // Find out which interrupts have been triggered and jump to them.
+                        cpu.interruptHandler()
                     }
                 }
             }
+            cpuTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preCpuTime)
+            // FIXME: timer and lcd still update when cpu cycle/clock is halted.
             
+            let preTimerTime = DispatchTime.now().uptimeNanoseconds
             // Tick the timer by the number of cycles we used
             timer.tick(count: Int(usedCycles))
+            timerTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preTimerTime)
             
+            let preLcdTime = DispatchTime.now().uptimeNanoseconds
             // Tick the lcd by the number of cycles we used
             lcd.refresh(count: Int(usedCycles))
-
+            lcdTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preLcdTime)
             // subtract the time used on the cycles from the cycleAllowance.
             // The DMG hardware has a cycle of systemClock (usually 1_048_576 hertz) so
             // A cycle takes 1000 / 1_048_576 = 0.0009536743164 milliseconds
@@ -230,9 +244,9 @@ class Gameboy : SYSTEM {
 //        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
         
-//        let binaryName = "Tetris.gb"
+        let binaryName = "Tetris.gb"
 //        let binaryName = "loz.gb"
-        let binaryName = "PokemonBlue.gb"
+//        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
