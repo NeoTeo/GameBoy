@@ -15,6 +15,7 @@
 		AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */; };
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
 		AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E420E285D200E26B23 /* cpu_instrs.gb */; };
+		AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4F1A1020FF4E1500DF75EB /* SML.gb */; };
 		AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */; };
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
 		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
@@ -64,6 +65,7 @@
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB4665E420E285D200E26B23 /* cpu_instrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = cpu_instrs.gb; sourceTree = "<group>"; };
+		AB4F1A1020FF4E1500DF75EB /* SML.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = SML.gb; sourceTree = "<group>"; };
 		AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 02interrupts.gb; sourceTree = "<group>"; };
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
 		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				ABB20E8C20F779D300BF779F /* PokemonBlue.gb */,
 				ABB20E8E20F77C3200BF779F /* loz.gb */,
 				ABB20E9020F77D7A00BF779F /* drMario.gb */,
+				AB4F1A1020FF4E1500DF75EB /* SML.gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 			);
 			path = roms;
@@ -301,6 +304,7 @@
 				ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
 				ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */,
+				AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */,
 				AB09912A20E4E472003524CE /* 01special.gb in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

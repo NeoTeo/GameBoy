@@ -205,14 +205,14 @@ extension CPU {
         return (term1 & 0xFFF) < (term2 & 0xFFF)
     }
 
-    func signedVal(from value: UInt8) -> Int {
-        // The value is a (-128 to 127) value. Treat as 2's complement.
-//        let isNegative = (value & 0x80) == 0x80
-//        let tval = Int(value & 0x7f)
-//
-//        return isNegative ? -(128 - tval) : tval
-        return Int(value & 0x7f) - Int(value & 0x80)
-    }
+//    func signedVal(from value: UInt8) -> Int {
+//        // The value is a (-128 to 127) value. Treat as 2's complement.
+////        let isNegative = (value & 0x80) == 0x80
+////        let tval = Int(value & 0x7f)
+////
+////        return isNegative ? -(128 - tval) : tval
+//        return Int(value & 0x7f) - Int(value & 0x80)
+//    }
     /// Check for the given conditions, if any.
     ///
     /// - Parameter arg: the condition (or a non conditional argument type)
@@ -256,6 +256,11 @@ extension CPU {
 }
 
 // Global helpers
+
+func signedVal(from value: UInt8) -> Int {
+    return Int(value & 0x7f) - Int(value & 0x80)
+}
+
 func isSet(bit: UInt8, in byte: UInt8) -> Bool {
     return ((byte >> bit) & 0x1) == 0x1
 }
@@ -276,6 +281,7 @@ struct OpenBuffer<T> {
     fileprivate var array: [T?]
     public let capacity: Int
     var count: Int = 0
+    var index = 0
     
     public init(capacity: Int) {
         array = Array<T?>(repeating: nil, count: capacity)
@@ -283,23 +289,20 @@ struct OpenBuffer<T> {
     }
     
     public mutating func push(element: T) {
-        
-        if array.count == capacity {
-            array = Array(array.dropFirst())
-        }
-        array.append(element)
-    }
-    
-    public mutating func pop() -> T?? {
-        return array.popLast()
+        index = (index + 1) % capacity
+        array[index] = element
     }
     
     public func debugPrint(handler: ((T)->Void)? ) {
-        for el in array where el != nil {
+        for i in 0 ..< capacity {
+            
+            let idx = (index + i) % capacity
+            guard let element = array[idx] else { continue }
+            
             if handler == nil {
-                print("\(String(describing: el))")
+                print("\(String(describing: element))")
             } else {
-                handler?(el!)
+                handler?(element)
             }
         }
     }

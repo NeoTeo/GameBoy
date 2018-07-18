@@ -275,7 +275,7 @@ class CPU {
     let maxClock: Double = 4_194_304
     
     // Debug PC trace the last 10 PC values
-    var pcTrace = OpenBuffer<UInt16>(capacity: 200)
+    var pcTrace = OpenBuffer<UInt16>(capacity: 200000)
     
     init(sysClock: Double) {
         systemClock = sysClock        
@@ -881,7 +881,7 @@ class CPU {
 
         var dbgPr = false
 
-//        pcTrace.push(element: PC)
+        pcTrace.push(element: PC)
         
 //        if PC == 0xC33D {
 //        if PC == 0x06A1 {
@@ -889,7 +889,7 @@ class CPU {
 //        if PC == 0x0339 {
 //        if PC == 0x034C {
 //        if PC == 0x2A24 {
-        if PC == 0x35e3 {
+        if PC == 0x04ff {
 //        if PC == 0x01FD || PC == 0x029C || PC == 0x27A {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true

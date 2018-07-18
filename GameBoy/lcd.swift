@@ -254,7 +254,11 @@ class LCD {
         }
         let scx = delegateMmu.getValue(for: .scx)
         let scy = delegateMmu.getValue(for: .scy)
+        // Get background palette
         let bgp = delegateMmu.getValue(for: .bgp)
+        // Get tile data start address
+//        let tileDataStart: UInt16 = (delegateMmu.getValue(for: .lcdc) & 0x10) != 0 ? 0x8000 : 0x8800
+        let tileDataStart: UInt16 = isSet(bit: 4, in: delegateMmu.getValue(for: .lcdc)) ? 0x8000 : 0x8800
         
         do {
 //            let preDisplayNanos = DispatchTime.now().uptimeNanoseconds
@@ -273,7 +277,7 @@ class LCD {
                     let x = UInt8((pixCol + Int(scx)) & 0xFF)
                     let y = UInt8((pixRow + Int(scy)) & 0xFF)
                     
-                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: vRamLocation)
+                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: vRamLocation, from: tileDataStart)
                     
                     let shadeVal = (bgp >> (pixelValue << 1)) & 0x3
                     vbuf[pixRow * hResolution + pixCol] = shadeVal
@@ -303,8 +307,8 @@ class LCD {
     var prevY: UInt8 = 255
     
     // Returns a pixel value for any coordinate in the bg map as mapped through tile map
-    func pixelForCoord(x: UInt8, y: UInt8, at tileBase: UInt16) throws -> UInt8 {
-        let bgTileRamStart: UInt16 = tileBase
+    func pixelForCoord(x: UInt8, y: UInt8, at tileMapStart: UInt16, from tileDataStart: UInt16) throws -> UInt8 {
+        let bgTileMapStart: UInt16 = tileMapStart
         
         // Convert coords to col and rows in tile map
         let col = (x >> 3)
@@ -313,7 +317,7 @@ class LCD {
         
         // read the byte at the location
         if col != prevC || row != prevR {
-            charData = try delegateMmu.unsafeRead8(at: bgTileRamStart + (UInt16(row) << 5) + UInt16(col))
+            charData = try delegateMmu.unsafeRead8(at: bgTileMapStart + (UInt16(row) << 5) + UInt16(col))
             prevC = col
             prevR = row
             update = true
@@ -329,8 +333,14 @@ class LCD {
         if prevY != y || update == true {
         let subY = (y & 7) << 1
         
-        let tileOffset = tileRamStart + (UInt16(charData) << 4)
-        
+            // If the tile data table is located at 0x8800 it is sharing space with the obj tile table
+            // and the indexes range from -128 to 127
+            let offset = tileDataStart == 0x8800 ? 128 + signedVal(from: charData) : Int(charData)
+//        let tileOffset = tileDataStart + (UInt16(charData) << 4)
+        let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
+//            if (tileDataStart == 0x8800) && charData == 0x19 {
+//                print("arse")
+//            }
 //        let tileRowHi = try delegateMmu.read8(at: tileOffset + UInt16(subY))
 //        let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(subY+1))
         tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(subY))

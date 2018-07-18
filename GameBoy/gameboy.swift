@@ -113,12 +113,12 @@ class Gameboy : SYSTEM {
         let startTime = DispatchTime.now()
         var usedCycles: Int = 0
         
-        var cpuTimeAcc: Double = 0
-        var timerTimeAcc: Double = 0
-        var lcdTimeAcc: Double = 0
+//        var cpuTimeAcc: Double = 0
+//        var timerTimeAcc: Double = 0
+//        var lcdTimeAcc: Double = 0
         
         repeat {
-            let preCpuTime = DispatchTime.now().uptimeNanoseconds
+//            let preCpuTime = DispatchTime.now().uptimeNanoseconds
             // Check the cpu mode and act accordingly
             let mode = cpu.powerMode
             if mode == .normal {
@@ -126,31 +126,29 @@ class Gameboy : SYSTEM {
             } else {
                 // FIXME: probably not use a single cycle here just to trigger the timer.
                 usedCycles = 1
+                
                 // check if interrupts have occurred to change mode
-                let interrupts = (cpu.mmu.IE & cpu.mmu.IF)
-                if interrupts != 0 {
+                if (cpu.mmu.IE & cpu.mmu.IF) != 0 {
                     cpu.powerMode = .normal
-                    if cpu.IME == false {
-                        print("PC should be the one following HALT.")
-                    } else {
-                        print("PC should be the one of each interrupt starting address...")
-                        // Find out which interrupts have been triggered and jump to them.
-                        cpu.interruptHandler()
-                    }
+                    // FIXME: look into hardware bug mentioned here:
+                    // https://www.reddit.com/r/EmuDev/comments/5bfb2t/a_subtlety_about_the_gameboy_z80_halt_instruction/
+                    if cpu.IME == true { cpu.interruptHandler() }
                 }
             }
-            cpuTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preCpuTime)
+            
+//            cpuTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preCpuTime)
             // FIXME: timer and lcd still update when cpu cycle/clock is halted.
             
-            let preTimerTime = DispatchTime.now().uptimeNanoseconds
+//            let preTimerTime = DispatchTime.now().uptimeNanoseconds
             // Tick the timer by the number of cycles we used
             timer.tick(count: Int(usedCycles))
-            timerTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preTimerTime)
+//            timerTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preTimerTime)
             
-            let preLcdTime = DispatchTime.now().uptimeNanoseconds
+//            let preLcdTime = DispatchTime.now().uptimeNanoseconds
             // Tick the lcd by the number of cycles we used
             lcd.refresh(count: Int(usedCycles))
-            lcdTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preLcdTime)
+//            lcdTimeAcc += Double(DispatchTime.now().uptimeNanoseconds - preLcdTime)
+            
             // subtract the time used on the cycles from the cycleAllowance.
             // The DMG hardware has a cycle of systemClock (usually 1_048_576 hertz) so
             // A cycle takes 1000 / 1_048_576 = 0.0009536743164 milliseconds
@@ -177,7 +175,6 @@ class Gameboy : SYSTEM {
 
         //  Subtract the actual time spent from the emulator f. If negative use 0.
         let interval = max(Int(emuAllowanceNanos - elapsed), 0)
-    
         let nextCycle = DispatchTime.now() + .nanoseconds(interval)
         
         cycleQ.asyncAfter(deadline: nextCycle, execute: runCycle)
@@ -197,37 +194,6 @@ class Gameboy : SYSTEM {
         mmu.bootRom = bootBinary
     }
     
-//    func bodgeRomLoader() {
-//
-////        let binaryName = "cpu_instrs.gb"
-////        let binaryName = "11opahl.gb"
-////        let binaryName = "10bitops.gb"
-////        let binaryName = "09oprr.gb"
-////        let binaryName = "08miscinstrs.gb"
-////        let binaryName = "07jrjpcallretrst.gb"
-////        let binaryName = "06ldrr.gb"
-////        let binaryName = "05oprp.gb"
-////        let binaryName = "04oprimm.gb"
-////        let binaryName = "03opsphl.gb"
-////        let binaryName = "02interrupts.gb"
-////        let binaryName = "01special.gb" // passes
-////        let binaryName = "bgbtest.gb"
-//
-//        let binaryName = "Tetris.gb"
-////        let binaryName = "loz.gb"
-////        let binaryName = "PokemonBlue.gb"
-////        let binaryName = "drMario.gb"
-//        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
-//            let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
-//            else {
-//                print("Failed to load rom binary.")
-//                return
-//        }
-//
-//
-//        //try? mmu.replace(data: romBinary, from: 0x0000)
-//        mmu.cartridgeRom = romBinary
-//    }
     func bodgeRomLoader() -> [UInt8]? {
 
 //        let binaryName = "cpu_instrs.gb"
@@ -244,10 +210,11 @@ class Gameboy : SYSTEM {
 //        let binaryName = "01special.gb" // passes
 //        let binaryName = "bgbtest.gb"
         
-        let binaryName = "Tetris.gb"
+//        let binaryName = "Tetris.gb"
 //        let binaryName = "loz.gb"
 //        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
+        let binaryName = "SML.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
