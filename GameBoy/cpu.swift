@@ -886,7 +886,7 @@ class CPU {
 //        }
         
         /// Read from ram.
-        guard let opcode = try? read8(at: PC, incPC: true) else {
+        guard var opcode = try? read8(at: PC, incPC: true) else {
             print("clockTick failed to read opcode.")
             return 0
         }
@@ -899,30 +899,33 @@ class CPU {
             print("CB prefix is \(cbMode)")
             print("HL: \(HL)")
         }
+        var handler = handleOps
+        var operations: [Operation?]
         
-        if cbMode == true {
-        
-            guard let (op, args, cycles) = cbOps[Int(opcode)] else {
-                print("ERROR reading from CB ops table")
+        if opcode == 0xCB {
+            handler = handleCbOps
+            operations = cbOps
+            // An opcode byte always follows the CB instruction.
+            opcode = try! read8(at: PC, incPC: true)
+            if opcode == nil {
+                print("clockTick failed to read opcode.")
                 return 0
             }
-            subOpCycles = cycles
-            handleCbOps(opcode: op, args: args, cycles: cycles) }
-            
-        else {
-            
-            guard let (op, args, cycles) = ops[Int(opcode)] else {
-                print("ERROR reading from ops table for opcode \(opcode)")
-                return 0
-            }
-            subOpCycles = cycles
-            handleOps(opcode: op, args: args, cycles: cycles)
+        } else {
+            handler = handleOps
+            operations = ops
         }
         
+        guard let (op, args, cycles) = operations[Int(opcode)] else {
+            print("ERROR reading from operations table")
+            return 0
+        }
+        
+        handler(op, args, cycles)
         // A quirk in hardware means interrupts are ignored when IE is the instruction.
         // source: https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
         // ipfs hash: QmWjqqnSHuAvyJ4JJG57fPdGxhFyLZLgHn3CbtWGieZMf5
-        if opcode != 0xFB && opcode != 0xCB {
+        if opcode != 0xFB { //}&& opcode != 0xCB {
             // TODO: add interrupt clocks to subOpCycles
             interruptHandler()
         }
