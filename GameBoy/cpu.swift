@@ -876,24 +876,14 @@ class CPU {
     
     func clockTick() -> UInt8 {
         
-//        subOpCycles -= 1
-//        if subOpCycles > 0 {  return 0 }
-
         var dbgPr = false
-
-        pcTrace.push(element: PC)
+//        pcTrace.push(element: PC)
         
-//        if PC == 0xC33D {
-//        if PC == 0x06A1 {
-//        if PC == 0x2800 {
-//        if PC == 0x0339 {
-//        if PC == 0x034C {
-//        if PC == 0x2A24 {
-        if PC == 0x04ff {
-//        if PC == 0x01FD || PC == 0x029C || PC == 0x27A {
-            print("PC is \(String(format: "%2X",PC))")
-            dbgPr = true
-        }
+//        if PC == 0x04ff {
+//        if PC == 0x0040 {
+//            print("PC is \(String(format: "%2X",PC))")
+//            dbgPr = true
+//        }
         
         /// Read from ram.
         guard let opcode = try? read8(at: PC, incPC: true) else {
@@ -909,8 +899,6 @@ class CPU {
             print("CB prefix is \(cbMode)")
             print("HL: \(HL)")
         }
-
-        
         
         if cbMode == true {
         
@@ -934,7 +922,7 @@ class CPU {
         // A quirk in hardware means interrupts are ignored when IE is the instruction.
         // source: https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
         // ipfs hash: QmWjqqnSHuAvyJ4JJG57fPdGxhFyLZLgHn3CbtWGieZMf5
-        if opcode != 0xFB {
+        if opcode != 0xFB && opcode != 0xCB {
             // TODO: add interrupt clocks to subOpCycles
             interruptHandler()
         }

@@ -188,7 +188,15 @@ class DmgMmu : MMU {
                     
                 case .ir, .ie: // Interrupt request and interrupt enable
                     return ram[Int(location)]
-                                        
+                    
+                // Sound controller
+                case .nr10, .nr11, .nr12, .nr14,        // .nr13 write only
+                     .nr21, .nr22, .nr24,               // .nr23 write only
+                     .nr30, .nr31, .nr32, .nr34,        // .nr33 write only
+                     .nr41, .nr42, .nr43, .nr44,
+                     .nr50, .nr51, .nr52:
+                    return ram[Int(location)]
+                    
                 default:
                     print("mmuReg is \(mmuReg)")
                     throw MmuError.invalidAddress
@@ -345,6 +353,14 @@ class DmgMmu : MMU {
                 
             case .romoff: // switch out rom
                 print("switch out ROM")
+                ram[Int(location)] = value
+             
+            // Sound controller
+            case .nr10, .nr11, .nr12, .nr13, .nr14,
+                 .nr21, .nr22, .nr23, .nr24,
+                 .nr30, .nr31, .nr32, .nr33, .nr34,
+                 .nr41, .nr42, .nr43, .nr44,
+                 .nr50, .nr51, .nr52:
                 ram[Int(location)] = value
                 
             default:
