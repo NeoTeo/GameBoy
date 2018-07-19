@@ -212,9 +212,9 @@ class Gameboy : SYSTEM {
         
 //        let binaryName = "Tetris.gb"
 //        let binaryName = "loz.gb"
-        let binaryName = "PokemonBlue.gb"
+//        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
-//        let binaryName = "SML.gb"
+        let binaryName = "SML.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {

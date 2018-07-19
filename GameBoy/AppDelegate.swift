@@ -81,29 +81,40 @@ class DmgDisplay : NSView {
     
     
     // DMG pixel colors
-//    let pColors: [[UInt8]] = [[155, 188, 15], [48, 98, 49], [139, 172,15], [15, 56, 15]]
-    let pColors: [[UInt8]] = [[0xE0, 0xF8, 0xD0], [0x34, 0x68, 0x56], [0x88, 0xC8, 0x70], [0x8, 0x18, 0x20]]
-
+    // Every three bytes correspond to the red, green and blue component of a color in the lookup table.
+    // There are four colors in total.
+    let clut: [UInt8] = [0xE0, 0xF8, 0xD0, 0x34, 0x68, 0x56, 0x88, 0xC8, 0x70, 0x8, 0x18, 0x20]
+    
     func updateView(buffer: [UInt8]) {
-       var pBuf = [UInt8]()
+        
         let height = 144
         let width = 160
-        for y in 0 ..< height {
-            for x in 0 ..< width {
-                let pixVal = buffer[y * width + x]
-                pBuf += pColors[Int(pixVal)]
-            }
-        }
-        let bpr = width * 3
-        let bpp = 3 * 8
 
-        let provider = CGDataProvider(data: Data(pBuf) as NSData)
-        let cgImage = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: bpp, bytesPerRow: bpr, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue), provider: provider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)
+        let bpr = width
+        let bpp = 8
+
+        guard let testColorSpace = CGColorSpace(indexedBaseSpace: CGColorSpaceCreateDeviceRGB(), last: 3, colorTable: UnsafePointer<UInt8>(clut)) else {
+            print("Failed to make color space from clut")
+            return
+        }
+        
+        let provider = CGDataProvider(data: Data(buffer) as NSData)
+        let cgImage = CGImage(width: width,
+                              height: height,
+                              bitsPerComponent: 8,
+                              bitsPerPixel: bpp,
+                              bytesPerRow: bpr,
+                              space: testColorSpace,
+                              bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                              provider: provider!,
+                              decode: nil,
+                              shouldInterpolate: true,
+                              intent: CGColorRenderingIntent.defaultIntent)
 
         DispatchQueue.main.async {
             self.window?.contentView?.wantsLayer = true
             self.window?.contentView?.layer?.contents = cgImage
-    }
+        }
     }
 }
 
