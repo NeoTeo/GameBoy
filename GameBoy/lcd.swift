@@ -16,6 +16,7 @@ protocol LcdDelegate {
     func set(bit: UInt8, on register: MmuRegister)
     
     func unsafeRead8(at location: UInt16) throws -> UInt8
+    func unsafeRead(bytes: Int, at location: UInt16) -> [UInt8]
 }
 
 protocol LcdDisplayDelegate {
@@ -235,15 +236,23 @@ class LCD {
 
         if refresh == true {
             // Check which area of tile map ram is selected
-            let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
+            
 
-            generateDisplay(from: bgTileRamStart)
+            generateDisplay()
         }
     }
     
+    struct OamEntry {
+        let x: UInt8
+        let y: UInt8
+        let tileNo: UInt8
+        let attribute: UInt8
+    }
+    
+    
     var lastDisplay: UInt64 = 0
     var fpsCount = 0
-    func generateDisplay(from vRamLocation: UInt16) {
+    func generateDisplay() {
 
         let now = DispatchTime.now().uptimeNanoseconds
         let displayDelta = (now - lastDisplay) / 1_000_000 // in ms
@@ -256,9 +265,13 @@ class LCD {
         let scy = delegateMmu.getValue(for: .scy)
         // Get background palette
         let bgp = delegateMmu.getValue(for: .bgp)
+        
         // Get tile data start address
-//        let tileDataStart: UInt16 = (delegateMmu.getValue(for: .lcdc) & 0x10) != 0 ? 0x8000 : 0x8800
-        let tileDataStart: UInt16 = isSet(bit: 4, in: delegateMmu.getValue(for: .lcdc)) ? 0x8000 : 0x8800
+        let lcdc = delegateMmu.getValue(for: .lcdc)
+        
+        let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
+        let tileDataStart: UInt16 = isSet(bit: 4, in: lcdc) ? 0x8000 : 0x8800
+        let objHeight: UInt8 = isSet(bit: 2, in: lcdc) ? 16 : 8
         
         do {
 //            let preDisplayNanos = DispatchTime.now().uptimeNanoseconds
@@ -271,15 +284,46 @@ class LCD {
             // The tile row and column are scy / 8 and scx / 8
             
             for pixRow in 0 ..< vResolution {
+                
+                // OAM search is done on a per-line basis. Find the 10 objs to display.
+                let displayObjs = try oamSearch(for: UInt8(pixRow), objHeight: objHeight)
+
                 for pixCol in 0 ..< hResolution {
                     
                     // wrap left/top when overflowing past right/bottom
                     let x = UInt8((pixCol + Int(scx)) & 0xFF)
                     let y = UInt8((pixRow + Int(scy)) & 0xFF)
                     
-                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: vRamLocation, from: tileDataStart)
+                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: bgTileRamStart, from: tileDataStart)
+                    var shadeVal = (bgp >> (pixelValue << 1)) & 0x3
                     
-                    let shadeVal = (bgp >> (pixelValue << 1)) & 0x3
+                    // Check if we need to draw a sprite here
+                    for obj in displayObjs {
+                        
+                        guard let obj = obj else { continue }
+                    
+                        guard obj.x-8 == x else { continue }
+                        let tileRow = (y & 7) << 1
+                        
+                        // If the tile data table is located at 0x8800 it is sharing space with the obj tile table
+                        // and the indexes range from -128 to 127
+                        let offset = tileDataStart == 0x8800 ? 128 + signedVal(from: obj.tileNo) : Int(obj.tileNo)
+                        let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
+                        
+                        tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
+                        tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+
+                        // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
+                        let tileCol = 7 - (x & 7)
+                        let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
+
+        
+                        let obp = isSet(bit: 4, in: obj.attribute) ? delegateMmu.getValue(for: .obp0) : delegateMmu.getValue(for: .obp1)
+                        // Check for priority and decide if we need to overwrite
+                        shadeVal = (obp >> (pixIdx << 1)) & 0x3
+                    }
+                    
+                    
                     vbuf[pixRow * hResolution + pixCol] = shadeVal
                 }
             }
@@ -305,52 +349,46 @@ class LCD {
     var prevC: UInt8 = 255
     var prevR: UInt8 = 255
     var prevY: UInt8 = 255
+    var prevMap: UInt16 = 0
     
     // Returns a pixel value for any coordinate in the bg map as mapped through tile map
     func pixelForCoord(x: UInt8, y: UInt8, at tileMapStart: UInt16, from tileDataStart: UInt16) throws -> UInt8 {
-        let bgTileMapStart: UInt16 = tileMapStart
-        
+
         // Convert coords to col and rows in tile map
-        let col = (x >> 3)
-        let row = (y >> 3)
+        let mapCol = (x >> 3)
+        let mapRow = (y >> 3)
         var update = false
-        
-        // read the byte at the location
-        if col != prevC || row != prevR {
-            charData = try delegateMmu.unsafeRead8(at: bgTileMapStart + (UInt16(row) << 5) + UInt16(col))
-            prevC = col
-            prevR = row
+
+        // Read a new byte at the location only if we've changed map or row/column.
+        if mapCol != prevC || mapRow != prevR || tileMapStart != prevMap {
+            charData = try delegateMmu.unsafeRead8(at: tileMapStart + (UInt16(mapRow) << 5) + UInt16(mapCol))
+            prevC = mapCol
+            prevR = mapRow
+            prevMap = tileMapStart
             update = true
         }
+    
         // go through the tile data at the given index in tile memory
         // Each 2 bytes in tile memory correspond to a row of 8 pixels
         // So each tile is 16 bytes
-        // Mask out three lower bits (same as y % 8) to get the row within the tile
-//        let subY = row > 0 ? (y & 7) << 1 : 0
-        
         // To calculate which row within the tile to start from we calc the remainder
         // from dividing by 8 and then multiply by two because each tile row is two bytes.
         if prevY != y || update == true {
-        let subY = (y & 7) << 1
+            
+            let tileRow = (y & 7) << 1
         
             // If the tile data table is located at 0x8800 it is sharing space with the obj tile table
             // and the indexes range from -128 to 127
             let offset = tileDataStart == 0x8800 ? 128 + signedVal(from: charData) : Int(charData)
-//        let tileOffset = tileDataStart + (UInt16(charData) << 4)
-        let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
-//            if (tileDataStart == 0x8800) && charData == 0x19 {
-//                print("arse")
-//            }
-//        let tileRowHi = try delegateMmu.read8(at: tileOffset + UInt16(subY))
-//        let tileRowLo = try delegateMmu.read8(at: tileOffset + UInt16(subY+1))
-        tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(subY))
-        tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(subY+1))
+            let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
+            
+            tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
+            tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
             
             prevY = y
         }
         // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
-//        let subX = col > 0 ? 7 - (x & 7) : 7
-        let subX = 7 - (x & 7)
+        let tileCol = 7 - (x & 7)
         
         // Each bit in each of the hi and lo bytes constitute a pixel whose
         // color value (0 to 3) is an index into a 4 colour CLUT.
@@ -368,9 +406,35 @@ class LCD {
          | 0x8194   |  .   |    .     |     .        .
          |   .      |  .   |    .     |
          */
-        let pixIdx = (((tileRowHi >> subX) & 0x01) << 1) + ((tileRowLo >> subX) & 0x01)
+        let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
         
         return pixIdx
+    }
+    
+    func fetch(row: UInt8, in tile: UInt8) -> (UInt8, UInt8) {
+        return (0,0)
+    }
+    // Search for objs (sprites) whose x value is > 0
+    func oamSearch(for line: UInt8, objHeight: UInt8) throws -> [OamEntry?] {
+        
+        var displayObjs = Array<OamEntry?>(repeating: nil, count: 10)
+        let oamBaseAddress: Int = 0xFE00
+        let oamEntryBytes = 4
+        // There are a maximum of 8 * 5 objs we need to search
+        for objIdx in stride(from:0, to: 8 * 5 * oamEntryBytes, by: oamEntryBytes) {
+            let oam = delegateMmu.unsafeRead(bytes: oamEntryBytes, at: UInt16(oamBaseAddress + objIdx))
+            // skip objects with an x of 0.
+            guard oam[1] != 0 && ((line + 16) >= oam[0]) && ((line + 16) < (oam[0] + objHeight)) else { continue }
+            
+            displayObjs.append(OamEntry(x: oam[1], y: oam[0], tileNo: oam[2], attribute: oam[3]))
+//            print("OAM:")
+//            print("x: \(oam[0])")
+//            print("y: \(oam[1])")
+//            print("Tile no: \(oam[2])")
+//            print("Attribute: \(oam[3])")
+            
+        }
+        return displayObjs
     }
     
     func start() {

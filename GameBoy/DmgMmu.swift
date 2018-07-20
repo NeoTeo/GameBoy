@@ -363,8 +363,19 @@ class DmgMmu : MMU {
                  .nr50, .nr51, .nr52:
                 ram[Int(location)] = value
                 
-            default:
-                return
+            case .dma:  // Perform DMA transfer
+                // The destination is always OAM RAM (0xFE00-0xFE9F)
+                // We multiply the value by 0x100 (256) to get the source address.
+                // FIXME: Should also do some checking for being in a mode that allows DMA
+                guard value > 0x7F else {
+                    print("Attempted DMA from illegal source address \(value << 8)")
+                    return
+                }
+                
+                dma(from: UInt16(value) << 8)
+
+//            default:
+//                return
             }
             
         default:
@@ -381,6 +392,12 @@ class DmgMmu : MMU {
 
 // Called by the LCD.
 extension DmgMmu : LcdDelegate, TimerDelegate, ControllerDelegate {
+    
+    func unsafeRead(bytes: Int, at location: UInt16) -> [UInt8] {
+        let start = Int(location)
+        let end = (start + bytes) & 0xFFFF
+        return Array(ram[start ..< end])
+    }
     
     func unsafeRead8(at location: UInt16) throws -> UInt8 {
         return ram[Int(location)]
@@ -418,6 +435,13 @@ extension DmgMmu {
 //    func setIF(flag: mmuInterruptFlag) {
 //        IF = IF | UInt8(flag.rawValue)
 //    }
+    
+    func dma(from startAddress: UInt16) {
+        let sourceStart = Int(startAddress)
+        let sourceData = Array(ram[sourceStart ..< (sourceStart + 0x9F)])
+        let targetStart = UInt16(0xFE00)
+        try? replace(data: sourceData, from: targetStart)
+    }
     
     func replace(data: [UInt8], from address: UInt16) throws {
         //ram.insert(contentsOf: data, at: Int(address))
