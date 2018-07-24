@@ -879,11 +879,13 @@ class CPU {
         var dbgPr = false
 //        pcTrace.push(element: PC)
         
-//        if PC == 0x04ff {
-//        if PC == 0x0040 {
-//            print("PC is \(String(format: "%2X",PC))")
-//            dbgPr = true
-//        }
+//        if PC == 0x01D0 {
+//        if PC == 0x016E {
+//        if PC == 0x0150 {
+        if PC == 0x005D {
+            print("PC is \(String(format: "%2X",PC))")
+            dbgPr = true
+        }
         
         /// Read from ram.
         guard var opcode = try? read8(at: PC, incPC: true) else {

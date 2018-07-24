@@ -251,7 +251,8 @@ extension CPU {
         let stat = mmu.getValue(for: .stat)
         print(String(format: "lcdc: %2X – stat: %2X", lcdc, stat))
         let ly = mmu.getValue(for: .ly)
-        print(String(format: "ly: %2X", ly))
+        let lyc = mmu.getValue(for: .lyc)
+        print(String(format: "ly: %2X – lyc: %2X", ly, lyc))
     }
 }
 

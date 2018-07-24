@@ -72,13 +72,61 @@ class DmgMmu : MMU {
     
     
     required init(size: Int) throws {
+        
         guard size <= 0x10000 else { throw RamError.Overflow }
         self.size = size
         
-        ram = Array(repeating: 0, count: Int(size))
+        ram = Array(repeating: 0xFF, count: Int(size))
         bootRom = Array(repeating: 0, count: Int(romSize))
         
         delegateLcd = nil
+        resetDefaults()
+    }
+    
+    // FIXME: change the mechanism to disable the boot rom because it's the write
+    // that disables the boot rom not the value at 0xFF50
+    // Boot-up defaults from Pandoc + bgb emulator
+    let dmgDefaults: [UInt16 : UInt8] = [
+        0xFF05 : 0x00,    // TIMA
+        0xFF06 : 0x00,    // TMA
+        0xFF07 : 0x00,    // TAC
+        0xFF10 : 0x80,    // NR10
+        0xFF11 : 0xBF,    // NR11
+        0xFF12 : 0xF3,    // NR12
+        0xFF14 : 0xBF,    // NR14
+        0xFF16 : 0x3F,    // NR21
+        0xFF17 : 0x00,    // NR22
+        0xFF19 : 0xBF,    // NR24
+        0xFF1A : 0x7F,    // NR30
+        0xFF1B : 0xFF,    // NR31
+        0xFF1C : 0x9F,    // NR32
+        0xFF1E : 0xBF,    // NR33
+        0xFF20 : 0xFF,    // NR41
+        0xFF21 : 0x00,    // NR42
+        0xFF22 : 0x00,    // NR43
+        0xFF23 : 0xBF,    // NR30
+        0xFF24 : 0x77,    // NR50
+        0xFF25 : 0xF3,    // NR51
+        0xFF26 : 0xF1,    // $F0-SGB ; NR52
+////        0xFF40 : 0x91,    // LCDC
+        0xFF40 : 0x00,    // LCDC
+        0xFF42 : 0x00,    // SCY
+        0xFF43 : 0x00,    // SCX
+        0xFF44 : 0x00,    // LY
+        0xFF45 : 0x00,    // LYC
+        0xFF47 : 0xFC,    // BGP
+        0xFF48 : 0xFF,    // OBP0
+        0xFF49 : 0xFF,    // OBP1
+        0xFF50 : 0x00,    // Writing 01 to this will disable the boot rom
+        0xFF4A : 0x00,    // WY
+        0xFF4B : 0x00,    // WX
+        0xFFFF : 0x00    // IE
+    ]
+    
+    func resetDefaults() {
+        for deffo in dmgDefaults {
+            ram[Int(deffo.key)] = deffo.value
+        }
     }
     
     // Cartridge ROM data is used init a Cartridge from its header.
@@ -174,8 +222,10 @@ class DmgMmu : MMU {
                     // Perhaps this should go through the timerDelegate...?
                     return ram[Int(location)]
                     
-                case .ly, .lyc, .lcdc, .stat:
+                case .ly, .lyc, .lcdc:
                     return ram[Int(location)]
+                case .stat:
+                    return ram[Int(location)] | 0x80
                     
                 case .bgp, .obp0, .obp1: // Palette data (BG, OBP0, OBP1)
                     return ram[Int(location)]
@@ -225,7 +275,9 @@ class DmgMmu : MMU {
         return (UInt16(msb) << 8) | UInt16(lsb)
     }
     
+    var dbgPrevScx: UInt8 = 0
     // TODO: factor cartridge specific code out into own class/struct.
+    // TODO: consider making this into a subscript of the ram array. same with read.
     func write(at location: UInt16, with value: UInt8) {
 
         switch location {
@@ -325,7 +377,7 @@ class DmgMmu : MMU {
                 ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)
             case .stat: // LCD status register
-                ram[Int(location)] = value
+                ram[Int(location)] = 0x80 | value
                 delegateLcd?.set(value: value, on: mmuReg)
                 
             case .ly:
