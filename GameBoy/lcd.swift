@@ -23,7 +23,7 @@ protocol LcdDisplayDelegate {
     func didUpdate(buffer: [UInt8])
 }
 /*
-       <--+ 20 clocks +-> <--------+ 43 clocks +---------> <---------+ 51 clocks +--------->
+       <--+ 20 clocks +-> <----+ 43 clocks (minimum) +----> <----+ 51 clocks (maximum) +----->
        |------------------|--------------------------------|---------------------------------+
  ^     |                  |                                |                                 |
  |     |                  |                                |                                 |
@@ -54,6 +54,21 @@ protocol LcdDisplayDelegate {
  So if we have 154 lines * 114 clocks = 17556 clocks per screen (at 1/4 max clock speed)
  and 17556 clocks per screen * 4 = 70224 clocks per screen at max clock speed.
  and a refresh rate of 4194304 / 70224 = 59,7
+ 
+ Modes: 0 = H-Blank, 1 = V-Blank, 2 = OAM Search, 3 = Pixel Transfer
+ 
+ * OAM Search is fixed at 20 clocks: 2 cycles per entry in OAM.
+ * V-Blank is fixed at 1140 clocks (10 lines * 114 clocks per line)
+ * Pixel Transfer is variable but takes at least 43 clocks (2 clocks * 10 sprites)
+   The variability comes from "penalties" added to to the base clock of 43:
+     Add 2 cycles per sprite on the line
+     Add up to (5 cycles @4Mhz) so 5/4 cycles for stopping the background fetcher.
+     Add (unconfirmed) up to 2 cycles if the window is visible on the line.
+ * H-Blank takes whatever is left to reach 114 clocks (114 - (oam search + pixel transfer))
+ 
+ For now this is just academic. As long as the line takes 114 cycles we're good.
+ source: ipfs hash QmNYdV6hSgnKfxXH2BuAwi1xVxKKYUdnvbQw1q7HEGN5WG
+
  */
 class LCD {
     // keep a reference to the mmu where we have registers mapped to I/O
@@ -206,6 +221,9 @@ class LCD {
                 // V-blank state
                 lcdMode = .vBlank
                 
+                if delegateMmu.getValue(for: .ly) != 144 {
+                    print("sync issue!")
+                }
                 // Set the v-blank interrupt request (regardless of the stat version)
                 // They trigger different vblank vectors.
                 delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
@@ -213,6 +231,8 @@ class LCD {
                 if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
+                
+                delegateDisplay?.didUpdate(buffer: vbuf)
             }
 
         } else {
@@ -245,7 +265,7 @@ class LCD {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
                 
-                delegateDisplay?.didUpdate(buffer: vbuf)
+//                delegateDisplay?.didUpdate(buffer: vbuf)
             }
         }
 
@@ -285,7 +305,7 @@ class LCD {
             // the screen coords x and y are 0 indexed. The sprites are not,
             // so we adjust.
             let sx = UInt8(pixCol+1)
-            let sy = UInt8(line+1)
+            let sy = UInt8(line)
             
             for obj in activeObjs {
                 
@@ -556,13 +576,20 @@ extension LCD : MmuDelegate {
              Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
              */
             if isSet(bit: 7, in: value) {
-                start()
-            } else {
-                // Only allowed to stop during v-blank.
-                if let lyVal = delegateMmu?.getValue(for: .ly), lyVal >= UInt8(0x90) {
-                    stop()
-                }
+                // Reset ly on toggling lcd on
+                delegateMmu?.set(value: 0, on: .ly)
+                lcdTicks = lcdModulo
+                lineClock = lineClockModulo
             }
+            
+//            if isSet(bit: 7, in: value) {
+//                start()
+//            } else {
+//                // Only allowed to stop during v-blank.
+//                if let lyVal = delegateMmu?.getValue(for: .ly), lyVal >= UInt8(0x90) {
+//                    stop()
+//                }
+//            }
             // FIXME: Handle other cases
             
         case .scy, .scx:

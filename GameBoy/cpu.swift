@@ -120,7 +120,7 @@ class CPU {
     var mmu: MMU!
     var timer: Timer!
     
-    var subOpCycles: UInt8 = 1
+//    var subOpCycles: UInt8 = 1
     
     enum OpType {
         case adc8_8
@@ -882,7 +882,10 @@ class CPU {
 //        if PC == 0x01D0 {
 //        if PC == 0x016E {
 //        if PC == 0x0150 {
-        if PC == 0x005D {
+//        if PC == 0x005D {
+//        if PC == 0xC003 {
+        if PC == 0xC0C1 || PC == 0xC0C9 {
+//        if PC == 0xC10A {
             print("PC is \(String(format: "%2X",PC))")
             dbgPr = true
         }
@@ -937,7 +940,8 @@ class CPU {
         // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
         // will count as 12 * (1_048_576 / 4_194_304) = 3 cycles
         
-        return UInt8(Double(subOpCycles) * (systemClock / maxClock))
+//        return UInt8(Double(subOpCycles) * (systemClock / maxClock))
+        return UInt8(Double(cycles) * (systemClock / maxClock))
     }
 
     func interruptHandler() {
@@ -1082,7 +1086,7 @@ class CPU {
         
         // TODO: Consider using the functions directly in the table instead since they
         // all take args anyway
-        subOpCycles = cycles
+//        subOpCycles = cycles
         do {
             switch opcode {
             case .bit:
