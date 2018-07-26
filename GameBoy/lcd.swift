@@ -86,7 +86,7 @@ class LCD {
     
     // Our video buffer uses a byte per pixel
     var vbuf: [UInt8]
-    var activeObjs: [OamEntry?]!
+    var activeObjs = [OamEntry]()
     
     let hResolution = 160
     let vResolution = 144
@@ -221,9 +221,6 @@ class LCD {
                 // V-blank state
                 lcdMode = .vBlank
                 
-                if delegateMmu.getValue(for: .ly) != 144 {
-                    print("sync issue!")
-                }
                 // Set the v-blank interrupt request (regardless of the stat version)
                 // They trigger different vblank vectors.
                 delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
@@ -247,11 +244,13 @@ class LCD {
                 if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
-                
-                let objHeight: UInt8 = isSet(bit: 2, in: lcdc) ? 16 : 8
-                // OAM search is done on a per-line basis. Find the 10 objs to display.
-                activeObjs = try! oamSearch(for: ly, objHeight: objHeight)
-
+    
+                // Only compile sprite list if they are enabled.
+                if isSet(bit: 1, in: lcdc) {
+                    let objHeight: UInt8 = isSet(bit: 2, in: lcdc) ? 16 : 8
+                    // OAM search is done on a per-line basis. Find the 10 objs to display.
+                    activeObjs = oamSearch(for: ly, objHeight: objHeight)
+                }
             }
             
             if lcdMode != .pxxfer && oamTicks ..< pxfer ~= modeCount {
@@ -304,18 +303,26 @@ class LCD {
             // FIXME: check lcdc obj on flag (bit 1)
             // the screen coords x and y are 0 indexed. The sprites are not,
             // so we adjust.
+            
             let sx = UInt8(pixCol+1)
-            let sy = UInt8(line)
+            let sy = UInt8(line+1)
             
             for obj in activeObjs {
-                
-                guard let obj = obj else { continue }
+
+                // Ignore objs that are not overlapping the currently drawn pixel
                 guard sx > (Int(obj.x) - 8) && sx <= Int(obj.x) else { continue }
                 
-                let tileRow = (sy & 7) << 1
-                // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
-                let tileCol = (obj.x - sx)
+                // Calculate the row and column offset within a given tile
+                let objHeightMask: UInt8 = isSet(bit: 2, in: lcdc) ? 0xF : 0x7
+                let objXFlipped = isSet(bit: 5, in: obj.attribute)
+                let objYFlipped = isSet(bit: 6, in: obj.attribute)
                 
+//                var tileRow = (sy & objHeightMask)// << 1
+                let tileRow = objYFlipped ? (obj.y - sy) << 1 : (0xF - (obj.y - sy)) << 1
+                let tileCol = objXFlipped ? 7 - (obj.x - sx) : (obj.x - sx)
+                
+                
+//                let offset = isSet(bit: 2, in: lcdc) ? Int(obj.tileNo) & 0xFE : Int(obj.tileNo)
                 let offset = Int(obj.tileNo)
                 let tileOffset = UInt16(Int(0x8000) + (offset << 4))
                 
@@ -344,7 +351,7 @@ class LCD {
         let attribute: UInt8
     }
     
-    
+  /*
     var lastDisplay: UInt64 = 0
     var fpsCount = 0
     func generateDisplay() {
@@ -448,8 +455,8 @@ class LCD {
             print("Lcd refresh error \(error)")
         }
     }
-    
-    // TODO: clean up
+    */
+    // TODO: clean up and try to move into args.
     var charData: UInt8 = 0
     var tileRowHi: UInt8 = 0
     var tileRowLo: UInt8 = 0
@@ -521,13 +528,15 @@ class LCD {
         return pixIdx
     }
     
+    // WIP
     func fetch(row: UInt8, in tile: UInt8) -> (UInt8, UInt8) {
         return (0,0)
     }
+    
     // Search for objs (sprites) whose x value is > 0
-    func oamSearch(for line: UInt8, objHeight: UInt8) throws -> [OamEntry?] {
+    func oamSearch(for line: UInt8, objHeight: UInt8) -> [OamEntry] {
         
-        var displayObjs = Array<OamEntry?>(repeating: nil, count: 10)
+        var displayObjs = [OamEntry]()
         let oamBaseAddress: Int = 0xFE00
         let oamEntryBytes = 4
         // There are a maximum of 8 * 5 objs we need to search
