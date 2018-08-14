@@ -50,15 +50,15 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
         dmgDisplayView = DmgDisplay(frame: NSRect(x: 0, y: 0, width: 160, height: 144))
         self.view = dmgDisplayView
         
-        NSEvent.addLocalMonitorForEvents(matching: .keyUp) { (theEvent)-> NSEvent? in
-            self.keyUp(with: theEvent)
-            return nil
-        }
-        
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { (theEvent)-> NSEvent? in
-            self.keyDown(with: theEvent)
-            return nil
-        }
+//        NSEvent.addLocalMonitorForEvents(matching: .keyUp) { (theEvent)-> NSEvent? in
+//            self.keyUp(with: theEvent)
+//            return nil
+//        }
+//
+//        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { (theEvent)-> NSEvent? in
+//            self.keyDown(with: theEvent)
+//            return nil
+//        }
     }
     
     func didUpdate(buffer: [UInt8]) {
@@ -69,10 +69,13 @@ class DmgDisplayController : NSViewController, LcdDisplayDelegate {
         }
     }
     
-    override func keyDown(with event: NSEvent) {
-        print("ongo")
-    }
-    
+//    override func keyDown(with event: NSEvent) {
+//        print("ongo")
+//    }
+//    
+//    override func keyUp(with event: NSEvent) {
+//        print("bongo")
+//    }
 }
 
 class DmgDisplay : NSView {
@@ -83,8 +86,8 @@ class DmgDisplay : NSView {
     // DMG pixel colors
     // Every three bytes correspond to the red, green and blue component of a color in the lookup table.
     // There are four colors in total.
-//    let clut: [UInt8] = [0xE0, 0xF8, 0xD0, 0x34, 0x68, 0x56, 0x88, 0xC8, 0x70, 0x8, 0x18, 0x20]
-    let clut: [UInt8] = [0xE6, 0xF8, 0xDA, 0x9A, 0xC7, 0x85, 0x43, 0x79, 0x69, 0x4, 0x1F, 0x2A]
+    let clut: [UInt8] = [0xE0, 0xF8, 0xD0, 0x34, 0x68, 0x56, 0x88, 0xC8, 0x70, 0x8, 0x18, 0x20]
+//    let clut: [UInt8] = [0xE6, 0xF8, 0xDA, 0x9A, 0xC7, 0x85, 0x43, 0x79, 0x69, 0x4, 0x1F, 0x2A]
     
     func updateView(buffer: [UInt8]) {
         

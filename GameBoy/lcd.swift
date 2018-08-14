@@ -290,6 +290,7 @@ class LCD {
         //        let tileDataStart: UInt16 = isSet(bit: 4, in: lcdc) ? 0x8000 : 0x8800
         let tileDataStart: UInt16 = isSet(bit: 4, in: lcdc) ? 0x8000 : 0x9000
 
+        // FIXME: Do 8 pixels at a time instead.
         for pixCol in 0 ..< hResolution {
             
             // wrap left/top when overflowing past right/bottom
@@ -321,7 +322,9 @@ class LCD {
                 let tileRow = objYFlipped ? (obj.y - sy) << 1 : (0xF - (obj.y - sy)) << 1
                 let tileCol = objXFlipped ? 7 - (obj.x - sx) : (obj.x - sx)
                 
-                
+                if obj.tileNo == 0xD4 {
+                    print("bug")
+                }
 //                let offset = isSet(bit: 2, in: lcdc) ? Int(obj.tileNo) & 0xFE : Int(obj.tileNo)
                 let offset = Int(obj.tileNo)
                 let tileOffset = UInt16(Int(0x8000) + (offset << 4))

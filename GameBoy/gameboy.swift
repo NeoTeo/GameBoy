@@ -69,7 +69,7 @@ class Gameboy : SYSTEM {
         allowance = cpuCycleAllowance
         
         // FIXME: debug: single update to refresh the register in the mmu.
-        controller.controllerUpdated()
+        //controller.controllerUpdated()
         
         runCycle()
         
@@ -213,10 +213,10 @@ class Gameboy : SYSTEM {
 //        let binaryName = "oam_bug.gb"
 //        let binaryName = "1-lcd_sync.gb"
         
-//        let binaryName = "Tetris.gb"
+        let binaryName = "Tetris.gb"
 //        let binaryName = "loz.gb"
 //        let binaryName = "PokemonBlue.gb"
-        let binaryName = "drMario.gb"
+//        let binaryName = "drMario.gb"
 //        let binaryName = "SML.gb"
         guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
