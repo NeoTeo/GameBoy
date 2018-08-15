@@ -72,8 +72,6 @@ class Timer {
 
     func tick(count: Int) {
         
-        // check that the timer is on
-        guard let tac = delegateMmu?.getValue(for: .tac), isSet(bit: 2, in: tac) else { return }
         
         // The CPU has ticked count times. Catch up.
         
@@ -87,6 +85,9 @@ class Timer {
             DIV = DIV &+ 1
         }
         
+        // check that the timer is on
+        guard let tac = delegateMmu?.getValue(for: .tac), isSet(bit: 2, in: tac) else { return }
+
         ticks -= count
         if ticks <= 0 {
             ticks += tickModulo
