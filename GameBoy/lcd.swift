@@ -90,21 +90,21 @@ class LCD {
     
     let hResolution = 160
     let vResolution = 144
-    let verticalLines = 144
+    let verticalVisibleLines = 144
     let vBlankLines = 10
     let oamTicks = 20
     let pixelTransferTicks = 43
     let hBlankTicks = 51
     
     lazy var horizontalTicks = oamTicks + pixelTransferTicks + hBlankTicks
-    lazy var verticalTicks = verticalLines + vBlankLines
-    lazy var lcdModulo = horizontalTicks * verticalTicks
+    lazy var verticalLines = verticalVisibleLines + vBlankLines
+    lazy var lcdModulo = horizontalTicks * verticalLines
     lazy var lineClockModulo = horizontalTicks
     lazy var lineClock: Int = lineClockModulo
     
     lazy var pxfer = oamTicks + pixelTransferTicks
     lazy var hBlank = oamTicks + pixelTransferTicks + hBlankTicks
-    lazy var drawingModulo = verticalLines * horizontalTicks
+    lazy var drawingModulo = verticalVisibleLines * horizontalTicks
     lazy var lcdTicks = lcdModulo
     
     var lastVsyncNanos: UInt64 = 0
@@ -158,6 +158,9 @@ class LCD {
         vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
     }
     
+    var dbgHblankCount = 0
+    var dbgRefreshString = ""
+    
     func refresh(count: Int) {
         
         // Early out if lcd is off
@@ -169,12 +172,11 @@ class LCD {
         // When in the vblank state it is in vBlank mode.
         
         let stat = delegateMmu.getValue(for: .stat)
-        var refresh = false
         
         lcdTicks -= count
         if lcdTicks <= 0 {
             lcdTicks += lcdModulo
-            refresh = true
+            dbgRefreshString += "(lcdTicks: \(lcdTicks), lineclock: \(lineClock))\n"
         }
         
         // Drawing state
@@ -194,11 +196,14 @@ class LCD {
             counter = counter &+ 1
             if (counter & 0xFFF) == 0 { print("lineclock: \(deltaMillis) ms") }
             */
+            dbgRefreshString += "(LC: \(lineClock))\n"
             lineClock += lineClockModulo
-            
+            guard activeObjs.count == 0 else {
+                fatalError("ffs")
+            }
             // Increment ly
             var ly = delegateMmu.getValue(for: .ly)
-            ly = (ly + 1) % UInt8(verticalTicks)
+            ly = (ly + 1) % UInt8(verticalLines)
             delegateMmu?.set(value: ly, on: .ly)
             
             let lyc = delegateMmu.getValue(for: .lyc)
@@ -218,6 +223,14 @@ class LCD {
         if lcdTicks < (lcdModulo - drawingModulo) {
             
             if lcdMode != .vBlank {
+                
+                if dbgHblankCount != 144 {
+                    print("hblank count is \(dbgHblankCount) at the time of vblank")
+                    print(dbgRefreshString)
+                }
+                dbgHblankCount = 0
+                dbgRefreshString = ">VBlank | "
+
                 // V-blank state
                 lcdMode = .vBlank
                 
@@ -231,7 +244,7 @@ class LCD {
                 
                 delegateDisplay?.didUpdate(buffer: vbuf)
             }
-
+            
         } else {
             
             let ly = delegateMmu.getValue(for: .ly)
@@ -240,6 +253,10 @@ class LCD {
             let modeCount = lineClockModulo - lineClock
             
             if lcdMode != .oam && 0 ..< oamTicks ~= modeCount {
+                
+                if lcdMode == .pxxfer {
+                    fatalError("wrong!")
+                }
                 lcdMode = .oam
                 if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
@@ -251,11 +268,14 @@ class LCD {
                     // OAM search is done on a per-line basis. Find the 10 objs to display.
                     activeObjs = oamSearch(for: ly, objHeight: objHeight)
                 }
+                dbgRefreshString += "OAM | "
             }
             
             if lcdMode != .pxxfer && oamTicks ..< pxfer ~= modeCount {
                 lcdMode = .pxxfer
-                try! transferPixels(line: ly)
+                try! transferPixels(line: ly, activeObjects: activeObjs)
+                dbgRefreshString += "Pixel transfer \(modeCount) | "
+                
             }
             
             if lcdMode != .hBlank && pxfer ..< hBlank ~= modeCount {
@@ -264,17 +284,22 @@ class LCD {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
                 
-//                delegateDisplay?.didUpdate(buffer: vbuf)
+                dbgHblankCount += 1
+                // We're done with this scan line so clear sprites list.
+                activeObjs = []
+                dbgRefreshString += "HBlank |\n"
             }
-        }
 
-        if refresh == true {
-            // Check which area of tile map ram is selected
-//            delegateDisplay?.didUpdate(buffer: vbuf)
+            if lcdMode == .pxxfer {
+                dbgRefreshString += "(\(modeCount))"
+                if  modeCount >= pxfer {
+                    fatalError("closer?")
+                }
+            }
         }
     }
     
-    func transferPixels(line: UInt8) throws {
+    func transferPixels(line: UInt8, activeObjects: [OamEntry]) throws {
         
         // x and y scroll offset
         let scx = delegateMmu.getValue(for: .scx)
@@ -293,7 +318,8 @@ class LCD {
         // FIXME: Do 8 pixels at a time instead.
         for pixCol in 0 ..< hResolution {
             
-            // wrap left/top when overflowing past right/bottom
+            // wrap left/top when overflowing past right/bottom.
+            // The display area is 256*256 pixels (32*32 tiles)
             let x = UInt8((pixCol + Int(scx)) & 0xFF)
             let y = UInt8((Int(line) + Int(scy)) & 0xFF)
             
@@ -308,7 +334,8 @@ class LCD {
             let sx = UInt8(pixCol+1)
             let sy = UInt8(line+1)
             
-            for obj in activeObjs {
+            // activeObjs holds any sprites to display
+            for obj in activeObjects {
 
                 // Ignore objs that are not overlapping the currently drawn pixel
                 guard sx > (Int(obj.x) - 8) && sx <= Int(obj.x) else { continue }
@@ -318,8 +345,8 @@ class LCD {
                 let objXFlipped = isSet(bit: 5, in: obj.attribute)
                 let objYFlipped = isSet(bit: 6, in: obj.attribute)
                 
-//                var tileRow = (sy & objHeightMask)// << 1
-                let tileRow = objYFlipped ? (obj.y - sy) << 1 : (0xF - (obj.y - sy)) << 1
+                // Sprite origin is lower right
+                let tileRow = objYFlipped ? (obj.y - sy) << 1 : (15 - (obj.y - sy)) << 1
                 let tileCol = objXFlipped ? 7 - (obj.x - sx) : (obj.x - sx)
                 
                 if obj.tileNo == 0xD4 {
@@ -352,113 +379,9 @@ class LCD {
         let y: UInt8
         let tileNo: UInt8
         let attribute: UInt8
+        let line: UInt8
     }
     
-  /*
-    var lastDisplay: UInt64 = 0
-    var fpsCount = 0
-    func generateDisplay() {
-
-        let now = DispatchTime.now().uptimeNanoseconds
-        let displayDelta = (now - lastDisplay) / 1_000_000 // in ms
-        lastDisplay = now
-        fpsCount = (fpsCount + 1) % 60
-        if fpsCount == 0 {
-            print("fps: \(1000/displayDelta)")
-        }
-        // x and y scroll offset
-        let scx = delegateMmu.getValue(for: .scx)
-        let scy = delegateMmu.getValue(for: .scy)
-        
-        // Get background palette
-        let bgp = delegateMmu.getValue(for: .bgp)
-        
-        // Get tile data start address
-        let lcdc = delegateMmu.getValue(for: .lcdc)
-        
-        let bgTileRamStart: UInt16 = isSet(bit: 3, in: lcdc) ? 0x9C00 : 0x9800
-//        let tileDataStart: UInt16 = isSet(bit: 4, in: lcdc) ? 0x8000 : 0x8800
-        let tileDataStart: UInt16 = isSet(bit: 4, in: lcdc) ? 0x8000 : 0x9000
-        let objHeight: UInt8 = isSet(bit: 2, in: lcdc) ? 16 : 8
-        
-        do {
-//            let preDisplayNanos = DispatchTime.now().uptimeNanoseconds
-            
-            // Each byte in the background tile ram contains a character code
-            // What gets displayed is determined by the scx and scy which define the position of the view.
-            // The background consists of an area of 32*32 tiles each of which is 8*8 pixels so
-            // the whole background is 256*256 pixels.
-            // Calculate which area of the bg we are displaying
-            // The tile row and column are scy / 8 and scx / 8
-            if scx != 0 || scx == 0x1D {
-                print("debug me")
-            }
-            for pixRow in 0 ..< vResolution {
-                
-                // OAM search is done on a per-line basis. Find the 10 objs to display.
-                let displayObjs = try oamSearch(for: UInt8(pixRow), objHeight: objHeight)
-
-                // FIXME: Do 8 pixels at a time instead.
-                for pixCol in 0 ..< hResolution {
-                    
-                    // wrap left/top when overflowing past right/bottom
-                    let x = UInt8((pixCol + Int(scx)) & 0xFF)
-                    let y = UInt8((pixRow + Int(scy)) & 0xFF)
-                    
-                    let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: bgTileRamStart, from: tileDataStart)
-                    var shadeVal = (bgp >> (pixelValue << 1)) & 0x3
-                    
-                    // Check if we need to draw a sprite here
-                    // FIXME: check lcdc obj on flag (bit 1)
-                    // the screen coords x and y are 0 indexed. The sprites are not,
-                    // so we adjust.
-                    let sx = UInt8(pixCol+1)
-                    let sy = UInt8(pixRow+1)
-                    
-                    for obj in displayObjs {
-                        
-                        guard let obj = obj else { continue }
-                        guard sx > (Int(obj.x) - 8) && sx <= Int(obj.x) else { continue }
-                        
-                        let tileRow = (sy & 7) << 1
-                        // Mask out lower 3 bits (same as x % 8) to get to the column within the tile.
-                        let tileCol = (obj.x - sx)
-
-                        let offset = Int(obj.tileNo)
-                        let tileOffset = UInt16(Int(0x8000) + (offset << 4))
-                        
-                        let tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-                        let tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
-
-                        let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
-
-        
-                        let obp = isSet(bit: 4, in: obj.attribute) ? delegateMmu.getValue(for: .obp1) : delegateMmu.getValue(for: .obp0)
-                        // Check for priority and decide if we need to overwrite
-                        // Skip if transparent pixel
-                        let shade = (obp >> (pixIdx << 1)) & 0x3
-                        guard shade != 0 else { continue }
-                        shadeVal = shade
-                    }
-                    
-                    
-                    vbuf[pixRow * hResolution + pixCol] = shadeVal
-                }
-            }
-            delegateDisplay?.didUpdate(buffer: vbuf)
-            
-            /*
-             // Debug timing output
-             let displayDeltaMillis = Double(DispatchTime.now().uptimeNanoseconds - preDisplayNanos) / 1000000
-             counter = counter &+ 1
-             if (counter & 0xF) == 0 { print("display time: \(displayDeltaMillis) ms") }
-             */
-
-        } catch {
-            print("Lcd refresh error \(error)")
-        }
-    }
-    */
     // TODO: clean up and try to move into args.
     var charData: UInt8 = 0
     var tileRowHi: UInt8 = 0
@@ -542,13 +465,24 @@ class LCD {
         var displayObjs = [OamEntry]()
         let oamBaseAddress: Int = 0xFE00
         let oamEntryBytes = 4
+        
         // There are a maximum of 8 * 5 objs we need to search
         for objIdx in stride(from:0, to: 8 * 5 * oamEntryBytes, by: oamEntryBytes) {
             let oam = delegateMmu.unsafeRead(bytes: oamEntryBytes, at: UInt16(oamBaseAddress + objIdx))
+            // An obj origin is lower right
             // skip objects with an x of 0.
-            guard oam[1] != 0 && ((line &+ 16) >= oam[0]) && ((line &+ 16) < (oam[0] + objHeight)) else { continue }
+            let scanline = Int(line)
+//            guard objXPos != 0 &&
+//                ((line &+ 16) >= objYPos) &&
+//                ((line &+ 16) < (objYPos + objHeight))
+//            else { continue }
+            guard oam[1] != 0 &&
+                (scanline >= (Int(oam[0]) - 16)) &&
+                (scanline < oam[0])
             
-            displayObjs.append(OamEntry(x: oam[1], y: oam[0], tileNo: oam[2], attribute: oam[3]))
+            else { continue }
+            
+            displayObjs.append(OamEntry(x: oam[1], y: oam[0], tileNo: oam[2], attribute: oam[3], line: line))
 //            print("OAM:")
 //            print("x: \(oam[0])")
 //            print("y: \(oam[1])")
@@ -587,22 +521,14 @@ extension LCD : MmuDelegate {
              Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
              Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
              */
-            if isSet(bit: 7, in: value) {
-                // Reset ly on toggling lcd on
-                delegateMmu?.set(value: 0, on: .ly)
-                lcdTicks = lcdModulo
-                lineClock = lineClockModulo
-            }
-            
 //            if isSet(bit: 7, in: value) {
-//                start()
-//            } else {
-//                // Only allowed to stop during v-blank.
-//                if let lyVal = delegateMmu?.getValue(for: .ly), lyVal >= UInt8(0x90) {
-//                    stop()
-//                }
+//                // Reset ly on toggling lcd on
+//                delegateMmu?.set(value: 0, on: .ly)
+//                lcdTicks = lcdModulo
+//                lineClock = lineClockModulo
+                dbgRefreshString += "eek"
 //            }
-            // FIXME: Handle other cases
+            break
             
         case .scy, .scx:
             break
