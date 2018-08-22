@@ -100,7 +100,9 @@ class LCD {
     lazy var verticalLines = verticalVisibleLines + vBlankLines
     lazy var lcdModulo = horizontalTicks * verticalLines
     lazy var lineClockModulo = horizontalTicks
-    lazy var lineClock: Int = lineClockModulo
+    var lineClock: Int = 0
+    var prevLineClock: Int = 0
+//    lazy var lineClock: Int = lineClockModulo
     
     lazy var pxfer = oamTicks + pixelTransferTicks
     lazy var hBlank = oamTicks + pixelTransferTicks + hBlankTicks
@@ -176,7 +178,7 @@ class LCD {
         lcdTicks -= count
         if lcdTicks <= 0 {
             lcdTicks += lcdModulo
-            dbgRefreshString += "(lcdTicks: \(lcdTicks), lineclock: \(lineClock))\n"
+            dbgRefreshString += "(lcdTicks: \(lcdTicks))\n"
         }
         
         // Drawing state
@@ -186,6 +188,7 @@ class LCD {
         // in the subsequent 43 clocks and finally the horizontal blank for the
         // last 51 clocks.
         // Determine which mode we're in.
+        /*
         lineClock -= count
         if lineClock <= 0 {
             
@@ -218,12 +221,43 @@ class LCD {
                 delegateMmu.set(value: newStat, on: .stat)
             }
         }
+        */
         
+        let tickCount = lcdModulo - lcdTicks
+        prevLineClock = lineClock
+        lineClock = tickCount % lineClockModulo
+        // Check if we've wrapped which indicates a new scanline
+        if prevLineClock > lineClock {
+            // Increment ly
+            var ly = delegateMmu.getValue(for: .ly)
+            ly = (ly + 1) % UInt8(verticalLines)
+            delegateMmu?.set(value: ly, on: .ly)
+            
+            let lyc = delegateMmu.getValue(for: .lyc)
+            if ly == lyc {
+                // Check if we need to trigger an interrupt
+                if isSet(bit: LcdStatusBit.lyclyIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                }
+                
+                // Set the coincidence bit on
+                let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
+                delegateMmu.set(value: newStat, on: .stat)
+            }
+            
+            // We're done with this scan line so clear sprites list.
+            activeObjs = []
+        }
+
         // FIXME: Need to ensure we only enable interrupt bits once per mode change.
-        if lcdTicks < (lcdModulo - drawingModulo) {
+        if lcdTicks <= (lcdModulo - drawingModulo) {
             
             if lcdMode != .vBlank {
-                
+
+                guard activeObjs.count == 0 else {
+                    fatalError("ffs 2")
+                }
+
                 if dbgHblankCount != 144 {
                     print("hblank count is \(dbgHblankCount) at the time of vblank")
                     print(dbgRefreshString)
@@ -249,9 +283,13 @@ class LCD {
             
             let ly = delegateMmu.getValue(for: .ly)
             
+            guard ly < 144 else {
+                fatalError("too far")
+            }
             // check if we've gone into oam mode
-            let modeCount = lineClockModulo - lineClock
-            
+//            let modeCount = lineClockModulo - lineClock
+            let modeCount = lineClock
+
             if lcdMode != .oam && 0 ..< oamTicks ~= modeCount {
                 
                 if lcdMode == .pxxfer {
@@ -285,8 +323,8 @@ class LCD {
                 }
                 
                 dbgHblankCount += 1
-                // We're done with this scan line so clear sprites list.
-                activeObjs = []
+//                // We're done with this scan line so clear sprites list.
+//                activeObjs = []
                 dbgRefreshString += "HBlank |\n"
             }
 
@@ -472,13 +510,16 @@ class LCD {
             // An obj origin is lower right
             // skip objects with an x of 0.
             let scanline = Int(line)
-//            guard objXPos != 0 &&
-//                ((line &+ 16) >= objYPos) &&
-//                ((line &+ 16) < (objYPos + objHeight))
+            let objYPos = oam[0]
+            let objXPos = oam[1]
+            guard objXPos != 0 &&
+                ((line &+ 16) >= objYPos) &&
+                ((line &+ 16) < (objYPos + objHeight))
 //            else { continue }
-            guard oam[1] != 0 &&
-                (scanline >= (Int(oam[0]) - 16)) &&
-                (scanline < oam[0])
+//            guard oam[1] != 0 &&
+////                (scanline >= (Int(oam[0]) - 16)) &&
+//                (scanline >= (Int(oam[0] - objHeight))) &&
+//                (scanline < oam[0])
             
             else { continue }
             
