@@ -214,8 +214,8 @@ class Gameboy : SYSTEM {
 //        let binaryName = "1-lcd_sync.gb"
         
 //        let binaryName = "Tetris.gb"
-//        let binaryName = "loz.gb"
-        let binaryName = "kby.gb"
+        let binaryName = "loz.gb"
+//        let binaryName = "kby.gb"
 //        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
 //        let binaryName = "SML.gb"

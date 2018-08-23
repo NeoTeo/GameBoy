@@ -108,7 +108,7 @@ class DmgMmu : MMU {
         0xFF24 : 0x77,    // NR50
         0xFF25 : 0xF3,    // NR51
         0xFF26 : 0xF1,    // $F0-SGB ; NR52
-////        0xFF40 : 0x91,    // LCDC
+//        0xFF40 : 0x91,    // LCDC
         0xFF40 : 0x00,    // LCDC
         0xFF42 : 0x00,    // SCY
         0xFF43 : 0x00,    // SCX

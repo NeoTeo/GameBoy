@@ -188,40 +188,6 @@ class LCD {
         // in the subsequent 43 clocks and finally the horizontal blank for the
         // last 51 clocks.
         // Determine which mode we're in.
-        /*
-        lineClock -= count
-        if lineClock <= 0 {
-            
-            /* Debug output
-            let nowNanos = DispatchTime.now().uptimeNanoseconds
-            let deltaMillis = Double(nowNanos - lastVsyncNanos) / 1000000.0
-            lastVsyncNanos = nowNanos
-            counter = counter &+ 1
-            if (counter & 0xFFF) == 0 { print("lineclock: \(deltaMillis) ms") }
-            */
-            dbgRefreshString += "(LC: \(lineClock))\n"
-            lineClock += lineClockModulo
-            guard activeObjs.count == 0 else {
-                fatalError("ffs")
-            }
-            // Increment ly
-            var ly = delegateMmu.getValue(for: .ly)
-            ly = (ly + 1) % UInt8(verticalLines)
-            delegateMmu?.set(value: ly, on: .ly)
-            
-            let lyc = delegateMmu.getValue(for: .lyc)
-            if ly == lyc {
-                // Check if we need to trigger an interrupt
-                if isSet(bit: LcdStatusBit.lyclyIrq.rawValue, in: stat) {
-                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
-                }
-                
-                // Set the coincidence bit on
-                let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
-                delegateMmu.set(value: newStat, on: .stat)
-            }
-        }
-        */
         
         let tickCount = lcdModulo - lcdTicks
         prevLineClock = lineClock
@@ -243,14 +209,20 @@ class LCD {
                 // Set the coincidence bit on
                 let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
                 delegateMmu.set(value: newStat, on: .stat)
+            } else if isSet(bit: LcdStatusBit.lyclySame.rawValue, in: stat) {
+                // Set the coincidence bit on
+                let newStat = GameBoy.clear(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
+                delegateMmu.set(value: newStat, on: .stat)
             }
             
             // We're done with this scan line so clear sprites list.
             activeObjs = []
         }
-
+        
+        let ly = delegateMmu.getValue(for: .ly)
         // FIXME: Need to ensure we only enable interrupt bits once per mode change.
-        if lcdTicks <= (lcdModulo - drawingModulo) {
+//        if lcdTicks <= (lcdModulo - drawingModulo) {
+        if ly > 143 {
             
             if lcdMode != .vBlank {
 
@@ -281,7 +253,7 @@ class LCD {
             
         } else {
             
-            let ly = delegateMmu.getValue(for: .ly)
+//            let ly = delegateMmu.getValue(for: .ly)
             
             guard ly < 144 else {
                 fatalError("too far")
@@ -364,6 +336,9 @@ class LCD {
             let pixelValue: UInt8 = try pixelForCoord(x: x, y: y, at: bgTileRamStart, from: tileDataStart)
             var shadeVal = (bgp >> (pixelValue << 1)) & 0x3
             
+//            if pixCol == 16 && line == 40 {
+//                print(pixelValue)
+//            }
             // Check if we need to draw a sprite here
             // FIXME: check lcdc obj on flag (bit 1)
             // the screen coords x and y are 0 indexed. The sprites are not,
@@ -394,17 +369,20 @@ class LCD {
                 let offset = Int(obj.tileNo)
                 let tileOffset = UInt16(Int(0x8000) + (offset << 4))
                 
-                let tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-                let tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
-                
-                let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
-                
+                let tileRowLsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
+                let tileRowMsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+                // Extract the two bits (one from the most significant byte and one from the least)
+                // that make a palette index from the two bytes that define a row of 8 pixels.
+                let pixIdx = (((tileRowMsb >> tileCol) & 0x01) << 1) + ((tileRowLsb >> tileCol) & 0x01)
+
+                // Skip if transparent pixel
+                guard pixIdx != 0 else { continue }
                 
                 let obp = isSet(bit: 4, in: obj.attribute) ? delegateMmu.getValue(for: .obp1) : delegateMmu.getValue(for: .obp0)
                 // Check for priority and decide if we need to overwrite
-                // Skip if transparent pixel
+                
                 let shade = (obp >> (pixIdx << 1)) & 0x3
-                guard shade != 0 else { continue }
+                //guard shade != 0 else { continue }
                 shadeVal = shade
             }
             
@@ -422,9 +400,11 @@ class LCD {
     
     // TODO: clean up and try to move into args.
     var charData: UInt8 = 0
-    var tileRowHi: UInt8 = 0
-    var tileRowLo: UInt8 = 0
-    
+//    var tileRowHi: UInt8 = 0
+//    var tileRowLo: UInt8 = 0
+    var tileRowMsb: UInt8 = 0
+    var tileRowLsb: UInt8 = 0
+
     var prevC: UInt8 = 255
     var prevR: UInt8 = 255
     var prevY: UInt8 = 255
@@ -449,6 +429,7 @@ class LCD {
             update = true
         }
 
+        // TODO: find better way of reusing the tileRowMsb/Lsb
         if prevY != y || update == true {
             // go through the tile data at the given index in tile memory
             // Each 2 bytes in tile memory correspond to a row of 8 pixels
@@ -464,9 +445,11 @@ class LCD {
             let offset = tileDataStart == 0x8000 ? Int(charData) : signedVal(from: charData)
             let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
             
-            tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-            tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
-            
+//            tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
+//            tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+            tileRowLsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
+            tileRowMsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+
             prevY = y
         }
         // Mask in lower 3 bits (not same as x % 8) to get to the column within the tile.
@@ -488,7 +471,11 @@ class LCD {
          | 0x8194   |  .   |    .     |     .        .
          |   .      |  .   |    .     |
          */
-        let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
+//        let pixIdx = (((tileRowHi >> tileCol) & 0x01) << 1) + ((tileRowLo >> tileCol) & 0x01)
+        // Extract the two bits (one from the most significant byte and one from the least)
+        // that make a palette index from the two bytes that define a row of 8 pixels.
+        let pixIdx = (((tileRowMsb >> tileCol) & 0x01) << 1) + ((tileRowLsb >> tileCol) & 0x01)
+
         return pixIdx
     }
     
@@ -566,9 +553,16 @@ extension LCD : MmuDelegate {
 //                // Reset ly on toggling lcd on
 //                delegateMmu?.set(value: 0, on: .ly)
 //                lcdTicks = lcdModulo
-//                lineClock = lineClockModulo
-                dbgRefreshString += "eek"
+//                lineClock = 0
+//                dbgRefreshString += "eek"
 //            }
+            // only reset ly when turning lcd OFF
+            if isSet(bit: 7, in: value) == false {
+                if lcdMode != .vBlank {
+                    fatalError("disabling lcd outside of vblank.")
+                }
+                delegateMmu?.set(value: 0, on: .ly)
+            }
             break
             
         case .scy, .scx:
