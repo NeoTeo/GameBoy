@@ -383,6 +383,7 @@ class DmgMmu : MMU {
             case .ly:
                 break // Read only, ignore
             case .lyc:
+                ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)
                 
             case .scy, .scx: // horizontal/vertical scroll
@@ -441,6 +442,8 @@ class DmgMmu : MMU {
         }
     }
 }
+
+var dbgPrevScx = 0
 
 // Called by the LCD.
 extension DmgMmu : LcdDelegate, TimerDelegate, ControllerDelegate {

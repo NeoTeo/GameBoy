@@ -206,11 +206,11 @@ class LCD {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
                 
-                // Set the coincidence bit on
+                // Set the coincidence bit on stat
                 let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
                 delegateMmu.set(value: newStat, on: .stat)
             } else if isSet(bit: LcdStatusBit.lyclySame.rawValue, in: stat) {
-                // Set the coincidence bit on
+                // Clear the coincidence bit on stat
                 let newStat = GameBoy.clear(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
                 delegateMmu.set(value: newStat, on: .stat)
             }
