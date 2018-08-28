@@ -559,7 +559,8 @@ extension LCD : MmuDelegate {
             // only reset ly when turning lcd OFF
             if isSet(bit: 7, in: value) == false {
                 if lcdMode != .vBlank {
-                    fatalError("disabling lcd outside of vblank.")
+//                    fatalError("disabling lcd outside of vblank.")
+                    print("disabling lcd outside of vblank.")
                 }
                 delegateMmu?.set(value: 0, on: .ly)
             }
