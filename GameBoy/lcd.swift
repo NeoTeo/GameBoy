@@ -367,10 +367,10 @@ class LCD {
                 }
 //                let offset = isSet(bit: 2, in: lcdc) ? Int(obj.tileNo) & 0xFE : Int(obj.tileNo)
                 let offset = Int(obj.tileNo)
-                let tileOffset = UInt16(Int(0x8000) + (offset << 4))
+                let tileAddress = UInt16(Int(0x8000) + (offset << 4))
                 
-                let tileRowLsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-                let tileRowMsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+                let tileRowLsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow))
+                let tileRowMsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow+1))
                 // Extract the two bits (one from the most significant byte and one from the least)
                 // that make a palette index from the two bytes that define a row of 8 pixels.
                 let pixIdx = (((tileRowMsb >> tileCol) & 0x01) << 1) + ((tileRowLsb >> tileCol) & 0x01)
@@ -399,7 +399,7 @@ class LCD {
     }
     
     // TODO: clean up and try to move into args.
-    var charData: UInt8 = 0
+    var tileNumber: UInt8 = 0
 //    var tileRowHi: UInt8 = 0
 //    var tileRowLo: UInt8 = 0
     var tileRowMsb: UInt8 = 0
@@ -413,16 +413,20 @@ class LCD {
     // Returns a pixel value for any coordinate in the bg map as mapped through tile map
     func pixelForCoord(x: UInt8, y: UInt8, at tileMapStart: UInt16, from tileDataStart: UInt16) throws -> UInt8 {
 
-        // Convert coords to col and rows in tile map
+        // Convert x, y pixel coords (from 256*256 bg map) into col, row tile coords (32*32)
+        // eg. pixels 0 to 7 correspond to map column/row 0, between 8 and 15 -> 1, etc.
         let mapCol = (x >> 3)
         let mapRow = (y >> 3)
+        
+        // Update flag indicates that we've changed the char data.
         var update = false
 
         // Read a new byte at the location only if we've changed map or row/column.
         if mapCol != prevC || mapRow != prevR || tileMapStart != prevMap {
             
-            // Each row is 32 columns so to get the row multiply mapRow by 32
-            charData = try delegateMmu.unsafeRead8(at: tileMapStart + (UInt16(mapRow) << 5) + UInt16(mapCol))
+            // The tile map is 32 by 32 tiles.
+            // Since each row is 32 columns, multiply mapRow by 32 to get the row.
+            tileNumber = try delegateMmu.unsafeRead8(at: tileMapStart + (UInt16(mapRow) << 5) + UInt16(mapCol))
             prevC = mapCol
             prevR = mapRow
             prevMap = tileMapStart
@@ -430,25 +434,30 @@ class LCD {
         }
 
         // TODO: find better way of reusing the tileRowMsb/Lsb
+        // If we've changed tile row/col or we're reading a different row *within a tile*...
         if prevY != y || update == true {
-            // go through the tile data at the given index in tile memory
-            // Each 2 bytes in tile memory correspond to a row of 8 pixels
-            // So each tile row is 16 bytes
+            // Go through the tile data at the given index in tile memory.
             
+            // If the tile data table is located at 0x8800 it is sharing space with the obj tile table
+            // and the indexes range from -128 to 127
+            let tileNum = tileDataStart == 0x8000 ? Int(tileNumber) : signedVal(from: tileNumber)
+            
+            // Each 2 bytes in tile memory correspond to a row of 8 pixels,
+            // so each 8x8 pixel tile is 16 bytes.
+            // A tile's start address is the start address of all tiles' data + (the tile number * the tile size)
+            let tileAddress = UInt16(Int(tileDataStart) + (tileNum << 4))
+            
+            if (mapCol == 6 || mapCol == 7) && mapRow == 11 {
+                print("tile address: ")
+                dbC(tileAddress)
+            }
+
             // To calculate which row *within the tile* to start from we only consider
             // values between 0 and 7 and then multiply that by two (each tile row is two bytes).
             let tileRow = (y & 7) << 1
-        
-            // If the tile data table is located at 0x8800 it is sharing space with the obj tile table
-            // and the indexes range from -128 to 127
-//            let offset = tileDataStart == 0x8800 ? 128 + signedVal(from: charData) : Int(charData)
-            let offset = tileDataStart == 0x8000 ? Int(charData) : signedVal(from: charData)
-            let tileOffset = UInt16(Int(tileDataStart) + (offset << 4))
-            
-//            tileRowHi = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-//            tileRowLo = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
-            tileRowLsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow))
-            tileRowMsb = try delegateMmu.unsafeRead8(at: tileOffset + UInt16(tileRow+1))
+
+            tileRowLsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow))
+            tileRowMsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow+1))
 
             prevY = y
         }
