@@ -437,6 +437,10 @@ class DmgMmu : MMU {
                 print("Attempting to write to ROM at location \(location). Ignoring.")
                 return
             }
+            if location == 0xD62D && value == 0xEE {
+                print("Hold it! value: \(value)")
+                debugPrint(from: 0xD620, bytes: 16, type: .mainRam)
+            }
             // deal with it as a direct memory access.
             ram[Int(location)] = value
         }
@@ -447,6 +451,10 @@ var dbgPrevScx = 0
 
 // Called by the LCD.
 extension DmgMmu : LcdDelegate, TimerDelegate, ControllerDelegate {
+    func delme() {
+        debugPrint(from: 0x9a20, bytes: 16, type: .mainRam)
+    }
+    
     
     func unsafeRead(bytes: Int, at location: UInt16) -> [UInt8] {
         let start = Int(location)

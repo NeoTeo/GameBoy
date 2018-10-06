@@ -17,6 +17,8 @@ protocol LcdDelegate {
     
     func unsafeRead8(at location: UInt16) throws -> UInt8
     func unsafeRead(bytes: Int, at location: UInt16) -> [UInt8]
+    
+    func delme()
 }
 
 protocol LcdDisplayDelegate {
@@ -223,7 +225,8 @@ class LCD {
         // FIXME: Need to ensure we only enable interrupt bits once per mode change.
 //        if lcdTicks <= (lcdModulo - drawingModulo) {
         if ly > 143 {
-            
+//        if ly >= 143 {
+        
             if lcdMode != .vBlank {
 
                 guard activeObjs.count == 0 else {
@@ -427,6 +430,17 @@ class LCD {
             // The tile map is 32 by 32 tiles.
             // Since each row is 32 columns, multiply mapRow by 32 to get the row.
             tileNumber = try delegateMmu.unsafeRead8(at: tileMapStart + (UInt16(mapRow) << 5) + UInt16(mapCol))
+//            if tileNumber == 0x2A {
+//                print("omfg")
+//                print("mapCol: \(mapCol), mapRow: \(mapRow)")
+//                print("tilemapstart:")
+//                dbC(tileMapStart)
+//                let addr = tileMapStart + (UInt16(mapRow) << 5) + UInt16(mapCol)
+//                print("addr:")
+//                dbC(addr)
+//                delegateMmu.delme()
+//            }
+
             prevC = mapCol
             prevR = mapRow
             prevMap = tileMapStart
@@ -447,17 +461,20 @@ class LCD {
             // A tile's start address is the start address of all tiles' data + (the tile number * the tile size)
             let tileAddress = UInt16(Int(tileDataStart) + (tileNum << 4))
             
-            if (mapCol == 6 || mapCol == 7) && mapRow == 11 {
-                print("tile address: ")
-                dbC(tileAddress)
-            }
-
             // To calculate which row *within the tile* to start from we only consider
             // values between 0 and 7 and then multiply that by two (each tile row is two bytes).
             let tileRow = (y & 7) << 1
 
             tileRowLsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow))
             tileRowMsb = try delegateMmu.unsafeRead8(at: tileAddress + UInt16(tileRow+1))
+            
+//            if (mapCol == 6 || mapCol == 7) && mapRow == 0x11 {
+//                print("tile address: ")
+//                dbC(tileAddress)
+//                print("tile row: \(tileRow)")
+//                dbC(UInt16(tileRowLsb))
+//                dbC(UInt16(tileRowMsb))
+//            }
 
             prevY = y
         }

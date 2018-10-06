@@ -40,12 +40,15 @@ struct Cartridge {
     var _romBank: UInt8 = 0
     public var romBank: UInt8 {
         set {
+            
             // A romBank of 0 is translated to bank 1
             _romBank = newValue == 0 ? 1 : newValue
             
             if romRamMode == 0 {
                 _romBank |= (ramRomBank << 5)
             }
+            
+//            if newValue == 8 { print("romBank request for bank \(newValue). Rombank now \(_romBank)") }
         }
         
         get { return _romBank }

@@ -132,7 +132,9 @@ class Gameboy : SYSTEM {
                     cpu.powerMode = .normal
                     // FIXME: look into hardware bug mentioned here:
                     // https://www.reddit.com/r/EmuDev/comments/5bfb2t/a_subtlety_about_the_gameboy_z80_halt_instruction/
-                    if cpu.IME == true { cpu.interruptHandler() }
+                    if cpu.IME == true {
+                        usedCycles += Int(cpu.interruptHandler())
+                    }
                 }
             }
             

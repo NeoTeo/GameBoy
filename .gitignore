@@ -7,3 +7,4 @@ Build
 xcuserdata
 Carthage
 Cartfile.resolved
+*.sav

@@ -862,7 +862,11 @@ class CPU {
         cbOps[0xFF] = (.set, (.u3_7, .A), 8)
 
     }
-
+    
+    // TODO: It seems like res/set hlptr ops have a timing of 16, not 12:
+    // m-cycle (machine cycle), t-cycle (clock cycle).
+    // On DMG 1 m-cycle = 4 t-cycles
+    // https://github.com/Gekkio/mooneye-gb/blob/master/docs/accuracy.markdown
     
     enum CPUError : Error {
         case UnsupportedOperation
@@ -873,25 +877,30 @@ class CPU {
     }
     
     var cbMode = false
+    var dbgCount = 0
     
     func clockTick() -> UInt8 {
         
         var dbgPr = false
 //        pcTrace.push(element: PC)
         
-//        if PC == 0x03E2 || PC == 0x0525 {
-//        if PC == 0x0431 {
-//        if PC == 0x016E {
-//        if PC == 0x0150 {
-//        if PC == 0x005D {
-//        if PC == 0xC003 {
-//        if PC == 0xC0C1 || PC == 0xC0C9 {
-////        if PC == 0xC10A {
-//        if PC == 0x20AF || PC == 0x209E {
-//            print("PC is \(String(format: "%2X",PC))")
-//            dbgPr = true
-//        }
-        
+//        if PC == 0x2725 && mmu.cartridgeRom?._romBank == 0x8 { //}&& HL == 0x9A26 {
+        if PC >= 0x2725 && PC <= 0x272a { //}&& HL == 0x9A26 {
+            dbgCount += 1
+            print("PC is \(String(format: "%2X",PC))")
+            print("------------------ \(dbgCount) ----------------")
+            debugRegisters()
+            mmu.debugPrint(from: 0x4a20, bytes: 16, type: .cartRom)
+            print("memory at:")
+            dbC(DE)
+            print("is:")
+            dbC(UInt16(try! mmu.read8(at: DE)))
+            print("rom: \(mmu.cartridgeRom?._romBank)")
+            
+            mmu.debugPrint(from: 0xd620, bytes: 16, type: .mainRam)
+            dbgPr = true
+        }
+    
         /// Read from ram.
         guard var opcode = try? read8(at: PC, incPC: true) else {
             print("clockTick failed to read opcode.")
@@ -899,6 +908,7 @@ class CPU {
         }
         
         // We may have to do some checking on the PC
+        // 1 M(achine)-cycle = 2
         // https://realboyemulator.wordpress.com/2013/01/18/emulating-the-core-2/
         
         if dbgPr == true {
@@ -932,9 +942,11 @@ class CPU {
         // A quirk in hardware means interrupts are ignored when IE is the instruction.
         // source: https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
         // ipfs hash: QmWjqqnSHuAvyJ4JJG57fPdGxhFyLZLgHn3CbtWGieZMf5
+        
+        var cycs = cycles
         if opcode != 0xFB { //}&& opcode != 0xCB {
             // TODO: add interrupt clocks to subOpCycles
-            interruptHandler()
+            cycs += interruptHandler()
         }
         
         // FIXME: Bodge until I get each instruction to return the cycles it uses.
@@ -942,11 +954,13 @@ class CPU {
         // get scaled appropriately. Eg. if system clock is 1_048_576 then a 12 cycle op
         // will count as 12 * (1_048_576 / 4_194_304) = 3 cycles
         
-//        return UInt8(Double(subOpCycles) * (systemClock / maxClock))
-        return UInt8(Double(cycles) * (systemClock / maxClock))
+//        return UInt8(Double(cycles) * (systemClock / maxClock))
+        return UInt8(Double(cycs) * (systemClock / maxClock))
     }
 
-    func interruptHandler() {
+    func interruptHandler() -> UInt8 {
+        
+        var ticks: UInt8 = 0
         // Check for interrupts
         if (IME == true) && (mmu.IE != 0) && (mmu.IF != 0) {
             
@@ -985,12 +999,20 @@ class CPU {
                         continue
                     }
                     
+                    // Servicing interrupts takes 5 m-cycles
+                    // sources:
+                    // https://github.com/Gekkio/mooneye-gb/blob/master/docs/accuracy.markdown
+                    // https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf
+                    
+                    ticks = 20
+
                     // Only one interrupt gets executed unless IME has been re-enabled
                     // by the interrupt code.
                     if IME == false { break }
                 }
             }
         }
+        return ticks
     }
     
     func handleOps(opcode: CPU.OpType, args: (CPU.ArgType, CPU.ArgType), cycles: UInt8) {
