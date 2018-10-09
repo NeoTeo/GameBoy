@@ -437,10 +437,6 @@ class DmgMmu : MMU {
                 print("Attempting to write to ROM at location \(location). Ignoring.")
                 return
             }
-            if location == 0xD62D && value == 0xEE {
-                print("Hold it! value: \(value)")
-                debugPrint(from: 0xD620, bytes: 16, type: .mainRam)
-            }
             // deal with it as a direct memory access.
             ram[Int(location)] = value
         }

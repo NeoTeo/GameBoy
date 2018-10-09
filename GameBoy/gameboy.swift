@@ -112,11 +112,7 @@ class Gameboy : SYSTEM {
     
         let startTime = DispatchTime.now()
         var usedCycles: Int = 0
-        
-//        var cpuTimeAcc: Double = 0
-//        var timerTimeAcc: Double = 0
-//        var lcdTimeAcc: Double = 0
-        
+                
         repeat {
 //            let preCpuTime = DispatchTime.now().uptimeNanoseconds
             // Check the cpu mode and act accordingly

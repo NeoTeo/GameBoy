@@ -884,7 +884,8 @@ class CPU {
         var dbgPr = false
 //        pcTrace.push(element: PC)
         
-//        if PC == 0x2725 && mmu.cartridgeRom?._romBank == 0x8 { //}&& HL == 0x9A26 {
+
+        /*
         if PC >= 0x2725 && PC <= 0x272a { //}&& HL == 0x9A26 {
             dbgCount += 1
             print("PC is \(String(format: "%2X",PC))")
@@ -900,7 +901,7 @@ class CPU {
             mmu.debugPrint(from: 0xd620, bytes: 16, type: .mainRam)
             dbgPr = true
         }
-    
+    */
         /// Read from ram.
         guard var opcode = try? read8(at: PC, incPC: true) else {
             print("clockTick failed to read opcode.")
@@ -939,13 +940,12 @@ class CPU {
         }
         
         handler(op, args, cycles)
+        
+        var cycs = cycles
         // A quirk in hardware means interrupts are ignored when IE is the instruction.
         // source: https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
         // ipfs hash: QmWjqqnSHuAvyJ4JJG57fPdGxhFyLZLgHn3CbtWGieZMf5
-        
-        var cycs = cycles
         if opcode != 0xFB { //}&& opcode != 0xCB {
-            // TODO: add interrupt clocks to subOpCycles
             cycs += interruptHandler()
         }
         
