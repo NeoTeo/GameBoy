@@ -233,6 +233,9 @@ class DmgMmu : MMU {
                 case .scy, .scx: // scroll x and y
                     return ram[Int(location)]
                     
+                case .tac:
+                    return ram[Int(location)]
+                    
                 case .wx, .wy: // window x and y position
                     return ram[Int(location)]
                     
@@ -246,6 +249,9 @@ class DmgMmu : MMU {
                      .nr41, .nr42, .nr43, .nr44,
                      .nr50, .nr51, .nr52:
                     return ram[Int(location)]
+                    
+                case .romoff:
+                    return 0xFF
                     
                 default:
                     print("mmuReg is \(mmuReg)")
@@ -369,7 +375,9 @@ class DmgMmu : MMU {
                 delegateTimer?.set(value: value, on: mmuReg)
                 break
             case .tac:
-                delegateTimer?.set(value: value, on: mmuReg)
+                // Bits 7 to 3 are always 1
+                let newVal = value | 0xF8
+                delegateTimer?.set(value: newVal, on: mmuReg)
                 break
                 
             // LCD registers
@@ -409,11 +417,41 @@ class DmgMmu : MMU {
                 ram[Int(location)] = value
              
             // Sound controller
-            case .nr10, .nr11, .nr12, .nr13, .nr14,
+            case .nr10:
+                // Bit 7 is always 1
+                let newVal = value | 0x80
+                ram[Int(location)] = newVal
+
+            case .nr30:
+                // Bits 6 to 0 are always 1
+                let newVal = value | 0x7F
+                ram[Int(location)] = newVal
+
+            case .nr32:
+                // Bits 7, 4 to 0 are always 1
+                let newVal = value | 0x9F
+                ram[Int(location)] = newVal
+
+            case .nr41:
+                // Bits 7, 6 always 1
+                let newVal = value | 0xC0
+                ram[Int(location)] = newVal
+
+            case .nr44:
+                // Bits 5 to 0 always 1
+                let newVal = value | 0x3F
+                ram[Int(location)] = newVal
+
+            case .nr52:
+                // Bits 6 to 4 always 1
+                let newVal = value | 0x70
+                ram[Int(location)] = newVal
+
+            case .nr11, .nr12, .nr13, .nr14,
                  .nr21, .nr22, .nr23, .nr24,
-                 .nr30, .nr31, .nr32, .nr33, .nr34,
-                 .nr41, .nr42, .nr43, .nr44,
-                 .nr50, .nr51, .nr52:
+                 .nr31, .nr33, .nr34,
+                 .nr42, .nr43,
+                 .nr50, .nr51:
                 ram[Int(location)] = value
                 
             case .dma:  // Perform DMA transfer

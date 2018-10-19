@@ -714,7 +714,7 @@ class CPU {
         cbOps[0x7B] = (.bit, (.u3_7, .E), 8)
         cbOps[0x7C] = (.bit, (.u3_7, .H), 8)
         cbOps[0x7D] = (.bit, (.u3_7, .L), 8)
-        cbOps[0x7E] = (.bit, (.u3_7, .HLptr), 12)
+        cbOps[0x7E] = (.bit, (.u3_7, .HLptr), 16)
         cbOps[0x7F] = (.bit, (.u3_7, .A), 8)
 
         cbOps[0x80] = (.res, (.u3_0, .B), 8)
@@ -723,7 +723,7 @@ class CPU {
         cbOps[0x83] = (.res, (.u3_0, .E), 8)
         cbOps[0x84] = (.res, (.u3_0, .H), 8)
         cbOps[0x85] = (.res, (.u3_0, .L), 8)
-        cbOps[0x86] = (.res, (.u3_0, .HLptr), 12)
+        cbOps[0x86] = (.res, (.u3_0, .HLptr), 16)
         cbOps[0x87] = (.res, (.u3_0, .A), 8)
         
         cbOps[0x88] = (.res, (.u3_1, .B), 8)
@@ -732,7 +732,7 @@ class CPU {
         cbOps[0x8B] = (.res, (.u3_1, .E), 8)
         cbOps[0x8C] = (.res, (.u3_1, .H), 8)
         cbOps[0x8D] = (.res, (.u3_1, .L), 8)
-        cbOps[0x8E] = (.res, (.u3_1, .HLptr), 12)
+        cbOps[0x8E] = (.res, (.u3_1, .HLptr), 16)
         cbOps[0x8F] = (.res, (.u3_1, .A), 8)
 
         cbOps[0x90] = (.res, (.u3_2, .B), 8)
@@ -741,7 +741,7 @@ class CPU {
         cbOps[0x93] = (.res, (.u3_2, .E), 8)
         cbOps[0x94] = (.res, (.u3_2, .H), 8)
         cbOps[0x95] = (.res, (.u3_2, .L), 8)
-        cbOps[0x96] = (.res, (.u3_2, .HLptr), 12)
+        cbOps[0x96] = (.res, (.u3_2, .HLptr), 16)
         cbOps[0x97] = (.res, (.u3_2, .A), 8)
         
         cbOps[0x98] = (.res, (.u3_3, .B), 8)
@@ -750,7 +750,7 @@ class CPU {
         cbOps[0x9B] = (.res, (.u3_3, .E), 8)
         cbOps[0x9C] = (.res, (.u3_3, .H), 8)
         cbOps[0x9D] = (.res, (.u3_3, .L), 8)
-        cbOps[0x9E] = (.res, (.u3_3, .HLptr), 12)
+        cbOps[0x9E] = (.res, (.u3_3, .HLptr), 16)
         cbOps[0x9F] = (.res, (.u3_3, .A), 8)
         
         cbOps[0xA0] = (.res, (.u3_4, .B), 8)
@@ -759,7 +759,7 @@ class CPU {
         cbOps[0xA3] = (.res, (.u3_4, .E), 8)
         cbOps[0xA4] = (.res, (.u3_4, .H), 8)
         cbOps[0xA5] = (.res, (.u3_4, .L), 8)
-        cbOps[0xA6] = (.res, (.u3_4, .HLptr), 12)
+        cbOps[0xA6] = (.res, (.u3_4, .HLptr), 16)
         cbOps[0xA7] = (.res, (.u3_4, .A), 8)
         
         cbOps[0xA8] = (.res, (.u3_5, .B), 8)
@@ -768,7 +768,7 @@ class CPU {
         cbOps[0xAB] = (.res, (.u3_5, .E), 8)
         cbOps[0xAC] = (.res, (.u3_5, .H), 8)
         cbOps[0xAD] = (.res, (.u3_5, .L), 8)
-        cbOps[0xAE] = (.res, (.u3_5, .HLptr), 12)
+        cbOps[0xAE] = (.res, (.u3_5, .HLptr), 16)
         cbOps[0xAF] = (.res, (.u3_5, .A), 8)
         
         cbOps[0xB0] = (.res, (.u3_6, .B), 8)
@@ -777,7 +777,7 @@ class CPU {
         cbOps[0xB3] = (.res, (.u3_6, .E), 8)
         cbOps[0xB4] = (.res, (.u3_6, .H), 8)
         cbOps[0xB5] = (.res, (.u3_6, .L), 8)
-        cbOps[0xB6] = (.res, (.u3_6, .HLptr), 12)
+        cbOps[0xB6] = (.res, (.u3_6, .HLptr), 16)
         cbOps[0xB7] = (.res, (.u3_6, .A), 8)
         
         cbOps[0xB8] = (.res, (.u3_7, .B), 8)
@@ -786,7 +786,7 @@ class CPU {
         cbOps[0xBB] = (.res, (.u3_7, .E), 8)
         cbOps[0xBC] = (.res, (.u3_7, .H), 8)
         cbOps[0xBD] = (.res, (.u3_7, .L), 8)
-        cbOps[0xBE] = (.res, (.u3_7, .HLptr), 12)
+        cbOps[0xBE] = (.res, (.u3_7, .HLptr), 16)
         cbOps[0xBF] = (.res, (.u3_7, .A), 8)
 
         cbOps[0xC0] = (.set, (.u3_0, .B), 8)
@@ -795,7 +795,7 @@ class CPU {
         cbOps[0xC3] = (.set, (.u3_0, .E), 8)
         cbOps[0xC4] = (.set, (.u3_0, .H), 8)
         cbOps[0xC5] = (.set, (.u3_0, .L), 8)
-        cbOps[0xC6] = (.set, (.u3_0, .HLptr), 12)
+        cbOps[0xC6] = (.set, (.u3_0, .HLptr), 16)
         cbOps[0xC7] = (.set, (.u3_0, .A), 8)
         
         cbOps[0xC8] = (.set, (.u3_1, .B), 8)
@@ -804,7 +804,7 @@ class CPU {
         cbOps[0xCB] = (.set, (.u3_1, .E), 8)
         cbOps[0xCC] = (.set, (.u3_1, .H), 8)
         cbOps[0xCD] = (.set, (.u3_1, .L), 8)
-        cbOps[0xCE] = (.set, (.u3_1, .HLptr), 12)
+        cbOps[0xCE] = (.set, (.u3_1, .HLptr), 16)
         cbOps[0xCF] = (.set, (.u3_1, .A), 8)
         
         cbOps[0xD0] = (.set, (.u3_2, .B), 8)
@@ -813,7 +813,7 @@ class CPU {
         cbOps[0xD3] = (.set, (.u3_2, .E), 8)
         cbOps[0xD4] = (.set, (.u3_2, .H), 8)
         cbOps[0xD5] = (.set, (.u3_2, .L), 8)
-        cbOps[0xD6] = (.set, (.u3_2, .HLptr), 12)
+        cbOps[0xD6] = (.set, (.u3_2, .HLptr), 16)
         cbOps[0xD7] = (.set, (.u3_2, .A), 8)
         
         cbOps[0xD8] = (.set, (.u3_3, .B), 8)
@@ -822,7 +822,7 @@ class CPU {
         cbOps[0xDB] = (.set, (.u3_3, .E), 8)
         cbOps[0xDC] = (.set, (.u3_3, .H), 8)
         cbOps[0xDD] = (.set, (.u3_3, .L), 8)
-        cbOps[0xDE] = (.set, (.u3_3, .HLptr), 12)
+        cbOps[0xDE] = (.set, (.u3_3, .HLptr), 16)
         cbOps[0xDF] = (.set, (.u3_3, .A), 8)
         
         cbOps[0xE0] = (.set, (.u3_4, .B), 8)
@@ -831,7 +831,7 @@ class CPU {
         cbOps[0xE3] = (.set, (.u3_4, .E), 8)
         cbOps[0xE4] = (.set, (.u3_4, .H), 8)
         cbOps[0xE5] = (.set, (.u3_4, .L), 8)
-        cbOps[0xE6] = (.set, (.u3_4, .HLptr), 12)
+        cbOps[0xE6] = (.set, (.u3_4, .HLptr), 16)
         cbOps[0xE7] = (.set, (.u3_4, .A), 8)
         
         cbOps[0xE8] = (.set, (.u3_5, .B), 8)
@@ -840,7 +840,7 @@ class CPU {
         cbOps[0xEB] = (.set, (.u3_5, .E), 8)
         cbOps[0xEC] = (.set, (.u3_5, .H), 8)
         cbOps[0xED] = (.set, (.u3_5, .L), 8)
-        cbOps[0xEE] = (.set, (.u3_5, .HLptr), 12)
+        cbOps[0xEE] = (.set, (.u3_5, .HLptr), 16)
         cbOps[0xEF] = (.set, (.u3_5, .A), 8)
         
         cbOps[0xF0] = (.set, (.u3_6, .B), 8)
@@ -849,7 +849,7 @@ class CPU {
         cbOps[0xF3] = (.set, (.u3_6, .E), 8)
         cbOps[0xF4] = (.set, (.u3_6, .H), 8)
         cbOps[0xF5] = (.set, (.u3_6, .L), 8)
-        cbOps[0xF6] = (.set, (.u3_6, .HLptr), 12)
+        cbOps[0xF6] = (.set, (.u3_6, .HLptr), 16)
         cbOps[0xF7] = (.set, (.u3_6, .A), 8)
         
         cbOps[0xF8] = (.set, (.u3_7, .B), 8)
@@ -858,7 +858,7 @@ class CPU {
         cbOps[0xFB] = (.set, (.u3_7, .E), 8)
         cbOps[0xFC] = (.set, (.u3_7, .H), 8)
         cbOps[0xFD] = (.set, (.u3_7, .L), 8)
-        cbOps[0xFE] = (.set, (.u3_7, .HLptr), 12)
+        cbOps[0xFE] = (.set, (.u3_7, .HLptr), 16)
         cbOps[0xFF] = (.set, (.u3_7, .A), 8)
 
     }

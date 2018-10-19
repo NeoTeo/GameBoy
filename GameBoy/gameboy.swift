@@ -211,9 +211,23 @@ class Gameboy : SYSTEM {
 //        let binaryName = "oam_bug.gb"
 //        let binaryName = "1-lcd_sync.gb"
         
+        // mooneye-gb tests
+        // passed
+//        let binaryName = "mem_oam.gb"
+//        let binaryName = "reg_f.gb"
+//        let binaryName = "unused_hwio-GS.gb"
+////        let binaryName = "daa.gb"
+        let binaryName = "basic.gb"
+        
+        
+        //failed
+//        let binaryName = "ie_push.gb"
+        
+        // Playables
 //        let binaryName = "Tetris.gb"
-        let binaryName = "loz.gb"
+//        let binaryName = "loz.gb"
 //        let binaryName = "kby.gb"
+        // Crashers
 //        let binaryName = "PokemonBlue.gb"
 //        let binaryName = "drMario.gb"
 //        let binaryName = "SML.gb"
