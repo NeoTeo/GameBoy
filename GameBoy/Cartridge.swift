@@ -57,8 +57,20 @@ struct Cartridge {
     var ramEnabled: Bool = false
     
     subscript(index: UInt16) -> UInt8 {
+        let bIndex = bankedIndex(from: index)
         
-//        let bankedIndex = _romBank <= 1 ? Int(index) : 0x4000 * Int(_romBank - 1) + Int(index)
+        return cartridgeRom[bIndex]
+    }
+    
+    subscript(bounds: ClosedRange<UInt16>) -> [UInt8] {
+        let startBankedIndex = bankedIndex(from: bounds.lowerBound)
+        let endBankedIndex = bankedIndex(from: bounds.upperBound)
+        return Array(cartridgeRom[startBankedIndex...endBankedIndex])
+        
+    }
+    
+    func bankedIndex(from index: UInt16) -> Int {
+        
         var bankedIndex = 0
         if index < 0x4000 || _romBank <= 1 {
             bankedIndex = Int(index)
@@ -66,10 +78,7 @@ struct Cartridge {
             bankedIndex = 0x4000 * Int(_romBank - 1) + Int(index)
         }
         
-//        guard bankedIndex < romSize else { throw CartridgeError.outOfBounds }
-        // subscripts cannot throw so for now we just let it crash.
-        
-        return cartridgeRom[bankedIndex]
+        return bankedIndex
     }
 }
 

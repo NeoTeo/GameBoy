@@ -20,6 +20,7 @@ class DmgMmu : MMU {
     var bootRom: [UInt8]
 //    var cartridgeRom: [UInt8]?
     var cartridgeRom: Cartridge?
+    var dmaActive: Bool = false
     
     // Constants
     let romSize = 0x8000
@@ -264,6 +265,9 @@ class DmgMmu : MMU {
             return 0xFF
 //            return ram[Int(location)]
 
+        case 0xFF80 ... 0xFFFE: // HRAM
+            return ram[Int(location)]
+            
         default:
             // deal with it as a direct memory access.
             return ram[Int(location)]
@@ -458,16 +462,19 @@ class DmgMmu : MMU {
                 // The destination is always OAM RAM (0xFE00-0xFE9F)
                 // We multiply the value by 0x100 (256) to get the source address.
                 // FIXME: Should also do some checking for being in a mode that allows DMA
-                guard value > 0x7F else {
-                    print("Attempted DMA from illegal source address \(value << 8)")
-                    return
-                }
+//                guard value > 0x7F else {
+//                    print("Attempted DMA from illegal source address \(value << 8)")
+//                    return
+//                }
                 
                 dma(from: UInt16(value) << 8)
 
 //            default:
 //                return
             }
+            
+        case 0xFF80 ... 0xFFFE: // HRAM
+            ram[Int(location)] = value
             
         default:
             // Do nothing if we're trying to write to rom
@@ -534,8 +541,16 @@ extension DmgMmu {
 //    }
     
     func dma(from startAddress: UInt16) {
-        let sourceStart = Int(startAddress)
-        let sourceData = Array(ram[sourceStart ..< (sourceStart + 0x9F)])
+
+        let sourceStart = startAddress
+        var sourceData: [UInt8]
+        
+        if 0x0000...0x7FFF ~= sourceStart {
+            sourceData = Array(cartridgeRom![sourceStart ... (sourceStart + 0x9F)])
+        } else {
+            sourceData = Array(ram[Int(sourceStart) ... Int(sourceStart + 0x9F)])
+        }
+
         let targetStart = UInt16(0xFE00)
         try? replace(data: sourceData, from: targetStart)
     }
