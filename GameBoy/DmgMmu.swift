@@ -194,9 +194,14 @@ class DmgMmu : MMU {
                 return 0xFF }
             return ram[Int(location)]
             
+        case 0xE000 ... 0xFDFF: // Echo RAM. A mirror of WRAM (0xC000 to 0xDDFF).
+            return ram[Int(location - 0x2000)]
+            
         case 0xFE00 ... 0xFE9F: // OAM RAM
-            // If the LCD is in mode 2 (reading from both OAM) we cannot read from OAM
-            guard (ram[MmuRegister.stat.rawValue] & 2) != 2 else { return 0xFF }
+        
+            // We cannot read from OAM if the LCD is in mode 2 or 3
+            guard (ram[MmuRegister.stat.rawValue] & 3) < 2 else {
+                return 0xFF }
             return ram[Int(location)]
             
         case 0xFF00 ... 0xFF7F: // We're in remapped country
@@ -309,19 +314,22 @@ class DmgMmu : MMU {
         case 0x6000 ... 0x7FFF: // ROMRAM mode select.
             cartridgeRom?.romRamMode = value & 0x1
             
-        case 0xFF30 ... 0xFF3F: // Wave pattern ram
-            // Just store
-            ram[Int(location)] = value
-            
         case 0x8000 ... 0x9FFF: // VRAM
             // If the LCD is in mode 3 (reading from both OAM and VRAM) we cannot write to VRAM
             guard (ram[MmuRegister.stat.rawValue] & 3) != 3 else {
                 return }
             ram[Int(location)] = value
             
+        case 0xE000 ... 0xFDFF: // Echo RAM. A mirror of WRAM (0xC000 to 0xCFFF). Ignore writes.
+            break
+            
         case 0xFE00 ... 0xFE9F: // OAM RAM
             // If the LCD is in mode 2 (reading from both OAM) we cannot write to OAM
             guard (ram[MmuRegister.stat.rawValue] & 2) != 2 else { return }
+            ram[Int(location)] = value
+            
+        case 0xFF30 ... 0xFF3F: // Wave pattern ram
+            // Just store
             ram[Int(location)] = value
 
         case 0xFF00 ... 0xFF7F: // We're in remapped country
@@ -466,7 +474,6 @@ class DmgMmu : MMU {
 //                    print("Attempted DMA from illegal source address \(value << 8)")
 //                    return
 //                }
-                
                 dma(from: UInt16(value) << 8)
 
 //            default:
@@ -482,6 +489,7 @@ class DmgMmu : MMU {
                 print("Attempting to write to ROM at location \(location). Ignoring.")
                 return
             }
+            
             // deal with it as a direct memory access.
             ram[Int(location)] = value
         }
@@ -545,10 +553,27 @@ extension DmgMmu {
         let sourceStart = startAddress
         var sourceData: [UInt8]
         
+        if startAddress == 0xe000 {
+            print("dma transfer from ")
+            dbC(sourceStart)
+            print(" to ")
+            dbC(sourceStart + 0x9F)
+        }
         if 0x0000...0x7FFF ~= sourceStart {
             sourceData = Array(cartridgeRom![sourceStart ... (sourceStart + 0x9F)])
         } else {
-            sourceData = Array(ram[Int(sourceStart) ... Int(sourceStart + 0x9F)])
+            // FIXME: use accessor instead of slurping RAM directly
+            // For now just bodge it with a gross loop.
+//            sourceData = Array(ram[Int(sourceStart) ... Int(sourceStart + 0x9F)])
+            if sourceStart == 0xFE00 {
+                print("stop here")
+            }
+            var i = 0
+            sourceData = Array(repeating: 0, count: 0xA0)
+            for ramLoc in sourceStart ... (sourceStart + 0x9F) {
+                sourceData[i] = try! read8(at: ramLoc)
+                i += 1
+            }
         }
 
         let targetStart = UInt16(0xFE00)

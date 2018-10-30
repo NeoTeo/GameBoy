@@ -217,7 +217,9 @@ class Gameboy : SYSTEM {
 //        let binaryName = "reg_f.gb"
 //        let binaryName = "unused_hwio-GS.gb"
 ////        let binaryName = "daa.gb"
-        let binaryName = "basic.gb"
+//        let binaryName = "basic.gb"
+//        let binaryName = "reg_read.gb"
+//        let binaryName = "sources-dmgABCmgbS.gb"
         
         
         //failed
@@ -225,7 +227,7 @@ class Gameboy : SYSTEM {
         
         // Playables
 //        let binaryName = "Tetris.gb"
-//        let binaryName = "loz.gb"
+        let binaryName = "loz.gb"
 //        let binaryName = "kby.gb"
         // Crashers
 //        let binaryName = "PokemonBlue.gb"

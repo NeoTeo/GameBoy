@@ -44,6 +44,8 @@
 		AB962FF621087FA9000C96F7 /* oam_count_v5.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF521087FA9000C96F7 /* oam_count_v5.gb */; };
 		AB962FF82108815C000C96F7 /* oam_bug.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF72108815C000C96F7 /* oam_bug.gb */; };
 		AB962FFA2108823A000C96F7 /* 1-lcd_sync.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */; };
+		AB9EDE2F217E0813005CFE14 /* reg_read.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB9EDE2E217E0813005CFE14 /* reg_read.gb */; };
+		AB9EDE31217E08D1005CFE14 /* sources-dmgABCmgbS.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */; };
 		ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8C20F779D300BF779F /* PokemonBlue.gb */; };
 		ABB20E8F20F77C3200BF779F /* loz.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8E20F77C3200BF779F /* loz.gb */; };
 		ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E9020F77D7A00BF779F /* drMario.gb */; };
@@ -106,6 +108,8 @@
 		AB962FF72108815C000C96F7 /* oam_bug.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oam_bug.gb; sourceTree = "<group>"; };
 		AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "1-lcd_sync.gb"; sourceTree = "<group>"; };
 		AB97CA0820EA75A20013E281 /* Tetris.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = Tetris.gb; sourceTree = "<group>"; };
+		AB9EDE2E217E0813005CFE14 /* reg_read.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = reg_read.gb; sourceTree = "<group>"; };
+		AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "sources-dmgABCmgbS.gb"; sourceTree = "<group>"; };
 		ABB20E8C20F779D300BF779F /* PokemonBlue.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = PokemonBlue.gb; sourceTree = "<group>"; };
 		ABB20E8E20F77C3200BF779F /* loz.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = loz.gb; sourceTree = "<group>"; };
 		ABB20E9020F77D7A00BF779F /* drMario.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = drMario.gb; sourceTree = "<group>"; };
@@ -194,6 +198,8 @@
 				AB758E3121760EB30030F35C /* daa.gb */,
 				AB758E3321760EED0030F35C /* ie_push.gb */,
 				AB758E352176106D0030F35C /* basic.gb */,
+				AB9EDE2E217E0813005CFE14 /* reg_read.gb */,
+				AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */,
 			);
 			path = "mooneye-gb";
 			sourceTree = "<group>";
@@ -324,6 +330,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */,
+				AB9EDE31217E08D1005CFE14 /* sources-dmgABCmgbS.gb in Resources */,
 				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
 				AB758E3421760EED0030F35C /* ie_push.gb in Resources */,
 				AB53B951212C6700000ABA88 /* kby.gb in Resources */,
@@ -350,6 +357,7 @@
 				ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */,
 				ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
+				AB9EDE2F217E0813005CFE14 /* reg_read.gb in Resources */,
 				AB758E362176106D0030F35C /* basic.gb in Resources */,
 				ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */,
 				AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */,
