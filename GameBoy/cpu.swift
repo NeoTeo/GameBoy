@@ -885,23 +885,24 @@ class CPU {
 //        pcTrace.push(element: PC)
         
 
-        /*
-        if PC >= 0x2725 && PC <= 0x272a { //}&& HL == 0x9A26 {
+        ///*
+        if PC == 0x0546 || PC == 0x549 || PC == 0x54E {
+            //}&& HL == 0x9A26 {
             dbgCount += 1
             print("PC is \(String(format: "%2X",PC))")
-            print("------------------ \(dbgCount) ----------------")
+//            print("------------------ \(dbgCount) ----------------")
             debugRegisters()
-            mmu.debugPrint(from: 0x4a20, bytes: 16, type: .cartRom)
-            print("memory at:")
-            dbC(DE)
-            print("is:")
-            dbC(UInt16(try! mmu.read8(at: DE)))
-            print("rom: \(mmu.cartridgeRom?._romBank)")
+//            mmu.debugPrint(from: 0x4a20, bytes: 16, type: .cartRom)
+//            print("memory at:")
+//            dbC(DE)
+//            print("is:")
+//            dbC(UInt16(try! mmu.read8(at: DE)))
+//            print("rom: \(mmu.cartridgeRom?._romBank)")
             
-            mmu.debugPrint(from: 0xd620, bytes: 16, type: .mainRam)
+//            mmu.debugPrint(from: 0xd620, bytes: 16, type: .mainRam)
             dbgPr = true
         }
-    */
+    //*/
         /// Read from ram.
         guard var opcode = try? read8(at: PC, incPC: true) else {
             print("clockTick failed to read opcode.")

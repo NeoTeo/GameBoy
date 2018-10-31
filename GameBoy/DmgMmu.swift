@@ -470,14 +470,11 @@ class DmgMmu : MMU {
                 // The destination is always OAM RAM (0xFE00-0xFE9F)
                 // We multiply the value by 0x100 (256) to get the source address.
                 // FIXME: Should also do some checking for being in a mode that allows DMA
-//                guard value > 0x7F else {
-//                    print("Attempted DMA from illegal source address \(value << 8)")
-//                    return
-//                }
-                dma(from: UInt16(value) << 8)
-
-//            default:
-//                return
+                var checkedVal = value
+                
+                // Experimentally established limit of F1
+                if value > 0xF1 { checkedVal = 0xD0 | (value & 0xF) }
+                dma(from: UInt16(checkedVal) << 8)
             }
             
         case 0xFF80 ... 0xFFFE: // HRAM
