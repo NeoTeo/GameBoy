@@ -13,7 +13,7 @@ protocol TimerDelegate {
     func getValue(for register: MmuRegister) -> UInt8
 }
 
-class Timer {
+class DMGTimer {
     
     var delegateMmu: TimerDelegate!
     
@@ -131,7 +131,7 @@ class Timer {
 }
 
 // Called by the MMU
-extension Timer : MmuDelegate {
+extension DMGTimer : MmuDelegate {
     
     func set(value: UInt8, on register: MmuRegister) {
         switch register {
@@ -156,7 +156,7 @@ extension Timer : MmuDelegate {
 }
 
 // Utility methods
-extension Timer {
+extension DMGTimer {
     
     // Calculate the number of timer ticks to system ticks.
     // Eg if the system clock is 1_048_576 then a clock select of 00

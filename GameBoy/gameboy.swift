@@ -13,7 +13,7 @@ class Gameboy : SYSTEM {
     var cpu: CPU
     var mmu: MMU
     var lcd: LCD
-    var timer: Timer
+    var timer: DMGTimer
     var controller: Controller
     
     var systemClock: Double
@@ -43,7 +43,7 @@ class Gameboy : SYSTEM {
         cpu.mmu = mmu
         
         // Make a timer
-        timer = Timer(sysClock: systemClock)
+        timer = DMGTimer(sysClock: systemClock)
         timer.delegateMmu = mmu
         cpu.timer = timer
         mmu.delegateTimer = timer
@@ -111,14 +111,19 @@ class Gameboy : SYSTEM {
     func runCycle() {
     
         let startTime = DispatchTime.now()
-        var usedCycles: Int = 0
-                
+//        var usedCycles: Int = 0
+        
         repeat {
+            var usedCycles: Int = 0
 //            let preCpuTime = DispatchTime.now().uptimeNanoseconds
             // Check the cpu mode and act accordingly
             let mode = cpu.powerMode
             if mode == .normal {
-                usedCycles = Int(cpu.clockTick())
+                let lastOp = cpu.getLastOpcode()
+                if lastOp != 0xFB {
+                    usedCycles += Int(cpu.interruptHandler())
+                }
+                usedCycles += Int(cpu.clockTick())
             } else {
                 // FIXME: probably not use a single cycle here just to trigger the timer.
                 usedCycles = 1
@@ -219,7 +224,10 @@ class Gameboy : SYSTEM {
 ////        let binaryName = "daa.gb"
 //        let binaryName = "basic.gb"
 //        let binaryName = "reg_read.gb"
-//        let binaryName = "sources-dmgABCmgbS.gb"
+////        let binaryName = "sources-dmgABCmgbS.gb"
+        
+        
+//        let binaryName = "intr_1_2_timing-GS.gb"
         
         
         //failed

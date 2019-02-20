@@ -127,9 +127,14 @@ extension CPU {
 
     // Push the address after the CALL instruction (PC+3) onto the stack and
     // jump to the label in source arg. Can also take conditions in target arg.
-    func call(argTypes: (ArgType, ArgType)) throws {
+    // Returns true if conditional action is taken and false if not.
+    func call(argTypes: (ArgType, ArgType)) throws -> Bool {
+        // We assume no conditional action is taken by default
+        var conditionalAction = false
+        
         let conditionArg = argTypes.0
         let addressArg = argTypes.1
+        
         // Make sure we get the call address (so we inc the PC if the arg is an
         // immediate) before we have a chance to fail the condition.
         let callAddress = try getVal16(for: addressArg)
@@ -137,7 +142,8 @@ extension CPU {
         // If checkCondition returns nil there was no condition so we ignore it.
         // If there was a condition we only continue if it passed.
         if let passCondition = checkCondition(for: conditionArg) {
-            guard passCondition == true else { return }
+            guard passCondition == true else { return false }
+            conditionalAction = true
         }
         
         // put the address after the CALL instruction onto the stack
@@ -147,6 +153,7 @@ extension CPU {
         try set(val: returnAddress, for: .SPptr)
         
         PC = callAddress
+        return conditionalAction
     }
 
     func cb() throws {
@@ -307,7 +314,10 @@ extension CPU {
     
     // Jump to the address given in the target argument. When there is a condition in the source arg
     // the jump will only occur if the condition is satisfied.
-    func jp(argTypes: (ArgType, ArgType)) throws {
+    // Returns true if conditional action is taken and false if not.
+    func jp(argTypes: (ArgType, ArgType)) throws -> Bool {
+        // We assume no conditional action is taken by default
+        var conditionalAction = false
         let conditionArg = argTypes.0
         let addressArg = argTypes.1
         
@@ -317,34 +327,32 @@ extension CPU {
         if let passCondition = checkCondition(for: conditionArg) {
             // skip after we get the val to ensure that we've incremented the PC
             // if an immediate value was accessed.
-            guard passCondition == true else { return }
+            guard passCondition == true else { return false }
+            conditionalAction = true
         }
         
         PC = address
+        return conditionalAction
     }
     
     // Jump to an offset from the current PC. When there is a condition in the source arg
     // the jump will only occur if the condition is satisfied.
-    func jr(argTypes: (ArgType, ArgType)) throws {
+    // Returns true if conditional action is taken and false if not.
+    func jr(argTypes: (ArgType, ArgType)) throws -> Bool {
+        // We assume no conditional action is taken by default
+        var conditionalAction = false
         let conditionArg = argTypes.0
         let offsetArg = argTypes.1
         
-//        let offset = try getVal8(for: offsetArg)
         let offset = signedVal(from: try getVal8(for: offsetArg))
         
         // Check if we have a conditional jump and the condition is satisfied.
         if let passCondition = checkCondition(for: conditionArg) {
             // Skip only _after_ we get the val to ensure that we've incremented the PC
             // if an immediate value was accessed.
-            guard passCondition == true else { return }
+            guard passCondition == true else { return false }
+            conditionalAction = true
         }
-        
-        
-//        // The offset is a (-128 to 127) value. Treat as 2's complement.
-//        let isNegative = (offset & 0x80) == 0x80
-//        let tval = Int(offset & 0x7f)
-        
-//        let newPc = UInt16(Int(PC) + (isNegative ? -(128 - tval) : tval))
         
         // TODO: Check if we need to wrap rather than mask here.
         let newPc = UInt16((Int(PC) + offset) & 0xFFFF)
@@ -353,6 +361,7 @@ extension CPU {
             throw CPUError.RamError
         }
         PC = newPc
+        return conditionalAction
     }
     
     func ld8_8(argTypes: (ArgType, ArgType)) throws {
@@ -490,12 +499,15 @@ extension CPU {
      }
  */
     // Return from subroutine
-    func ret(argTypes: (ArgType, ArgType)) throws {
+    func ret(argTypes: (ArgType, ArgType)) throws -> Bool {
+        // We assume no conditional action is taken by default
+        var conditionalAction = false
         let conditionArg = argTypes.0
         
         // Check if we have a condition and the condition is satisfied.
         if let passCondition = checkCondition(for: conditionArg) {
-            guard passCondition == true else { return }
+            guard passCondition == true else { return false }
+            conditionalAction = true
         }
         
         // Read the two bytes at the address pointed to by the SP
@@ -505,11 +517,13 @@ extension CPU {
         SP = SP &+ 2
 
         PC = retAddress
+        
+        return conditionalAction
     }
     
     func reti() throws {
         ei()
-        try ret(argTypes: (.noReg, .noReg))
+        _ = try ret(argTypes: (.noReg, .noReg))
     }
     
     // Rotate destination register(or value pointed to by it) left through carry.

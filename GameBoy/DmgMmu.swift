@@ -394,6 +394,9 @@ class DmgMmu : MMU {
                 
             // LCD registers
             case .lcdc:
+                if isSet(bit: 7, in: value) == true {
+                    //print("enabling LCD")
+                }
                 ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)
             case .stat: // LCD status register

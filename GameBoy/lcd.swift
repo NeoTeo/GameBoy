@@ -129,9 +129,9 @@ class LCD {
 
     struct LcdState {
         var scanlineClock: Int = 0
-        var prevScanlineClock: Int = 0
         var remainingFrameClocks = clocksPerLcdFrame
         var frameClocks = 0
+        var skip: Bool = false
     }
 
     // keep a reference to the mmu where we have registers mapped to I/O
@@ -153,6 +153,10 @@ class LCD {
     var dbgHblankCount = 0
     var dbgRefreshString = ""
 
+    func dbgPrint(dbgString: String) {
+        print(dbgString)
+    }
+    
     // The internal state of the LCD.
     var lcdState: LcdState
     
@@ -184,12 +188,23 @@ class LCD {
         
         // Initialize a fresh state.
         lcdState = LcdState()
+        //dbTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: dbSecondTimer)
     }
     
     public func refresh(count: Int) {
         lcdState = self.refresh2(clocksUsed: count, state: lcdState)
     }
 
+    var dbHBlanksPerScreen = 0
+    var dbClocksThisFrame = 0
+    var dbClocksThisScanline = 0
+    var dbTimeBetweenRefresh: CFAbsoluteTime = 0
+    var dbLastRefreshTime: CFAbsoluteTime = 0
+    var dbTimer: Timer = Timer()
+    
+    func dbSecondTimer(t: Timer) {
+        print(self.dbgRefreshString)
+    }
     // Refresh the LCD screen.
     // count is the number of m-cycles that have passed since last call.
     // All cycles inside refresh() are expressed in m-cycles.
@@ -206,15 +221,6 @@ class LCD {
         // When in the vblank stage it is in vBlank mode.
         let stat = delegateMmu.getValue(for: .stat)
         
-        // Frame clocks tracks how many clocks we are into the current frame.
-        ns.frameClocks += clocksUsed
-
-        // When the frameClocks exceed or match the number of clocks per frame we reset
-        // taking account of however many clocks it went over the maximum.
-        if ns.frameClocks >= LCD.clocksPerLcdFrame {
-            ns.frameClocks -= LCD.clocksPerLcdFrame
-        }
-        
         // Drawing state
         // The drawing state goes through 144 lines each of which is 114 clocks
         // and is subdivided into three modes.
@@ -222,33 +228,55 @@ class LCD {
         // the pixel transfer mode for the subsequent 43 clocks and finally
         // the horizontal blank for the last 51 clocks. 114 in total.
         
-        // Each scanline takes clocksPerScanline = 114 number of cycles.
-        // Comparing the prevLineClock with the frameClocks modulo 114 we can detect
-        // a scan line wrap. The scanlineClock ranges from 0 to 113.
-        ns.prevScanlineClock = state.scanlineClock
-        ns.scanlineClock = ns.frameClocks % LCD.clocksPerScanline
+        ns.scanlineClock += clocksUsed
         
-        // Check if we've wrapped which indicates a new scanline
-        if ns.scanlineClock < ns.prevScanlineClock {
+        // Each scanline takes clocksPerScanline = 114 number of cycles.
+        // The scanlineClock ranges from 0 to 113.
+        if ns.scanlineClock >= LCD.clocksPerScanline {
+            dbClocksThisScanline = ns.scanlineClock
             
+            // To avoid losing used clocks we leave the difference in scanlineClock
+            ns.scanlineClock -= LCD.clocksPerScanline
+        
+            dbgRefreshString += "Clocks this scanline: \(dbClocksThisScanline - ns.scanlineClock)\n"
+            dbgRefreshString += "\nnew scanline>"
             // Increment LY and wrap if it reaches 154
             var ly = delegateMmu.getValue(for: .ly) + 1
             
-            // FIXME: Setting this to 154 fixes the issue of corrupted tiles. Find out why.
-            //  if ly > 154 { ly = 0 }
-            if ly > 153 { ly = 0 }
+            
+            if ly > 153 {
+                ly = 0
+                
+                // Draw the screen on wrap
+                delegateDisplay?.didUpdate(buffer: vbuf)
+            }
+            
+            // Doing ly=0 for two scanlines causes the top scanline to be drawn correctly
+            // Could be related to: https://forums.nesdev.com/viewtopic.php?f=20&t=13727
+            // FIXME: Find out why!
+//            if ly == 1 && ns.skip == true {
+//                ly = 0
+//                ns.skip = false
+//            }
+            
+            dbgRefreshString += "|ly=\(ly)|"
+            
             delegateMmu?.set(value: ly, on: .ly)
             
+            // MARK: make sure this is ok
             let lyc = delegateMmu.getValue(for: .lyc)
             if ly == lyc {
+                dbgRefreshString += "LY and LYC are both \(ly)\n"
+                // We have coincidence of ly and lyc. Set the coincidence bit on stat
+                let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
+                delegateMmu.set(value: newStat, on: .stat)
+
                 // Check if we need to trigger an interrupt
                 if isSet(bit: LcdStatusBit.lyclyIrq.rawValue, in: stat) {
+                    // Request an interrupt on stat
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
                 
-                // Set the coincidence bit on stat
-                let newStat = GameBoy.set(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
-                delegateMmu.set(value: newStat, on: .stat)
             } else if isSet(bit: LcdStatusBit.lyclySame.rawValue, in: stat) {
                 // Clear the coincidence bit on stat
                 let newStat = GameBoy.clear(bit: LcdStatusBit.lyclySame.rawValue, in: stat)
@@ -261,10 +289,12 @@ class LCD {
         
         let ly = delegateMmu.getValue(for: .ly)
         
+        
         if ly > 143 {
             
             if lcdMode != .vBlank {
                 
+                dbgRefreshString += "|vBlank@\(ns.scanlineClock) clocks|"
                 // V-blank state
                 lcdMode = .vBlank
                 
@@ -275,10 +305,7 @@ class LCD {
                 if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
-                
-                delegateDisplay?.didUpdate(buffer: vbuf)
             }
-            
         } else {
             // Handle cases where ly is between 0 and 143
             // check if we've gone into oam mode
@@ -287,6 +314,7 @@ class LCD {
                 if lcdMode == .pxxfer {
                     fatalError("wrong!")
                 }
+                dbgRefreshString += "|OAM@\(ns.scanlineClock) clocks|"
                 lcdMode = .oam
                 if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
@@ -301,13 +329,16 @@ class LCD {
             }
             
             if lcdMode != .pxxfer && LCD.oamTicks ..< LCD.pxfer ~= ns.scanlineClock {
+                dbgRefreshString += "|pxxfr@\(ns.scanlineClock) clocks|"
                 lcdMode = .pxxfer
                 try! transferPixels(line: ly, activeObjects: activeObjs)
             }
             
             if lcdMode != .hBlank && LCD.pxfer ..< LCD.hBlank ~= ns.scanlineClock {
+                dbgRefreshString += "|hBlank@\(ns.scanlineClock) clocks|"
                 lcdMode = .hBlank
                 if isSet(bit: LcdStatusBit.hblankIrq.rawValue, in: stat) {
+                    dbHBlanksPerScreen += 1
                     delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
                 }
             }
@@ -741,7 +772,6 @@ extension LCD : MmuDelegate {
                     print("disabling lcd outside of vblank.")
                 }
                 delegateMmu?.set(value: 0, on: .ly)
-                
 //                // Clear the stat interrupt flags
 //                if let statVal = delegateMmu?.getValue(for: .stat) {
 //                    let newStat = statVal & ~(0x70)

@@ -13,6 +13,7 @@
 		AB1CDD5220F640D700CF3A74 /* 09oprr.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5120F640D700CF3A74 /* 09oprr.gb */; };
 		AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */; };
 		AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */; };
+		AB2DA45F221C451900F5B7E7 /* scanline.nes in Resources */ = {isa = PBXBuildFile; fileRef = AB2DA45E221C451800F5B7E7 /* scanline.nes */; };
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
 		AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E420E285D200E26B23 /* cpu_instrs.gb */; };
 		AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4F1A1020FF4E1500DF75EB /* SML.gb */; };
@@ -21,7 +22,7 @@
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
 		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
 		AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5DAA3A20D802D000BF58D3 /* lcd.swift */; };
-		AB66B0C220D3FB6E000498BB /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB66B0C120D3FB6E000498BB /* Timer.swift */; };
+		AB66B0C220D3FB6E000498BB /* DMGTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB66B0C120D3FB6E000498BB /* DMGTimer.swift */; };
 		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
 		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
@@ -40,6 +41,7 @@
 		AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9020C02D8300B0AEBF /* DmgMmu.swift */; };
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
 		AB817C0820FCE67F005666C9 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB817C0720FCE67F005666C9 /* Cartridge.swift */; };
+		AB8DB09B218B1AA9003C194F /* intr_1_2_timing-GS.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */; };
 		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
 		AB962FF621087FA9000C96F7 /* oam_count_v5.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF521087FA9000C96F7 /* oam_count_v5.gb */; };
 		AB962FF82108815C000C96F7 /* oam_bug.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF72108815C000C96F7 /* oam_bug.gb */; };
@@ -73,6 +75,7 @@
 		AB1CDD5120F640D700CF3A74 /* 09oprr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 09oprr.gb; sourceTree = "<group>"; };
 		AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 10bitops.gb; sourceTree = "<group>"; };
 		AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 11opahl.gb; sourceTree = "<group>"; };
+		AB2DA45E221C451800F5B7E7 /* scanline.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = scanline.nes; sourceTree = "<group>"; };
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -83,7 +86,7 @@
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
 		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
 		AB5DAA3A20D802D000BF58D3 /* lcd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lcd.swift; sourceTree = "<group>"; };
-		AB66B0C120D3FB6E000498BB /* Timer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
+		AB66B0C120D3FB6E000498BB /* DMGTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMGTimer.swift; sourceTree = "<group>"; };
 		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -103,6 +106,7 @@
 		AB801B9020C02D8300B0AEBF /* DmgMmu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmgMmu.swift; sourceTree = "<group>"; };
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
 		AB817C0720FCE67F005666C9 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
+		AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "intr_1_2_timing-GS.gb"; sourceTree = "<group>"; };
 		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
 		AB962FF521087FA9000C96F7 /* oam_count_v5.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oam_count_v5.gb; sourceTree = "<group>"; };
 		AB962FF72108815C000C96F7 /* oam_bug.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oam_bug.gb; sourceTree = "<group>"; };
@@ -181,7 +185,7 @@
 				AB801B8C20C02CE200B0AEBF /* Mmu.swift */,
 				AB801B9020C02D8300B0AEBF /* DmgMmu.swift */,
 				ABF6E2AE20FA3D0B00748689 /* controller.swift */,
-				AB66B0C120D3FB6E000498BB /* Timer.swift */,
+				AB66B0C120D3FB6E000498BB /* DMGTimer.swift */,
 				AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */,
 				AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */,
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
@@ -192,21 +196,76 @@
 		AB758E2A217606B80030F35C /* mooneye-gb */ = {
 			isa = PBXGroup;
 			children = (
+				AB8DB091218B18EA003C194F /* bits */,
+				AB8DB092218B1917003C194F /* instr */,
+				AB8DB094218B1965003C194F /* interrupts */,
+				AB8DB095218B197E003C194F /* oam dma */,
+				AB8DB099218B1A99003C194F /* ppu */,
+			);
+			path = "mooneye-gb";
+			sourceTree = "<group>";
+		};
+		AB8DB091218B18EA003C194F /* bits */ = {
+			isa = PBXGroup;
+			children = (
 				AB758E28217606A10030F35C /* mem_oam.gb */,
 				AB758E2D2176078F0030F35C /* reg_f.gb */,
 				AB758E2F217607970030F35C /* unused_hwio-GS.gb */,
+			);
+			name = bits;
+			sourceTree = "<group>";
+		};
+		AB8DB092218B1917003C194F /* instr */ = {
+			isa = PBXGroup;
+			children = (
 				AB758E3121760EB30030F35C /* daa.gb */,
+			);
+			name = instr;
+			sourceTree = "<group>";
+		};
+		AB8DB094218B1965003C194F /* interrupts */ = {
+			isa = PBXGroup;
+			children = (
 				AB758E3321760EED0030F35C /* ie_push.gb */,
+			);
+			name = interrupts;
+			sourceTree = "<group>";
+		};
+		AB8DB095218B197E003C194F /* oam dma */ = {
+			isa = PBXGroup;
+			children = (
 				AB758E352176106D0030F35C /* basic.gb */,
 				AB9EDE2E217E0813005CFE14 /* reg_read.gb */,
 				AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */,
 			);
-			path = "mooneye-gb";
+			name = "oam dma";
+			sourceTree = "<group>";
+		};
+		AB8DB097218B19B3003C194F /* games */ = {
+			isa = PBXGroup;
+			children = (
+				AB97CA0820EA75A20013E281 /* Tetris.gb */,
+				AB53B950212C6700000ABA88 /* kby.gb */,
+				ABB20E8C20F779D300BF779F /* PokemonBlue.gb */,
+				ABB20E8E20F77C3200BF779F /* loz.gb */,
+				ABB20E9020F77D7A00BF779F /* drMario.gb */,
+				AB4F1A1020FF4E1500DF75EB /* SML.gb */,
+			);
+			path = games;
+			sourceTree = "<group>";
+		};
+		AB8DB099218B1A99003C194F /* ppu */ = {
+			isa = PBXGroup;
+			children = (
+				AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */,
+			);
+			name = ppu;
 			sourceTree = "<group>";
 		};
 		AB958DF820D0072F00A186EA /* roms */ = {
 			isa = PBXGroup;
 			children = (
+				AB2DA45E221C451800F5B7E7 /* scanline.nes */,
 				AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */,
 				AB962FF72108815C000C96F7 /* oam_bug.gb */,
 				AB4665E420E285D200E26B23 /* cpu_instrs.gb */,
@@ -223,12 +282,7 @@
 				AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */,
 				AB962FF521087FA9000C96F7 /* oam_count_v5.gb */,
 				AB958DF720D0072400A186EA /* bgbtest.gb */,
-				AB97CA0820EA75A20013E281 /* Tetris.gb */,
-				AB53B950212C6700000ABA88 /* kby.gb */,
-				ABB20E8C20F779D300BF779F /* PokemonBlue.gb */,
-				ABB20E8E20F77C3200BF779F /* loz.gb */,
-				ABB20E9020F77D7A00BF779F /* drMario.gb */,
-				AB4F1A1020FF4E1500DF75EB /* SML.gb */,
+				AB8DB097218B19B3003C194F /* games */,
 				AB758E2A217606B80030F35C /* mooneye-gb */,
 				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
 			);
@@ -341,6 +395,7 @@
 				AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */,
 				AB962FF82108815C000C96F7 /* oam_bug.gb in Resources */,
 				AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */,
+				AB2DA45F221C451900F5B7E7 /* scanline.nes in Resources */,
 				AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */,
 				AB962FF621087FA9000C96F7 /* oam_count_v5.gb in Resources */,
 				AB0CF2DF20F60A73009C96D3 /* 04oprimm.gb in Resources */,
@@ -357,6 +412,7 @@
 				ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */,
 				ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
+				AB8DB09B218B1AA9003C194F /* intr_1_2_timing-GS.gb in Resources */,
 				AB9EDE2F217E0813005CFE14 /* reg_read.gb in Resources */,
 				AB758E362176106D0030F35C /* basic.gb in Resources */,
 				ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */,
@@ -383,7 +439,7 @@
 				AB801B8F20C02D4500B0AEBF /* cpu_helper.swift in Sources */,
 				AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */,
 				AB801B8B20C02CB800B0AEBF /* system.swift in Sources */,
-				AB66B0C220D3FB6E000498BB /* Timer.swift in Sources */,
+				AB66B0C220D3FB6E000498BB /* DMGTimer.swift in Sources */,
 				AB801B8920C02C5E00B0AEBF /* cpu_instructions.swift in Sources */,
 				AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */,
 				AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */,
