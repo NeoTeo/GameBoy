@@ -969,28 +969,23 @@ class CPU {
         var ticks: UInt8 = 0
         // Check for interrupts
         if (IME == true) && (mmu.IE != 0) && (mmu.IF != 0) {
-            
-            //            let interrupt = DmgMmu.InterruptFlag(rawValue: mmu.IE & mmu.IF)!
+
             let interrupts = mmu.IE & mmu.IF
             var vector: ArgType = .noReg
             
             // Execute by priority.
             for i in 0 ..< 5 {
                 if ((interrupts >> i) & 0x1) == 0x1 {
-                    // Mask out the triggered interrupt
-                    //let interrupt = interrupts & (1 << i)
                     
                     // Immediately disable interrupts
                     IME = false
 
-                    // Clear the flag
-                    let ifVal = mmu.IF
-                    mmu.IF = clear(bit: UInt8(i), in: ifVal)
+                    // Clear the IF (interrupt request) flag we're about to service.
+                    mmu.IF = clear(bit: UInt8(i), in: mmu.IF)
                     
                     // TODO: do I really need this flag business to get the vectors?
                     guard let int = mmuInterruptBit(rawValue: UInt8(i)) else {
-                        print("ERROR: Unsupported interrupt \(i)")
-                        continue
+                        fatalError("ERROR: Unsupported interrupt \(i)")
                     }
                     switch int {
                     case .vblank: vector = .vec40h
@@ -1001,8 +996,7 @@ class CPU {
                     }
                     
                     do { try rst(argTypes: (vector, .noReg)) } catch {
-                        print("ERROR: failed interrupt call on vector \(vector): \(error)")
-                        continue
+                        fatalError("ERROR: failed interrupt call on vector \(vector): \(error)")
                     }
                     
                     // Servicing interrupts takes 5 m-cycles
@@ -1012,9 +1006,10 @@ class CPU {
                     
                     ticks = 20
 
-                    // Only one interrupt gets executed unless IME has been re-enabled
-                    // by the interrupt code.
-                    if IME == false { break }
+                    // Only one interrupt gets executed
+                    // The IME can be re-enabled by the code of the interrupt which
+                    // would be handled by the next call of interruptHandler
+                    break
                 }
             }
         }

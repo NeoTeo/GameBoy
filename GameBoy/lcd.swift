@@ -290,6 +290,7 @@ class LCD {
         let ly = delegateMmu.getValue(for: .ly)
         
         
+//        if ly > 143 {
         if ly > 143 {
             
             if lcdMode != .vBlank {

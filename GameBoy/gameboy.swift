@@ -119,6 +119,9 @@ class Gameboy : SYSTEM {
             // Check the cpu mode and act accordingly
             let mode = cpu.powerMode
             if mode == .normal {
+                // A quirk in the DMG hardware means interrupts are disabled until
+                // the instruction *after* the IE (0xFB).
+                // see https://www.reddit.com/r/EmuDev/comments/7rm8l2/game_boy_vblank_interrupt_confusion/
                 let lastOp = cpu.getLastOpcode()
                 if lastOp != 0xFB {
                     usedCycles += Int(cpu.interruptHandler())
