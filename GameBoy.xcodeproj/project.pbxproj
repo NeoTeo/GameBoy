@@ -7,36 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AB09912A20E4E472003524CE /* 01special.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB09912920E4E46D003524CE /* 01special.gb */; };
-		AB0CF2DD20F60A3E009C96D3 /* 05oprp.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB0CF2DC20F60A3E009C96D3 /* 05oprp.gb */; };
-		AB0CF2DF20F60A73009C96D3 /* 04oprimm.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB0CF2DE20F60A73009C96D3 /* 04oprimm.gb */; };
-		AB1CDD5220F640D700CF3A74 /* 09oprr.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5120F640D700CF3A74 /* 09oprr.gb */; };
-		AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */; };
-		AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */; };
-		AB2AFBE7222589F300415D7D /* instr_timing.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB2AFBE6222589F300415D7D /* instr_timing.gb */; };
-		AB2AFBE922258F7A00415D7D /* add_sp_e_timing.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB2AFBE822258F7100415D7D /* add_sp_e_timing.gb */; };
-		AB2AFBEB2225922E00415D7D /* call_timing.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB2AFBEA2225922E00415D7D /* call_timing.gb */; };
-		AB2DA45F221C451900F5B7E7 /* scanline.nes in Resources */ = {isa = PBXBuildFile; fileRef = AB2DA45E221C451800F5B7E7 /* scanline.nes */; };
 		AB3D07061E2E6968009BDF00 /* GameBoyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */; };
-		AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4665E420E285D200E26B23 /* cpu_instrs.gb */; };
-		AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB4F1A1020FF4E1500DF75EB /* SML.gb */; };
-		AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */; };
-		AB53B951212C6700000ABA88 /* kby.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB53B950212C6700000ABA88 /* kby.gb */; };
 		AB59ADE120AEE6560055A60F /* BinaryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB59ADE020AEE6560055A60F /* BinaryLoader.swift */; };
-		AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */ = {isa = PBXBuildFile; fileRef = AB59ADE220AEEA480055A60F /* DMG_ROM.bin */; };
 		AB5DAA3B20D802D000BF58D3 /* lcd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB5DAA3A20D802D000BF58D3 /* lcd.swift */; };
 		AB66B0C220D3FB6E000498BB /* DMGTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB66B0C120D3FB6E000498BB /* DMGTimer.swift */; };
 		AB6E8AA81DBBA64F0072CF49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */; };
 		AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AA91DBBA64F0072CF49 /* Assets.xcassets */; };
 		AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB6E8AAB1DBBA64F0072CF49 /* MainMenu.xib */; };
 		AB6E8AB51DBBA6980072CF49 /* cpu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6E8AB41DBBA6980072CF49 /* cpu.swift */; };
-		AB758E29217606A80030F35C /* mem_oam.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E28217606A10030F35C /* mem_oam.gb */; };
-		AB758E2C217607540030F35C /* Tetris.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB97CA0820EA75A20013E281 /* Tetris.gb */; };
-		AB758E2E2176078F0030F35C /* reg_f.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E2D2176078F0030F35C /* reg_f.gb */; };
-		AB758E30217607970030F35C /* unused_hwio-GS.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E2F217607970030F35C /* unused_hwio-GS.gb */; };
-		AB758E3221760EB30030F35C /* daa.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E3121760EB30030F35C /* daa.gb */; };
-		AB758E3421760EED0030F35C /* ie_push.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E3321760EED0030F35C /* ie_push.gb */; };
-		AB758E362176106D0030F35C /* basic.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB758E352176106D0030F35C /* basic.gb */; };
 		AB801B8920C02C5E00B0AEBF /* cpu_instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */; };
 		AB801B8B20C02CB800B0AEBF /* system.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8A20C02CB800B0AEBF /* system.swift */; };
 		AB801B8D20C02CE200B0AEBF /* Mmu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B8C20C02CE200B0AEBF /* Mmu.swift */; };
@@ -44,21 +22,7 @@
 		AB801B9120C02D8300B0AEBF /* DmgMmu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9020C02D8300B0AEBF /* DmgMmu.swift */; };
 		AB801B9320C02DAD00B0AEBF /* gameboy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB801B9220C02DAD00B0AEBF /* gameboy.swift */; };
 		AB817C0820FCE67F005666C9 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB817C0720FCE67F005666C9 /* Cartridge.swift */; };
-		AB8DB09B218B1AA9003C194F /* intr_1_2_timing-GS.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */; };
-		AB958DF920D008C400A186EA /* bgbtest.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB958DF720D0072400A186EA /* bgbtest.gb */; };
-		AB962FF621087FA9000C96F7 /* oam_count_v5.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF521087FA9000C96F7 /* oam_count_v5.gb */; };
-		AB962FF82108815C000C96F7 /* oam_bug.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF72108815C000C96F7 /* oam_bug.gb */; };
-		AB962FFA2108823A000C96F7 /* 1-lcd_sync.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */; };
-		AB9EDE2F217E0813005CFE14 /* reg_read.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB9EDE2E217E0813005CFE14 /* reg_read.gb */; };
-		AB9EDE31217E08D1005CFE14 /* sources-dmgABCmgbS.gb in Resources */ = {isa = PBXBuildFile; fileRef = AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */; };
-		ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8C20F779D300BF779F /* PokemonBlue.gb */; };
-		ABB20E8F20F77C3200BF779F /* loz.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E8E20F77C3200BF779F /* loz.gb */; };
-		ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABB20E9020F77D7A00BF779F /* drMario.gb */; };
 		ABF6E2AF20FA3D0B00748689 /* controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF6E2AE20FA3D0B00748689 /* controller.swift */; };
-		ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640C20F60B6A0044629D /* 06ldrr.gb */; };
-		ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */; };
-		ABF8641120F6405F0044629D /* 08miscinstrs.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8641020F6405F0044629D /* 08miscinstrs.gb */; };
-		ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */ = {isa = PBXBuildFile; fileRef = ABF8A75720F4EB7400145773 /* 03opsphl.gb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,25 +36,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AB09912920E4E46D003524CE /* 01special.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 01special.gb; sourceTree = "<group>"; };
-		AB0CF2DC20F60A3E009C96D3 /* 05oprp.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 05oprp.gb; sourceTree = "<group>"; };
-		AB0CF2DE20F60A73009C96D3 /* 04oprimm.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 04oprimm.gb; sourceTree = "<group>"; };
-		AB1CDD5120F640D700CF3A74 /* 09oprr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 09oprr.gb; sourceTree = "<group>"; };
-		AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 10bitops.gb; sourceTree = "<group>"; };
-		AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 11opahl.gb; sourceTree = "<group>"; };
-		AB2AFBE6222589F300415D7D /* instr_timing.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = instr_timing.gb; sourceTree = "<group>"; };
-		AB2AFBE822258F7100415D7D /* add_sp_e_timing.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = add_sp_e_timing.gb; sourceTree = "<group>"; };
-		AB2AFBEA2225922E00415D7D /* call_timing.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = call_timing.gb; sourceTree = "<group>"; };
-		AB2DA45E221C451800F5B7E7 /* scanline.nes */ = {isa = PBXFileReference; lastKnownFileType = file; path = scanline.nes; sourceTree = "<group>"; };
 		AB3D07031E2E6968009BDF00 /* GameBoyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GameBoyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB3D07051E2E6968009BDF00 /* GameBoyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoyTests.swift; sourceTree = "<group>"; };
 		AB3D07071E2E6968009BDF00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AB4665E420E285D200E26B23 /* cpu_instrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = cpu_instrs.gb; sourceTree = "<group>"; };
-		AB4F1A1020FF4E1500DF75EB /* SML.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = SML.gb; sourceTree = "<group>"; };
-		AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 02interrupts.gb; sourceTree = "<group>"; };
-		AB53B950212C6700000ABA88 /* kby.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = kby.gb; sourceTree = "<group>"; };
 		AB59ADE020AEE6560055A60F /* BinaryLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryLoader.swift; sourceTree = "<group>"; };
-		AB59ADE220AEEA480055A60F /* DMG_ROM.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = DMG_ROM.bin; sourceTree = "<group>"; };
 		AB5DAA3A20D802D000BF58D3 /* lcd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lcd.swift; sourceTree = "<group>"; };
 		AB66B0C120D3FB6E000498BB /* DMGTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMGTimer.swift; sourceTree = "<group>"; };
 		AB6E8AA41DBBA64F0072CF49 /* GameBoy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameBoy.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,12 +48,6 @@
 		AB6E8AAC1DBBA64F0072CF49 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		AB6E8AAE1DBBA64F0072CF49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB6E8AB41DBBA6980072CF49 /* cpu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = cpu.swift; sourceTree = "<group>"; };
-		AB758E28217606A10030F35C /* mem_oam.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = mem_oam.gb; sourceTree = "<group>"; };
-		AB758E2D2176078F0030F35C /* reg_f.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = reg_f.gb; sourceTree = "<group>"; };
-		AB758E2F217607970030F35C /* unused_hwio-GS.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "unused_hwio-GS.gb"; sourceTree = "<group>"; };
-		AB758E3121760EB30030F35C /* daa.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = daa.gb; sourceTree = "<group>"; };
-		AB758E3321760EED0030F35C /* ie_push.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = ie_push.gb; sourceTree = "<group>"; };
-		AB758E352176106D0030F35C /* basic.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = basic.gb; sourceTree = "<group>"; };
 		AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cpu_instructions.swift; sourceTree = "<group>"; };
 		AB801B8A20C02CB800B0AEBF /* system.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = system.swift; sourceTree = "<group>"; };
 		AB801B8C20C02CE200B0AEBF /* Mmu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mmu.swift; sourceTree = "<group>"; };
@@ -112,22 +55,7 @@
 		AB801B9020C02D8300B0AEBF /* DmgMmu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmgMmu.swift; sourceTree = "<group>"; };
 		AB801B9220C02DAD00B0AEBF /* gameboy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gameboy.swift; sourceTree = "<group>"; };
 		AB817C0720FCE67F005666C9 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
-		AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "intr_1_2_timing-GS.gb"; sourceTree = "<group>"; };
-		AB958DF720D0072400A186EA /* bgbtest.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = bgbtest.gb; sourceTree = "<group>"; };
-		AB962FF521087FA9000C96F7 /* oam_count_v5.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oam_count_v5.gb; sourceTree = "<group>"; };
-		AB962FF72108815C000C96F7 /* oam_bug.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = oam_bug.gb; sourceTree = "<group>"; };
-		AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "1-lcd_sync.gb"; sourceTree = "<group>"; };
-		AB97CA0820EA75A20013E281 /* Tetris.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = Tetris.gb; sourceTree = "<group>"; };
-		AB9EDE2E217E0813005CFE14 /* reg_read.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = reg_read.gb; sourceTree = "<group>"; };
-		AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = "sources-dmgABCmgbS.gb"; sourceTree = "<group>"; };
-		ABB20E8C20F779D300BF779F /* PokemonBlue.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = PokemonBlue.gb; sourceTree = "<group>"; };
-		ABB20E8E20F77C3200BF779F /* loz.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = loz.gb; sourceTree = "<group>"; };
-		ABB20E9020F77D7A00BF779F /* drMario.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = drMario.gb; sourceTree = "<group>"; };
 		ABF6E2AE20FA3D0B00748689 /* controller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = controller.swift; sourceTree = "<group>"; };
-		ABF8640C20F60B6A0044629D /* 06ldrr.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 06ldrr.gb; sourceTree = "<group>"; };
-		ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 07jrjpcallretrst.gb; sourceTree = "<group>"; };
-		ABF8641020F6405F0044629D /* 08miscinstrs.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 08miscinstrs.gb; sourceTree = "<group>"; };
-		ABF8A75720F4EB7400145773 /* 03opsphl.gb */ = {isa = PBXFileReference; lastKnownFileType = file; path = 03opsphl.gb; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,14 +76,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AB2AFBE5222589E100415D7D /* Blargg */ = {
-			isa = PBXGroup;
-			children = (
-				AB2AFBE6222589F300415D7D /* instr_timing.gb */,
-			);
-			path = Blargg;
-			sourceTree = "<group>";
-		};
 		AB3D07041E2E6968009BDF00 /* GameBoyTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -186,7 +106,6 @@
 		AB6E8AA61DBBA64F0072CF49 /* GameBoy */ = {
 			isa = PBXGroup;
 			children = (
-				AB958DF820D0072F00A186EA /* roms */,
 				AB6E8AA71DBBA64F0072CF49 /* AppDelegate.swift */,
 				AB6E8AB41DBBA6980072CF49 /* cpu.swift */,
 				AB801B8820C02C5E00B0AEBF /* cpu_instructions.swift */,
@@ -205,105 +124,6 @@
 				AB6E8AAE1DBBA64F0072CF49 /* Info.plist */,
 			);
 			path = GameBoy;
-			sourceTree = "<group>";
-		};
-		AB758E2A217606B80030F35C /* mooneye-gb */ = {
-			isa = PBXGroup;
-			children = (
-				AB2AFBEA2225922E00415D7D /* call_timing.gb */,
-				AB2AFBE822258F7100415D7D /* add_sp_e_timing.gb */,
-				AB8DB091218B18EA003C194F /* bits */,
-				AB8DB092218B1917003C194F /* instr */,
-				AB8DB094218B1965003C194F /* interrupts */,
-				AB8DB095218B197E003C194F /* oam dma */,
-				AB8DB099218B1A99003C194F /* ppu */,
-			);
-			path = "mooneye-gb";
-			sourceTree = "<group>";
-		};
-		AB8DB091218B18EA003C194F /* bits */ = {
-			isa = PBXGroup;
-			children = (
-				AB758E28217606A10030F35C /* mem_oam.gb */,
-				AB758E2D2176078F0030F35C /* reg_f.gb */,
-				AB758E2F217607970030F35C /* unused_hwio-GS.gb */,
-			);
-			name = bits;
-			sourceTree = "<group>";
-		};
-		AB8DB092218B1917003C194F /* instr */ = {
-			isa = PBXGroup;
-			children = (
-				AB758E3121760EB30030F35C /* daa.gb */,
-			);
-			name = instr;
-			sourceTree = "<group>";
-		};
-		AB8DB094218B1965003C194F /* interrupts */ = {
-			isa = PBXGroup;
-			children = (
-				AB758E3321760EED0030F35C /* ie_push.gb */,
-			);
-			name = interrupts;
-			sourceTree = "<group>";
-		};
-		AB8DB095218B197E003C194F /* oam dma */ = {
-			isa = PBXGroup;
-			children = (
-				AB758E352176106D0030F35C /* basic.gb */,
-				AB9EDE2E217E0813005CFE14 /* reg_read.gb */,
-				AB9EDE30217E08D1005CFE14 /* sources-dmgABCmgbS.gb */,
-			);
-			name = "oam dma";
-			sourceTree = "<group>";
-		};
-		AB8DB097218B19B3003C194F /* games */ = {
-			isa = PBXGroup;
-			children = (
-				AB97CA0820EA75A20013E281 /* Tetris.gb */,
-				AB53B950212C6700000ABA88 /* kby.gb */,
-				ABB20E8C20F779D300BF779F /* PokemonBlue.gb */,
-				ABB20E8E20F77C3200BF779F /* loz.gb */,
-				ABB20E9020F77D7A00BF779F /* drMario.gb */,
-				AB4F1A1020FF4E1500DF75EB /* SML.gb */,
-			);
-			path = games;
-			sourceTree = "<group>";
-		};
-		AB8DB099218B1A99003C194F /* ppu */ = {
-			isa = PBXGroup;
-			children = (
-				AB8DB09A218B1AA9003C194F /* intr_1_2_timing-GS.gb */,
-			);
-			name = ppu;
-			sourceTree = "<group>";
-		};
-		AB958DF820D0072F00A186EA /* roms */ = {
-			isa = PBXGroup;
-			children = (
-				AB2AFBE5222589E100415D7D /* Blargg */,
-				AB2DA45E221C451800F5B7E7 /* scanline.nes */,
-				AB962FF92108823A000C96F7 /* 1-lcd_sync.gb */,
-				AB962FF72108815C000C96F7 /* oam_bug.gb */,
-				AB4665E420E285D200E26B23 /* cpu_instrs.gb */,
-				AB09912920E4E46D003524CE /* 01special.gb */,
-				AB51EE2C20E6158C001EAF2D /* 02interrupts.gb */,
-				ABF8A75720F4EB7400145773 /* 03opsphl.gb */,
-				AB0CF2DE20F60A73009C96D3 /* 04oprimm.gb */,
-				AB0CF2DC20F60A3E009C96D3 /* 05oprp.gb */,
-				ABF8640C20F60B6A0044629D /* 06ldrr.gb */,
-				ABF8640E20F60BD50044629D /* 07jrjpcallretrst.gb */,
-				ABF8641020F6405F0044629D /* 08miscinstrs.gb */,
-				AB1CDD5120F640D700CF3A74 /* 09oprr.gb */,
-				AB1CDD5320F73F7800CF3A74 /* 10bitops.gb */,
-				AB1CDD5520F73F7F00CF3A74 /* 11opahl.gb */,
-				AB962FF521087FA9000C96F7 /* oam_count_v5.gb */,
-				AB958DF720D0072400A186EA /* bgbtest.gb */,
-				AB8DB097218B19B3003C194F /* games */,
-				AB758E2A217606B80030F35C /* mooneye-gb */,
-				AB59ADE220AEEA480055A60F /* DMG_ROM.bin */,
-			);
-			path = roms;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -400,44 +220,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABB20E9120F77D7A00BF779F /* drMario.gb in Resources */,
-				AB9EDE31217E08D1005CFE14 /* sources-dmgABCmgbS.gb in Resources */,
-				AB958DF920D008C400A186EA /* bgbtest.gb in Resources */,
-				AB758E3421760EED0030F35C /* ie_push.gb in Resources */,
-				AB53B951212C6700000ABA88 /* kby.gb in Resources */,
-				AB2AFBE7222589F300415D7D /* instr_timing.gb in Resources */,
-				ABB20E8F20F77C3200BF779F /* loz.gb in Resources */,
-				AB758E29217606A80030F35C /* mem_oam.gb in Resources */,
-				ABB20E8D20F779D300BF779F /* PokemonBlue.gb in Resources */,
 				AB6E8AAA1DBBA64F0072CF49 /* Assets.xcassets in Resources */,
-				AB51EE2D20E61592001EAF2D /* 02interrupts.gb in Resources */,
-				AB962FF82108815C000C96F7 /* oam_bug.gb in Resources */,
-				AB2AFBEB2225922E00415D7D /* call_timing.gb in Resources */,
-				AB1CDD5420F73F7800CF3A74 /* 10bitops.gb in Resources */,
-				AB2DA45F221C451900F5B7E7 /* scanline.nes in Resources */,
-				AB1CDD5620F73F7F00CF3A74 /* 11opahl.gb in Resources */,
-				AB962FF621087FA9000C96F7 /* oam_count_v5.gb in Resources */,
-				AB0CF2DF20F60A73009C96D3 /* 04oprimm.gb in Resources */,
-				AB2AFBE922258F7A00415D7D /* add_sp_e_timing.gb in Resources */,
-				AB758E3221760EB30030F35C /* daa.gb in Resources */,
-				AB758E30217607970030F35C /* unused_hwio-GS.gb in Resources */,
-				AB1CDD5220F640D700CF3A74 /* 09oprr.gb in Resources */,
-				AB4665E520E2861A00E26B23 /* cpu_instrs.gb in Resources */,
-				AB758E2C217607540030F35C /* Tetris.gb in Resources */,
-				AB0CF2DD20F60A3E009C96D3 /* 05oprp.gb in Resources */,
-				AB59ADE320AEEA480055A60F /* DMG_ROM.bin in Resources */,
-				ABF8641120F6405F0044629D /* 08miscinstrs.gb in Resources */,
-				AB962FFA2108823A000C96F7 /* 1-lcd_sync.gb in Resources */,
-				AB758E2E2176078F0030F35C /* reg_f.gb in Resources */,
-				ABF8A75820F4EB7400145773 /* 03opsphl.gb in Resources */,
-				ABF8640F20F60BD50044629D /* 07jrjpcallretrst.gb in Resources */,
 				AB6E8AAD1DBBA64F0072CF49 /* MainMenu.xib in Resources */,
-				AB8DB09B218B1AA9003C194F /* intr_1_2_timing-GS.gb in Resources */,
-				AB9EDE2F217E0813005CFE14 /* reg_read.gb in Resources */,
-				AB758E362176106D0030F35C /* basic.gb in Resources */,
-				ABF8640D20F60B6A0044629D /* 06ldrr.gb in Resources */,
-				AB4F1A1120FF4E1500DF75EB /* SML.gb in Resources */,
-				AB09912A20E4E472003524CE /* 01special.gb in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,6 +19,8 @@ class Gameboy : SYSTEM {
     var systemClock: Double
     var clockRate: Double
     
+    let romsPath = "/Users/teo/emulation/roms/"
+    
     init(clock: Double) throws {
         
         clockRate = 0
@@ -189,7 +191,10 @@ class Gameboy : SYSTEM {
     
     func bodgeBootLoader() {
         let binaryName = "DMG_ROM.bin"
-        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+        let path = romsPath + binaryName
+        
+        guard FileManager.default.fileExists(atPath: path),
+//        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
             let bootBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
                 print("Failed to load boot binary.")
@@ -218,7 +223,7 @@ class Gameboy : SYSTEM {
 //        let binaryName = "oam_count_v5.gb"
 //        let binaryName = "oam_bug.gb"
         
-        let binaryName = "1-lcd_sync.gb"
+//        let binaryName = "1-lcd_sync.gb"
 
         
         // mooneye-gb tests
@@ -244,14 +249,18 @@ class Gameboy : SYSTEM {
 //        let binaryName = "call_timing.gb"
         
         // Playables
-//        let binaryName = "Tetris.gb"
-//        let binaryName = "loz.gb"
-//        let binaryName = "kby.gb"
+        let binaryName = "games/Tetris.gb"
+//        let binaryName = "games/loz.gb"
+//        let binaryName = "games/kby.gb"
         // Crashers
-//        let binaryName = "PokemonBlue.gb"
-//        let binaryName = "drMario.gb"
-//        let binaryName = "SML.gb"
-        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+//        let binaryName = "games/PokemonBlue.gb"
+//        let binaryName = "games/drMario.gb"
+//        let binaryName = "games/SML.gb"
+        
+//        guard let path = Bundle.main.path(forResource: binaryName, ofType: nil),
+        let path = romsPath + binaryName
+    
+        guard FileManager.default.fileExists(atPath: path),
             let romBinary = try? loadBinary(from: URL(fileURLWithPath: path))
             else {
                 print("Failed to load rom binary.")
