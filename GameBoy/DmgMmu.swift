@@ -404,7 +404,10 @@ class DmgMmu : MMU {
                 delegateLcd?.set(value: value, on: mmuReg)
                 
             case .ly:
-                break // Read only, ignore
+                // Read only, but can reset so pass on to LCD.
+                delegateLcd?.set(value: value, on: mmuReg)
+                break
+                
             case .lyc:
                 ram[Int(location)] = value
                 delegateLcd?.set(value: value, on: mmuReg)

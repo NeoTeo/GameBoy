@@ -217,7 +217,9 @@ class Gameboy : SYSTEM {
 //        let binaryName = "bgbtest.gb"
 //        let binaryName = "oam_count_v5.gb"
 //        let binaryName = "oam_bug.gb"
-//        let binaryName = "1-lcd_sync.gb"
+        
+        let binaryName = "1-lcd_sync.gb"
+
         
         // mooneye-gb tests
         // passed
@@ -234,11 +236,16 @@ class Gameboy : SYSTEM {
         
         
         //failed
+        // Blargg
+//        let binaryName = "instr_timing.gb"
+        // Mooneye
 //        let binaryName = "ie_push.gb"
+//        let binaryName = "add_sp_e_timing.gb"
+//        let binaryName = "call_timing.gb"
         
         // Playables
 //        let binaryName = "Tetris.gb"
-        let binaryName = "loz.gb"
+//        let binaryName = "loz.gb"
 //        let binaryName = "kby.gb"
         // Crashers
 //        let binaryName = "PokemonBlue.gb"

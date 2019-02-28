@@ -24,6 +24,7 @@ protocol LcdDelegate {
 protocol LcdDisplayDelegate {
     func didUpdate(buffer: [UInt8])
 }
+
 /*
        <--+ 20 clocks +-> <----+ 43 clocks (minimum) +----> <----+ 51 clocks (maximum) +----->
        |------------------|--------------------------------|---------------------------------+
@@ -242,8 +243,6 @@ class LCD {
             dbgRefreshString += "\nnew scanline>"
             // Increment LY and wrap if it reaches 154
             var ly = delegateMmu.getValue(for: .ly) + 1
-            
-            
             if ly > 153 {
                 ly = 0
                 
@@ -743,6 +742,14 @@ extension LCD : MmuDelegate {
     
     func set(value: UInt8, on register: MmuRegister) {
         switch register {
+        case .ly:
+            // reset to 0 if LCD is on
+            guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { break }
+            // debug print
+            print("reset LY")
+            delegateMmu?.set(value: 0, on: .ly)
+            break
+            
         case .lyc:
             // Do whatever it is this does
             break
@@ -772,7 +779,11 @@ extension LCD : MmuDelegate {
 //                    fatalError("disabling lcd outside of vblank.")
                     print("disabling lcd outside of vblank.")
                 }
+                dbgRefreshString += "<disabling lcd and setting LY=0.>"
                 delegateMmu?.set(value: 0, on: .ly)
+                
+                // reset the lcd state
+                lcdState = LcdState()
 //                // Clear the stat interrupt flags
 //                if let statVal = delegateMmu?.getValue(for: .stat) {
 //                    let newStat = statVal & ~(0x70)

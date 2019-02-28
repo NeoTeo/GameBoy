@@ -710,7 +710,7 @@ class CPU {
         cbOps[0x7B] = (.bit, (.u3_7, .E), (8,0))
         cbOps[0x7C] = (.bit, (.u3_7, .H), (8,0))
         cbOps[0x7D] = (.bit, (.u3_7, .L), (8,0))
-        cbOps[0x7E] = (.bit, (.u3_7, .HLptr), (16,0))
+        cbOps[0x7E] = (.bit, (.u3_7, .HLptr), (12,0))
         cbOps[0x7F] = (.bit, (.u3_7, .A), (8,0))
 
         cbOps[0x80] = (.res, (.u3_0, .B), (8,0))
@@ -882,9 +882,8 @@ class CPU {
         
 
         
-        if PC == 0xC0C6 {//}|| PC == 0x0546 || PC == 0x549 || PC == 0x54E {
+        if PC == 0xC10A {//}|| PC == 0x0546 || PC == 0x549 || PC == 0x54E {
             //}&& HL == 0x9A26 {
-            dbgCount += 1
             print("PC is \(String(format: "%2X",PC))")
 //            print("------------------ \(dbgCount) ----------------")
             debugRegisters()
@@ -897,6 +896,7 @@ class CPU {
             
 //            mmu.debugPrint(from: 0xd620, bytes: 16, type: .mainRam)
             dbgPr = true
+            dbgCount = 0
         }
     
         /// Read from ram.
@@ -938,6 +938,7 @@ class CPU {
         
         var cycs = handler(op, args, cycles)
         
+        dbgCount += Int(cycs)
         //var cycs = cycles
         
         dbLastOpcode = opcode
@@ -1040,6 +1041,9 @@ class CPU {
                 if try call(argTypes: args) == true { actualCycles = cycles.1 }
             case .cb:
                 cbMode = true
+                // test - the cb opcodes include the cb cycles in their cycle count...I think.
+                actualCycles = 0
+                
             case .ccf:
                 ccf()
             case .cp:
