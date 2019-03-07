@@ -207,6 +207,15 @@ class Gameboy : SYSTEM {
     
     func bodgeRomLoader() -> [UInt8]? {
 
+        // passed
+//        let binaryName = "mooneye-gb/mem_oam.gb"
+//        let binaryName = "mooneye-gb/reg_f.gb"
+//        let binaryName = "mooneye-gb/unused_hwio-GS.gb"
+//        let binaryName = "mooneye-gb/daa.gb"
+//        let binaryName = "mooneye-gb/basic.gb"
+//        let binaryName = "mooneye-gb/reg_read.gb"
+//        let binaryName = "mooneye-gb/sources-dmgABCmgbS.gb"
+
 //        let binaryName = "cpu_instrs.gb"
 //        let binaryName = "11opahl.gb"
 //        let binaryName = "10bitops.gb"
@@ -219,39 +228,30 @@ class Gameboy : SYSTEM {
 //        let binaryName = "03opsphl.gb"
 //        let binaryName = "02interrupts.gb"
 //        let binaryName = "01special.gb" // passes
+        
+        // Works but has issues
 //        let binaryName = "bgbtest.gb"
 //        let binaryName = "oam_count_v5.gb"
+        
+        
+        //fail
+        let binaryName = "1-lcd_sync.gb"
 //        let binaryName = "oam_bug.gb"
         
-//        let binaryName = "1-lcd_sync.gb"
-
-        
-        // mooneye-gb tests
-        // passed
-//        let binaryName = "mem_oam.gb"
-//        let binaryName = "reg_f.gb"
-//        let binaryName = "unused_hwio-GS.gb"
-////        let binaryName = "daa.gb"
-//        let binaryName = "basic.gb"
-//        let binaryName = "reg_read.gb"
-////        let binaryName = "sources-dmgABCmgbS.gb"
-        
-        
-//        let binaryName = "intr_1_2_timing-GS.gb"
-        
-        
-        //failed
         // Blargg
-//        let binaryName = "instr_timing.gb"
+//        let binaryName = "Blargg/instr_timing.gb"
+        
         // Mooneye
-//        let binaryName = "ie_push.gb"
-//        let binaryName = "add_sp_e_timing.gb"
-//        let binaryName = "call_timing.gb"
+//        let binaryName = "mooneye-gb/intr_1_2_timing-GS.gb"
+//        let binaryName = "mooneye-gb/ie_push.gb"
+//        let binaryName = "mooneye-gb/add_sp_e_timing.gb"
+//        let binaryName = "mooneye-gb/call_timing.gb"
         
         // Playables
-        let binaryName = "games/Tetris.gb"
+//        let binaryName = "games/Tetris.gb"
 //        let binaryName = "games/loz.gb"
 //        let binaryName = "games/kby.gb"
+        
         // Crashers
 //        let binaryName = "games/PokemonBlue.gb"
 //        let binaryName = "games/drMario.gb"
