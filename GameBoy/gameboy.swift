@@ -232,10 +232,11 @@ class Gameboy : SYSTEM {
         // Works but has issues
 //        let binaryName = "bgbtest.gb"
 //        let binaryName = "oam_count_v5.gb"
+//        let binaryName = "hblank_test.gb"
         
         
         //fail
-        let binaryName = "1-lcd_sync.gb"
+//        let binaryName = "1-lcd_sync.gb"
 //        let binaryName = "oam_bug.gb"
         
         // Blargg
@@ -249,7 +250,7 @@ class Gameboy : SYSTEM {
         
         // Playables
 //        let binaryName = "games/Tetris.gb"
-//        let binaryName = "games/loz.gb"
+        let binaryName = "games/loz.gb"
 //        let binaryName = "games/kby.gb"
         
         // Crashers

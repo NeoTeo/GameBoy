@@ -202,6 +202,7 @@ class LCD {
     var dbTimeBetweenRefresh: CFAbsoluteTime = 0
     var dbLastRefreshTime: CFAbsoluteTime = 0
     var dbTimer: Timer = Timer()
+    var dbOamStatIrq = 0
     
     func dbSecondTimer(t: Timer) {
         print(self.dbgRefreshString)
@@ -275,6 +276,13 @@ class LCD {
             guard ns.scanlineClock < LCD.hBlankTicks else {
 
                 dbgRefreshString += "|hBlank -> oam/vblank after\(ns.scanlineClock) clocks|"
+                dbgHblankCount += 1
+
+                if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
+                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                    dbOamStatIrq += 1
+                }
+
                 // Increment LY
                 let newLy = incrementLY()
                 if newLy == 144 {
@@ -293,12 +301,15 @@ class LCD {
                     // Draw the screen on going into vblank
                     delegateDisplay?.didUpdate(buffer: vbuf)
                     
+                    dbgPrint(dbgString: "hblanks: \(dbgHblankCount)")
+                    dbgHblankCount = 0
                 } else {
                     lcdMode = .oam
                     
-                    if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
-                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
-                    }
+//                    if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
+//                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+//                        dbOamStatIrq += 1
+//                    }
                     
                     // Only compile sprite list if they are enabled.
                     if isSet(bit: 1, in: lcdc) {
@@ -341,7 +352,11 @@ class LCD {
                 } else if newLy == 1 {
                     delegateMmu?.set(value: 0, on: .ly)
                     lcdMode = .oam
+                    
+                    lycLyCheck()
 //                    dbgRefreshString += "|vBlank -> oam |\n"
+                    dbgPrint(dbgString: "oam stat irqs : \(dbOamStatIrq)")
+                    dbOamStatIrq = 0
                 }
 
                 dbgRefreshString += "\n"
