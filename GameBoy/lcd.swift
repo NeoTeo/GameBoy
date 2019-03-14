@@ -139,11 +139,11 @@ class LCD {
     var delegateMmu: LcdDelegate!
     var delegateDisplay: LcdDisplayDelegate?
     
-    var tickModulo: Int
-    var ticks: Int
+//    var tickModulo: Int
+//    var ticks: Int
     
     // Each byte contains the data of two pixels
-    var pixelCount: Int
+//    var pixelCount: Int
     
     // Our video buffer uses a byte per pixel
     var vbuf: [UInt8]
@@ -176,16 +176,16 @@ class LCD {
         // 4194304 / 70224 = 59,7 (~60 hz)
         // calculate divisor
 //        let ramClock: Double = 1048576
-        let screenClocks: Double = 17556
+//        let screenClocks: Double = 17556
 //        let rate = screenClocks * (sysClock / ramClock)
         
-        pixelCount = LCD.hResolution * LCD.vResolution
+//        pixelCount = LCD.hResolution * LCD.vResolution
         
-        tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
-        ticks = tickModulo
+//        tickModulo = Int(screenClocks) //ticksPerRefresh//Int((sysClock / rate).rounded())
+//        ticks = tickModulo
         lcdMode = .oam //.hBlank
         
-        vbuf = Array<UInt8>(repeating: 0, count: pixelCount)
+        vbuf = Array<UInt8>(repeating: 0, count: LCD.hResolution * LCD.vResolution)
         
         // Initialize a fresh state.
         lcdState = LcdState()
@@ -214,7 +214,11 @@ class LCD {
     fileprivate func refresh3(clocksUsed: Int, state: LcdState) -> LcdState {
         
         // Early out if lcd is off
+        // FIXME: According to TCAGBD if the LCD is turned off the same cycle as
+        // an ir is set it will actually set it. This could be a problem if the
+        // code below this early-out would have set it.
         guard let lcdc = delegateMmu?.getValue(for: .lcdc), isSet(bit: 7, in: lcdc) else { return state }
+        
         
         var ns = state
         
@@ -278,38 +282,37 @@ class LCD {
                 dbgRefreshString += "|hBlank -> oam/vblank after\(ns.scanlineClock) clocks|"
                 dbgHblankCount += 1
 
-                if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
-                    delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
-                    dbOamStatIrq += 1
+                ns.scanlineClock -= LCD.hBlankTicks
+                if ns.scanlineClock != 0 {
+                    dbgRefreshString += "| +\(ns.scanlineClock) clocks|"
                 }
 
                 // Increment LY
                 let newLy = incrementLY()
                 if newLy == 144 {
-                    
+
                     lcdMode = .vBlank
-                    
-                    // Set the v-blank interrupt request (regardless of the stat version)
-                    // They trigger different vblank vectors.
-                    delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
-                    
-                    if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
-                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
-                    }
-                    
-                    //try! transferPixels(line: newLy, activeObjects: activeObjs)
+
+//                    // Set the v-blank interrupt request (regardless of the stat version)
+//                    // They trigger different vblank vectors.
+//                    delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
+//
+//                    if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
+//                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+//                    }
+
                     // Draw the screen on going into vblank
                     delegateDisplay?.didUpdate(buffer: vbuf)
-                    
+
                     dbgPrint(dbgString: "hblanks: \(dbgHblankCount)")
                     dbgHblankCount = 0
                 } else {
                     lcdMode = .oam
                     
-//                    if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
-//                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
-//                        dbOamStatIrq += 1
-//                    }
+                    if isSet(bit: LcdStatusBit.oamIrq.rawValue, in: stat) {
+                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                        dbOamStatIrq += 1
+                    }
                     
                     // Only compile sprite list if they are enabled.
                     if isSet(bit: 1, in: lcdc) {
@@ -317,14 +320,6 @@ class LCD {
                         // OAM search is done on a per-line basis. Find the 10 objs to display.
                         activeObjs = oamSearch(for: newLy, objHeight: objHeight)
                     }
-                }
-                
-                //lycLyCheck()
-                
-
-                ns.scanlineClock -= LCD.hBlankTicks
-                if ns.scanlineClock != 0 {
-                    dbgRefreshString += "| +\(ns.scanlineClock) clocks|"
                 }
 
                 dbgRefreshString += "\n"
@@ -347,13 +342,14 @@ class LCD {
                 // According to this comment:
                 // https://github.com/shonumi/gbe-plus/commit/c878372d271439e093ce0347fc92a39050090680
                 // The DMG does the work of LY 0 already at LY 153 so we have to bodge it here.
-                if newLy == 153 {
-                    _ = incrementLY() // set it to 0 (incrementLY wraps at 154)
-                } else if newLy == 1 {
+//                if newLy == 153 {
+//                    print("Setting LY to 0 (even if we're really at 153) after \(ns.scanlineClock) clocks.")
+//                    _ = incrementLY() // set it to 0 (incrementLY wraps at 154)
+//                } else
+                if newLy == 1 {
                     delegateMmu?.set(value: 0, on: .ly)
                     lcdMode = .oam
                     
-                    lycLyCheck()
 //                    dbgRefreshString += "|vBlank -> oam |\n"
                     dbgPrint(dbgString: "oam stat irqs : \(dbOamStatIrq)")
                     dbOamStatIrq = 0
@@ -361,6 +357,30 @@ class LCD {
 
                 dbgRefreshString += "\n"
                 break
+            }
+            
+            // According to the CAGBD various things happen in vblank mode *after* the first 4 cycles.
+            if ns.scanlineClock >= 4 {
+                let ly = delegateMmu.getValue(for: .ly)
+            
+                // All but the first four cycles of scanline 153 return 0 as ly
+                if ly == 153 {
+                    //print("Setting LY to 0 (even if we're really at 153) after \(ns.scanlineClock) clocks.")
+                    _ = incrementLY() // set it to 0 (incrementLY wraps at 154)
+                } else if ly == 144 {
+                    
+                    // Set the v-blank interrupt request (regardless of the stat version)
+                    // They trigger different vblank vectors.
+                    // only cycles 4 to 7 set the vblank interrupt request.
+                    if ns.scanlineClock < 8 {
+                        delegateMmu.set(bit: mmuInterruptBit.vblank.rawValue , on: .ir)
+                    }
+                    
+                    // All clocks above 3 set the stat mode to vblank
+                    if isSet(bit: LcdStatusBit.vblankIrq.rawValue, in: stat) {
+                        delegateMmu.set(bit: mmuInterruptBit.lcdStat.rawValue , on: .ir)
+                    }
+                }
             }
         }
         
@@ -379,7 +399,6 @@ class LCD {
         
         delegateMmu?.set(value: ly, on: .ly)
         
-        // FIXME: This causes the first scanline to be corrupted/offset
         lycLyCheck()
         
         return ly
@@ -823,6 +842,7 @@ extension LCD : MmuDelegate {
                 
                 // reset the lcd state
                 lcdState = LcdState()
+                lcdMode = .oam
 //                // Clear the stat interrupt flags
 //                if let statVal = delegateMmu?.getValue(for: .stat) {
 //                    let newStat = statVal & ~(0x70)
