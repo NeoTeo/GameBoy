@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import EventKit
+import AppKit
 
 protocol ControllerDelegate {
     func set(value: UInt8, on register: MmuRegister)
