@@ -150,7 +150,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.mmu.write(at: 0x0000, with: 0x3C) // Add instruction INC A
         
         // Run four ticks that the INC A takes
-        for _ in 0 ..< 4 { gb.cpu.clockTick() }
+        for _ in 0 ..< 4 { _ = gb.cpu.clockTick() }
         
         let f = gb.cpu.F
         XCTAssert(f.H)
@@ -164,7 +164,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.mmu.write(at: 0x0000, with: 0x3D) // Add instruction INC A
         
         // Run four ticks that the INC A takes
-        for _ in 0 ..< 4 { gb.cpu.clockTick() }
+        for _ in 0 ..< 4 { _ = gb.cpu.clockTick() }
         
         let f = gb.cpu.F
         XCTAssert( f.H && f.N )
@@ -202,7 +202,7 @@ class GameBoyTests: XCTestCase {
             // Set the PC to the instruction location
             gb.cpu.PC = 0xC000
             // Run the 8 ticks that the instruction takes
-            for _ in 0 ..< 8 { gb.cpu.clockTick() }
+            for _ in 0 ..< 8 { _ = gb.cpu.clockTick() }
             
             // Get the value for the register
             let endValue = try? gb.cpu.getVal16(for: reg)
@@ -229,7 +229,7 @@ class GameBoyTests: XCTestCase {
             // Set the PC to the instruction location
             gb.cpu.PC = 0xC000
             // Run the 8 ticks that the instruction takes
-            for _ in 0 ..< 8 { gb.cpu.clockTick() }
+            for _ in 0 ..< 8 { _ = gb.cpu.clockTick() }
             
             // Get the value for the register
             let endValue = try? gb.cpu.getVal16(for: reg)
@@ -253,7 +253,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.PC = 0xC000
         
         // Run 12 ticks that the INC (HL) takes
-        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+        for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
 
         // Check that the value in memory location 0xC001 is now 0x43
         var incVal = try? gb.cpu.mmu.read8(at: 0xC001)
@@ -265,7 +265,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.mmu.write(at: 0xC002, with: 0x35)
 
         // Run 12 ticks that the DEC (HL) takes
-        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+        for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
         
         // Check that the value in memory location 0xC001 is now 0x42
         incVal = try? gb.cpu.mmu.read8(at: 0xC001)
@@ -285,7 +285,7 @@ class GameBoyTests: XCTestCase {
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run 12 ticks that the instruction takes
-        for _ in 0 ..< 12 { gb.cpu.clockTick() }
+        for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
         // Check that the BC register now contains 0x4269
         XCTAssert( gb.cpu.BC == 0x4269)
     }
@@ -301,7 +301,7 @@ class GameBoyTests: XCTestCase {
         // Set the PC to the top of the RAM
         gb.cpu.PC = 0xC000
         // Run 8 ticks that the instruction takes
-        for _ in 0 ..< 8 { gb.cpu.clockTick() }
+        for _ in 0 ..< 8 { _ = gb.cpu.clockTick() }
         // Read the RAM at the location BC is pointing to
         let resVal = try? gb.cpu.read8(at: gb.cpu.BC)
         // Check that the value matches the value in register A
@@ -321,7 +321,7 @@ class GameBoyTests: XCTestCase {
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run the ticks that the instruction takes
-        for _ in 0 ..< 20 { gb.cpu.clockTick() }
+        for _ in 0 ..< 20 { _ = gb.cpu.clockTick() }
         
         let resVal = try! gb.cpu.read16(at: 0xC003)
         print("resval \(String(format: "%2X",resVal))")
@@ -355,6 +355,7 @@ class GameBoyTests: XCTestCase {
     }
     
     func testAdd8_8() {
+//        typealias GBOperation = (OpType, (ArgType, ArgType), (UInt8, UInt8))
         
         continueAfterFailure = false
         // Set up a list of the opcodes we want to test; all the LD 8bit, 8bit
@@ -369,7 +370,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.PC = 0xC001
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks) = gb.cpu.ops[Int(op)] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -387,7 +388,7 @@ class GameBoyTests: XCTestCase {
 
             // Run the ticks that the instruction takes
             gb.cpu.PC = 0xC000
-            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            for _ in 0 ..< ticks.0 { _ = gb.cpu.clockTick() }
 
             let resVal = try? gb.cpu.getVal8(for: regs.0)
         
@@ -413,7 +414,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.write(at: 0xC000, with: op)
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks) = gb.cpu.ops[Int(op)] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -429,7 +430,7 @@ class GameBoyTests: XCTestCase {
             
             // Run the ticks that the instruction takes
             gb.cpu.PC = 0xC000
-            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            for _ in 0 ..< ticks.0 { _ = gb.cpu.clockTick() }
             
             let resVal = try? gb.cpu.getVal16(for: regs.0)
             
@@ -475,7 +476,7 @@ class GameBoyTests: XCTestCase {
         // Set the PC to the top of RAM
         gb.cpu.PC = 0xC000
         // Run the ticks that the instruction takes
-        for _ in 0 ..< 24 { gb.cpu.clockTick() }
+        for _ in 0 ..< 24 { _ = gb.cpu.clockTick() }
         
         // Check that the PC is now 0xC00A
         XCTAssert( gb.cpu.PC == 0xC00A )
@@ -548,7 +549,7 @@ class GameBoyTests: XCTestCase {
             // Set the PC to the top of RAM
             gb.cpu.PC = 0xC000
             // Run the ticks that the instruction takes
-            for _ in 0 ..< 12 { gb.cpu.clockTick() }
+            for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
             
             // Check that the PC matches the expected location            
             XCTAssert( gb.cpu.PC == pcLoc[i])
@@ -598,7 +599,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.write(at: 0xFF00, with: UInt16(0x0000))
             gb.cpu.write(at: 0xC001, with: UInt8(0x00))
             // Get the registers involved in the operation
-            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks) = gb.cpu.ops[Int(op)] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -617,7 +618,7 @@ class GameBoyTests: XCTestCase {
             // Set the PC to the top of the RAM
             gb.cpu.PC = 0xC000
             // Run the ticks that the instruction takes
-            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            for _ in 0 ..< ticks.0 { _ = gb.cpu.clockTick() }
             
             // If the instruction we just executed contained an HLptrInc/HLptrDec source
             // or destination register then has [inc|dec]remented the HL by one
@@ -674,7 +675,7 @@ class GameBoyTests: XCTestCase {
             gb.cpu.PC = 0xC000
         
             // Run the ticks that the instruction takes
-            for _ in 0 ..< 12 { gb.cpu.clockTick() }
+            for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
             
             // Check that the PC matches the expected data
             XCTAssert( gb.cpu.A == 0x42)
@@ -700,7 +701,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.PC = 0xC000
         
         // Run the ticks that the instruction takes
-        for _ in 0 ..< 16 { gb.cpu.clockTick() }
+        for _ in 0 ..< 16 { _ = gb.cpu.clockTick() }
         
         
         XCTAssert( gb.cpu.BC == 0x00EB)
@@ -722,7 +723,7 @@ class GameBoyTests: XCTestCase {
         gb.cpu.PC = 0xC000
         
         // Run the ticks that the instruction takes
-        for _ in 0 ..< 16 { gb.cpu.clockTick() }
+        for _ in 0 ..< 16 { _ = gb.cpu.clockTick() }
         
         // Read the value at the location (originally) pointed to by the SP
         let val1 = try? gb.cpu.mmu.read8(at: startSP - 1)
@@ -879,7 +880,7 @@ extension GameBoyTests {
             let op = UInt8(opcode)
             
             // Get the registers involved in the operation
-            guard let (_,regs,_) = gb.cpu.cbOps[op] else {
+            guard let (_,regs,_) = gb.cpu.cbOps[Int(op)] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -903,7 +904,7 @@ extension GameBoyTests {
                 gb.cpu.PC = 0xC000
 
                 // Run the ticks that the instruction takes
-                for _ in 0 ..< 12 { gb.cpu.clockTick() }
+                for _ in 0 ..< 12 { _ = gb.cpu.clockTick() }
         
                 let endFlags = testEndState.1
                 // Check the flags
@@ -937,7 +938,7 @@ extension GameBoyTests {
             gb.cpu.write(at: 0xC000, with: op)
             
             // Get the registers involved in the operation
-            guard let (_,regs,ticks, _) = gb.cpu.ops[op] else {
+            guard let (_,regs,ticks) = gb.cpu.ops[Int(op)] else {
                 XCTFail("No entry for given opcode \(String(format: "%2X", op))")
                 return
             }
@@ -945,7 +946,7 @@ extension GameBoyTests {
             // custom registers override the ones fetched from the op table (for testing)
             let testRegs = customRegs ?? regs
             
-            multiTest(op: op, regs: testRegs, ticks: ticks, testVals:  testVals)
+            multiTest(op: op, regs: testRegs, ticks: ticks.0, testVals:  testVals)
         }
     }
     
@@ -981,7 +982,7 @@ extension GameBoyTests {
             
             // Run the ticks that the instruction takes
             gb.cpu.PC = 0xC000
-            for _ in 0 ..< ticks { gb.cpu.clockTick() }
+            for _ in 0 ..< ticks { _ = gb.cpu.clockTick() }
             
             // Extract the end states
             let endState = t.1

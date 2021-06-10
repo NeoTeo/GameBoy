@@ -263,9 +263,9 @@ class CPU {
     }
 
     // An op consists of an instruction id, a tuple of argument ids, a cycle count tuple (first is normal, second is conditional action)
-    typealias Operation = (OpType, (ArgType, ArgType), (UInt8, UInt8))
-    var ops:  [Operation?]!
-    var cbOps: [Operation?]!
+    typealias GBOperation = (OpType, (ArgType, ArgType), (UInt8, UInt8))
+    var ops:  [GBOperation?]!
+    var cbOps: [GBOperation?]!
     
     var systemClock: Double
     let maxClock: Double = 4_194_304
@@ -296,7 +296,7 @@ class CPU {
 ////            mmu.IF = self.setFlag(for: DmgMmu.InterruptFlag.vblank.rawValue , in: mmu.IF)
 //            self.mmu.setIF(flag: .vblank)
 //        }
-        ops = Array<Operation?>(repeating: nil, count: 512)
+        ops = Array<GBOperation?>(repeating: nil, count: 512)
         // Move this to definition of ops
         ops[0x00] = (.nop,      (.noReg, .noReg), (4,0))
         ops[0x01] = (.ld16_16,  (.BC, .i16), (12,0))
@@ -567,7 +567,7 @@ class CPU {
         ops[0xFE] = (.cp, (.A, .i8), (8,0))
         ops[0xFF] = (.rst, (.vec38h, .noReg), (16,0))
         
-        cbOps = Array<Operation?>(repeating: nil, count: 512)
+        cbOps = Array<GBOperation?>(repeating: nil, count: 512)
         // CB prefix operations
         cbOps[0x00] = (.rlc, (.B, .noReg), (8,0))
         cbOps[0x01] = (.rlc, (.C, .noReg), (8,0))
@@ -915,7 +915,7 @@ class CPU {
             print("HL: \(HL)")
         }
         var handler = handleOps
-        var operations: [Operation?]
+        var operations: [GBOperation?]
         
         if opcode == 0xCB {
             handler = handleCbOps
