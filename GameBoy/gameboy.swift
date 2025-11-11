@@ -19,7 +19,8 @@ class Gameboy : SYSTEM {
     var systemClock: Double
     var clockRate: Double
     
-    let romsPath = "/Users/teo/emulation/roms/"
+    // Use project directory for ROM files during development
+    let romsPath = "/Users/teo/source/GameBoy/"
     
     init(clock: Double) throws {
         
@@ -249,8 +250,8 @@ class Gameboy : SYSTEM {
 //        let binaryName = "mooneye-gb/call_timing.gb"
         
         // Playables
-//        let binaryName = "games/Tetris.gb"
-        let binaryName = "games/loz.gb"
+        let binaryName = "Tetris.gb"
+//        let binaryName = "games/loz.gb"
 //        let binaryName = "games/kby.gb"
         
         // Crashers

@@ -1,10 +1,13 @@
 .DS_Store
 Build
 # Xcode ignores
+xcshareddata
 *.xcbkptlist
 *.xcuserstate
 *.xccheckout
 xcuserdata
-Carthage
-Cartfile.resolved
+#other
 *.sav
+*.bin
+*.gb
+
